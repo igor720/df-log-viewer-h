@@ -1,0 +1,137 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           df-log-viewer-h
+version:        0.1.0.0
+synopsis:       Dwarf Fortress game log viewer
+description:    Please see the README on GitHub at <https://github.com/igor720/df-log-parser#readme>
+category:       Dwarf Fortress game utility
+homepage:       https://github.com/igor720/df-log-viewer-h#readme
+bug-reports:    https://github.com/igor720/df-log-viewer-h/issues
+author:         Igor Chudaev
+maintainer:     igor720@gmail.com.com
+copyright:      2021 Igor Chudaev
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/igor720/df-log-viewer-h
+
+library
+  exposed-modules:
+      LogFile
+      LogException
+      LogParser.LogEntry
+      LogParser.Rules
+      LogParser.Reassemble
+  other-modules:
+      LogParser.Profession
+  hs-source-dirs:
+      src
+  build-depends:
+      HsYAML ==0.2.*
+    , aeson >=1.4 && <2.1
+    , base >=4.11 && <5
+    , bytestring >=0.10
+    , containers >=0.5.11 && <0.7
+    , data-default >=0.5 && <0.8
+    , directory ==1.3.*
+    , extra >=1.6 && <1.9
+    , filepath ==1.4.*
+    , lens >=4.16 && <5.1
+    , monad-loops >=0.4.3 && <0.5
+    , mtl >=2.1
+    , parsec >=3.1
+    , random >=1.1 && <1.3
+    , text >=1.2
+    , text-show >=3.7 && <3.10
+    , time >=1.8 && <1.13
+  default-language: Haskell2010
+
+executable dflv
+  main-is: Main.hs
+  other-modules:
+      Config
+      Config.Default
+      AppException
+      LogFile
+      LogException
+      LogParser.LogEntry
+      LogParser.Rules
+      LogParser.Reassemble
+      GUI.Model.ColorsDialog
+      GUI.Model.LogWindowsDialog
+      GUI.Model.App
+      GUI.ColorsDialog
+      GUI.LogWindowsDialog
+      GUI.App
+      GUI
+  hs-source-dirs:
+      app
+      src
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HsYAML ==0.2.*
+    , aeson >=1.4 && <2.1
+    , base >=4.11 && <5
+    , bytestring >=0.10
+    , containers >=0.5.11 && <0.7
+    , data-default >=0.5 && <0.8
+    , df-log-viewer-h
+    , directory ==1.3.*
+    , extra >=1.6 && <1.9
+    , filepath ==1.4.*
+    , lens >=4.16 && <5.1
+    , monad-loops >=0.4.3 && <0.5
+    , monomer >=1.2
+    , mtl >=2.1
+    , parsec >=3.1
+    , random >=1.1 && <1.3
+    , text >=1.2
+    , text-show >=3.7 && <3.10
+    , time >=1.8 && <1.13
+  default-language: Haskell2010
+
+test-suite df-log-viewer-h-test
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      LogFile
+      LogException
+      LogParser.LogEntry
+      LogParser.Rules
+      Test.LogFile
+      Test.Rules
+  hs-source-dirs:
+      src
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HUnit
+    , HsYAML ==0.2.*
+    , aeson >=1.4 && <2.1
+    , base >=4.11 && <5
+    , bytestring >=0.10
+    , containers >=0.5.11 && <0.7
+    , data-default >=0.5 && <0.8
+    , df-log-viewer-h
+    , directory ==1.3.*
+    , extra >=1.6 && <1.9
+    , filepath ==1.4.*
+    , lens >=4.16 && <5.1
+    , monad-loops >=0.4.3 && <0.5
+    , mtl >=2.1
+    , parsec >=3.1
+    , random >=1.1 && <1.3
+    , text >=1.2
+    , text-show >=3.7 && <3.10
+    , time >=1.8 && <1.13
+  default-language: Haskell2010

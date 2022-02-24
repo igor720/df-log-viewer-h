@@ -1,0 +1,5 @@
+.stack-work/
+.git/
+*~
+stack.yaml
+stack.yaml.lock

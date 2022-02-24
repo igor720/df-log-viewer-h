@@ -1,0 +1,58 @@
+## Fall back if 'winsize' file is missed or invalid
+mainWindowDefaultSize:
+- 800
+- 600
+## Main text font
+regularFont: "Roboto-Regular.ttf"
+## Teg display font
+emphasizeFont: "Roboto-Bold.ttf"
+## Common font size
+textSize: 14.0
+## Common background color. Variants: "#B8860B" "#B8860B" "#EEE8AA" "#556B2F"
+bgColor: "#515151"
+## Number of log windows (1,2,3,4)
+logWindows: 3
+## Explicitly displayed time seconds for log entries (two starting time modes)
+explicitSecs: 60
+## Times at which the time text mode changes
+timeColorShifts:
+- 5
+- 10
+## Colors for time text modes
+timeColors:
+- "#F08080"
+- "#B08080"
+- "#808080"
+## Width of the time text (<=40 && >=10)
+timeFieldWidth: 30.0
+## Width of the horizontal spacings
+spacerWidth: 8.0
+## Sample text for color configuration dialog
+colorSampleText: "Losing is fun!"
+## Max number of recent records at the time of app start that will be displayed
+previousLogEntries: 100
+
+## Decorators for log entities
+jobDecorUnderline: False
+jobDecorFgColor: "#808080"
+#jobDecorBgColor:
+matDecorUnderline: False
+matDecorFgColor: "#000000"
+matDecorBgColor: "#C0C000"
+dorfDecorUnderline: True
+#dorfDecorFgColor:
+#dorfDecorBgColor:
+
+## Show dorf's profession
+showProfession: False
+## How to show dorf's name: FullName, NameOnly, NicknameOnly. 
+## Last variant will show name if nickname is unavailable
+#showName: "FullName"
+showName: "NameOnly"
+
+## Explicit path for gamelog. Used if no command line arg path; 
+## if none then app will try to find gamelog on its own.
+## This must be a valid Haskell String 
+## (So, on Windows '\\' matches '\' for directories separation)
+#logFilePath: "e:\\DF\\PeridexisErrant's Starter Pack 0.47.05-r06\\Dwarf Fortress 0.47.05\\gamelog.txt"
+
