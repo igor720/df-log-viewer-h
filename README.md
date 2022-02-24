@@ -19,9 +19,11 @@ To build from source, follow similar
 [instructions](https://github.com/fjvallarino/monomer/blob/main/docs/tutorials/00-setup.md) 
 for Monomer
 
+Folder with binary and configaration files can be placed in 
+PeridexisErrant's Starter Pack utilities folder. 
 
-
-
+Alternatively, you can specify the path to gamelog.txt in dflv.yaml
+or on the command line of the program dflv(.exe).
 
 
 
