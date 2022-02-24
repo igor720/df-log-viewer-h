@@ -174,7 +174,7 @@ logEntryRow wenv model le = row where
     -- constructing log entry visual row
     rowContent = box_ [alignTop, alignLeft] $ hstack [
         box_ [alignRight, alignTop] (
-            label_ tmp [ellipsis] `styleBasic` timeStyle -- timeTxt
+            label_ timeTxt [ellipsis] `styleBasic` timeStyle
             ) `styleBasic` timeBoxStyle,
         box_ [mergeRequired isMergeRequired] $ hstack [
             spacer_ [width spacerW],
