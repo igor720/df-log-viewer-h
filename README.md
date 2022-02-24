@@ -13,7 +13,7 @@ in principle, it can run on Windows, Linux and macOS.
 
 ## Installation
 
-On windows you can use [this binaries](https://drive.google.com/file/d/11teNPY7dQbf0PWJwYPqMBFyVDcfpCRPL/view?usp=sharing).
+On windows you can use [this binary](https://drive.google.com/file/d/11teNPY7dQbf0PWJwYPqMBFyVDcfpCRPL/view?usp=sharing).
 
 To build from source, follow similar 
 [instructions](https://github.com/fjvallarino/monomer/blob/main/docs/tutorials/00-setup.md) 
