@@ -3,9 +3,7 @@
 Convenient (hopefully) viewer for announcements of 
 [Dwarf Fortress game](http://www.bay12games.com/dwarves/) .
 
-I did the starting bulk push ahead of time, so with the start of the war, 
-I am not sure if github.com will be accessible.
-Almost everything is ready, except for reencoding of some characters,
+At the time, almost everything is ready, except for reencoding of some characters,
 and many parsing rules are not done.
 
 The app heavily relies on Francisco Vallarino [Monomer framework](https://github.com/fjvallarino/monomer), and 
