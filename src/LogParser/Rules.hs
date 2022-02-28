@@ -15,7 +15,7 @@ module LogParser.Rules where
 
 import Control.Lens
 import Control.Applicative
-import Data.Text ( pack, Text )
+import Data.Text ( pack, unpack, Text )
 import qualified Data.List as L
 import qualified Text.Parsec as Parsec
 import Text.Parsec ( (<?>) )
@@ -67,6 +67,14 @@ pDorfProf :: Parsec.Parsec Text LogParseConfig Dorf
 pDorfProf = do
     profS <- pMany1 (Parsec.noneOf [' '])
     return $ Dorf "" Nothing profS
+
+pSomeone :: [String] -> Parsec.Parsec Text LogParseConfig Text
+pSomeone endWith = do
+    str <- Parsec.lookAhead (Parsec.many (Parsec.noneOf ['\n','\r']))
+    let ws = L.takeWhile (`notElem` endWith) $ L.words str
+        someone = L.unwords ws
+    Parsec.string someone
+    return $ pack someone
 
 -- ****************************************************************************
 
@@ -126,30 +134,130 @@ pLogEntryData t@LEDFHackAutomation = do
         & job ?~ jobS
         & warns .~ [warnA] 
 
-pLogEntryData t@LEBattleMinorHitEventMiss1 = do
+pLogEntryData t@LEBattleMiss1 = do
     Parsec.string "The "
-    dorfA <- pDorfProf
+    someoneA <- pSomeone ["attacks", "strikes"]
     Parsec.space
     warnA <- pString "attacks" <|> pString "strikes at"
     Parsec.string " the "
-    dorfB <- pDorfProf
-    Parsec.string " but "
+    someoneB <- pSomeone ["but"]
+    Parsec.space
     warnB <- pMany1 (Parsec.noneOf ['!'])
     Parsec.char '!'
     Parsec.spaces 
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ dorfA
-        & dorf2 ?~ dorfB
+        & dorf1 ?~ Dorf someoneA Nothing ""
+        & dorf2 ?~ Dorf someoneB Nothing ""
         & warns .~ [warnA, warnB] 
 
--- | Base parsing rule; place move complex and more friquent rules to top
+pLogEntryData t@LEBattleMiss2 = do
+    Parsec.string "The "
+    someoneA <- pSomeone ["misses"]
+    Parsec.space
+    warnA <- pString "misses"
+    Parsec.string " the "
+    someoneB <- pMany1 (Parsec.noneOf ['!'])
+    Parsec.char '!'
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & dorf1 ?~ Dorf someoneA Nothing ""
+        & dorf2 ?~ Dorf someoneB Nothing ""
+        & warns .~ [warnA] 
+
+pLogEntryData t@LEBattleEvent1 = do
+    Parsec.string "The "
+    someoneA <- pSomeone ["charges", "collides"]
+    Parsec.space
+    warnA' <- Parsec.char 'c'
+    warnA''<- Parsec.string "harges at" <|> Parsec.string "ollides with"
+    let warnA = pack $ warnA':warnA''
+    Parsec.string " the "
+    someoneB <- pMany1 (Parsec.noneOf ['!'])
+    Parsec.char '!'
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & dorf1 ?~ Dorf someoneA Nothing ""
+        & dorf2 ?~ Dorf someoneB Nothing ""
+        & warns .~ [warnA]
+
+pLogEntryData t@LEBattleEvent2 = do
+    Parsec.string "The "
+    someoneA <- pSomeone ["has", "is", "stands", "passes", "falls", "regains"]
+    Parsec.space
+    warnA <- Parsec.try (pString "has been stunned")            <|> Parsec.try (pString "is knocked over")
+        <|> Parsec.try (pString "has been knocked unconscious") <|> Parsec.try (pString "stands up")  
+        <|> Parsec.try (pString "passes out")                   <|> Parsec.try (pString "falls over")
+        <|> Parsec.try (pString "regains consciousness")        <|> pString "is no longer stunned"
+    Parsec.char '!' <|> Parsec.char '.'
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & dorf1 ?~ Dorf someoneA Nothing ""
+        & warns .~ [warnA]
+
+pLogEntryData t@LEBattleStrike = do
+    Parsec.string "The "
+    -- Parsec.parserTrace "label1"
+    someoneA <- pSomeone 
+        ["leaps","punches","punches","catches","snatches","stabs"
+        ,"grabs","hacks","pushes","misses","slashes","shakes"
+        ,"blocks","gores","strangles","strikes","scratches","kicks"
+        ,"attacks","lashes","slaps","bashes","bites","strikes"
+        ,"punches","releases","throws","takes","locks","bends"
+        ,"places","gouges"]
+    Parsec.space
+    -- Parsec.parserTrace "label2"
+    warnA <- Parsec.try (pString "leaps at")<|> Parsec.try (pString "punches")  <|> Parsec.try (pString "punches")
+        <|> Parsec.try (pString "catches")  <|> Parsec.try (pString "snatches at") <|> Parsec.try (pString "stabs")
+        <|> Parsec.try (pString "grabs")    <|> Parsec.try (pString "hacks")    <|> Parsec.try (pString "pushes")
+        <|> Parsec.try (pString "misses")   <|> Parsec.try (pString "slashes")  <|> Parsec.try (pString "shakes")
+        <|> Parsec.try (pString "blocks")   <|> Parsec.try (pString "gores")    <|> Parsec.try (pString "strangles")
+        <|> Parsec.try (pString "strikes")  <|> Parsec.try (pString "scratches")<|> Parsec.try (pString "kicks")
+        <|> Parsec.try (pString "attacks")  <|> Parsec.try (pString "lashes")   <|> Parsec.try (pString "slaps")
+        <|> Parsec.try (pString "bashes")   <|> Parsec.try (pString "bites")    <|> Parsec.try (pString "strikes at")
+        <|> Parsec.try (pString "punches")  <|> Parsec.try (pString "releases") <|> Parsec.try (pString "throws")
+        <|> Parsec.try (pString "takes")    <|> Parsec.try (pString "locks")    <|> Parsec.try (pString "bends")
+        <|> Parsec.try (pString "places a chokehold on")                        <|> pString "gouges"
+    -- Parsec.parserTrace "label3"
+    Parsec.string " the "
+    someoneB <- pSomeone ["in"]
+    warnB <- pMany1 (Parsec.noneOf ['\n','\r'])
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & dorf1 ?~ Dorf someoneA Nothing ""
+        & dorf2 ?~ Dorf someoneB Nothing ""
+        & warns .~ [warnA, warnB]
+
+pLogEntryData t@LESystem1 = do
+    warnA' <- pString "Loaded "
+    warnA'' <- pMany1 (Parsec.noneOf ['\r', '\n'])
+    let warnA = warnA'<>warnA''
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & warns .~ [warnA]
+
+pLogEntryData t@LESystem2 = do
+    warnA' <- Parsec.char '*'
+    warnA'' <- Parsec.many1 (Parsec.noneOf ['\r', '\n'])
+    let warnA = pack $ warnA':warnA''
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & warns .~ [warnA]
+
+
+-- | Base parsing rule; place move specific and more friquent rules to top
 baseRule :: Parsec.Parsec Text LogParseConfig LogEntryData
 baseRule = 
         Parsec.try (pLogEntryData LECraftCancel)
     <|> Parsec.try (pLogEntryData LEJobSuspensionConstructBuilding)
     <|> Parsec.try (pLogEntryData LECrimeTheft)
     <|> Parsec.try (pLogEntryData LEDFHackAutomation)
-    <|> Parsec.try (pLogEntryData LEBattleMinorHitEventMiss1)
+    <|> Parsec.try (pLogEntryData LEBattleMiss1)
+    <|> Parsec.try (pLogEntryData LEBattleMiss2)
+    <|> Parsec.try (pLogEntryData LEBattleEvent1)
+    <|> Parsec.try (pLogEntryData LEBattleEvent2)
+    <|> Parsec.try (pLogEntryData LEBattleStrike)
+    <|> Parsec.try (pLogEntryData LESystem1)
+    <|> Parsec.try (pLogEntryData LESystem2)
     <|> pLogEntryData LEDefault
 
 parseLogEntry :: LogParseConfig -> Text -> LogEntryData

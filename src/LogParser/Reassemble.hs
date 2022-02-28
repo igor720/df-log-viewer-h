@@ -12,6 +12,8 @@ Reassamble log text from components
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE RankNTypes #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use ++" #-}
 
 module LogParser.Reassemble where
 
@@ -40,7 +42,10 @@ data ReConfig = ReConfig
 
 reassemble :: ReConfig -> LogEntryData -> (LogEntryDescription, ReLogEntry)
 reassemble reCfg led = ss where
-    np n p = if T.null n then p else n<>", "<>p
+    np n p 
+        | T.null n  = p 
+        | T.null p  = n 
+        | otherwise = n<>", "<>p
     np1 n p = if T.null n then p else n
     nk nick = "`"<>nick<>"'"
     makeName dorf = case (reCfg, dorf) of
@@ -75,7 +80,7 @@ reassemble reCfg led = ss where
         LEDefault -> ("default", 
             map (LEC LECOther) $ T.words (T.concat (led^.warns))
             )
-        LECraftCancel -> ("craft: cancelation", concat
+        LECraftCancel -> ("craft: cancelation1", concat
             [ [LEC LECJob (f job)]
             , [LEC LECOther ":"]
             , [LEC LECDorf (d dorf1)]
@@ -101,12 +106,33 @@ reassemble reCfg led = ss where
             , [LEC LECOther (f job)]
             , []
             ])
-        LEBattleMinorHitEventMiss1 -> ("battle: miss", concat
+        LEBattleMiss1 -> ("battle: miss1", concat
             [ [LEC LECDorf (d dorf1)]
-            , map (LEC LECOther) $ T.words (w warns 0)
+            , map (LEC LECOther) [w warns 0]
             , [LEC LECDorf (d dorf2)]
-            , map (LEC LECOther) $ T.words (", but "<>w warns 1<>"!")
+            , map (LEC LECOther) $ T.words (", "<>w warns 1<>"!")
             ])
+        LEBattleMiss2 -> ("battle: miss2", concat
+            [ [LEC LECDorf (d dorf1)]
+            , map (LEC LECOther) [w warns 0]
+            , [LEC LECDorf (d dorf2)]
+            ])
+        LEBattleEvent1 -> ("battle: event1", concat
+            [ [LEC LECDorf (d dorf1)]
+            , map (LEC LECOther) [w warns 0]
+            , [LEC LECDorf (d dorf2)]
+            ])
+        LEBattleEvent2 -> ("battle: event2", concat
+            [ [LEC LECDorf (d dorf1)]
+            , map (LEC LECOther) [w warns 0]
+            ])
+        LEBattleStrike -> ("battle: strike", concat
+            [ [LEC LECDorf (d dorf1)]
+            , map (LEC LECOther) [w warns 0]
+            , [LEC LECDorf (d dorf2)]
+            ])
+        LESystem1 -> ("system1", map (LEC LECOther) [w warns 0])
+        LESystem2 -> ("system1", map (LEC LECOther) [w warns 0])
 
 -- *****************************************************************************
 

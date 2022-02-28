@@ -53,14 +53,63 @@ tpLogEntryData = TestList
             (Just "melt")
             (Just "47")
             ["to"]
-    , let tag=LEBattleMinorHitEventMiss1 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+    , let tag=LEBattleMiss1 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The hammerdwarf strikes at the hammerdwarf but the shot is parried by the (bismuth bronze battle axe)!" ~?= 
         LogEntryData tag 
-            (Just (Dorf {_name = "", _nickname = Nothing, _prof = "hammerdwarf"}))
-            (Just (Dorf {_name = "", _nickname = Nothing, _prof = "hammerdwarf"}))
+            (Just (Dorf {_name = "hammerdwarf", _nickname = Nothing, _prof = ""}))
+            (Just (Dorf {_name = "hammerdwarf", _nickname = Nothing, _prof = ""}))
             Nothing
             Nothing
-            ["strikes at","the shot is parried by the (bismuth bronze battle axe)"]
+            ["strikes at","but the shot is parried by the (bismuth bronze battle axe)"]
+    , let tag=LEBattleMiss2 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The axedwarf misses the hammerdwarf!" ~?= 
+        LogEntryData tag 
+            (Just (Dorf {_name = "axedwarf", _nickname = Nothing, _prof = ""}))
+            (Just (Dorf {_name = "hammerdwarf", _nickname = Nothing, _prof = ""}))
+            Nothing
+            Nothing
+            ["misses"]
+    , let tag=LEBattleEvent1 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The stray war dog charges at the weasel!" ~?= 
+        LogEntryData tag 
+            (Just (Dorf {_name = "stray war dog", _nickname = Nothing, _prof = ""}))
+            (Just (Dorf {_name = "weasel", _nickname = Nothing, _prof = ""}))
+            Nothing
+            Nothing
+            ["charges at"]
+    , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The hammerdwarf is knocked over!" ~?= 
+        LogEntryData tag 
+            (Just (Dorf {_name = "hammerdwarf", _nickname = Nothing, _prof = ""}))
+            Nothing
+            Nothing
+            Nothing
+            ["is knocked over"]
+    , let tag=LEBattleStrike in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The macedwarf bashes the axedwarf in the left upper arm with her (+®copper maceЇ+), lightly tapping the target!" ~?= 
+        LogEntryData tag 
+            (Just (Dorf {_name = "macedwarf", _nickname = Nothing, _prof = ""}))
+            (Just (Dorf {_name = "axedwarf", _nickname = Nothing, _prof = ""}))
+            Nothing
+            Nothing
+            ["bashes"," in the left upper arm with her (+\174copper mace\1031+), lightly tapping the target!"]
+    , let tag=LESystem1 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Loaded region1, Xemomon (The Mythical Realms) at coordinates (113,93)" ~?= 
+        LogEntryData tag 
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            ["Loaded region1, Xemomon (The Mythical Realms) at coordinates (113,93)"]
+    , let tag=LESystem2 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "*** STARTING NEW GAME ***" ~?= 
+        LogEntryData tag 
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            ["*** STARTING NEW GAME ***"]
+
 
 
     ] where

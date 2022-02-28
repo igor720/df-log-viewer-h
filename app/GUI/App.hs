@@ -10,6 +10,8 @@ App creation and functionality
 -}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use maybe" #-}
 
 module GUI.App where
 
@@ -20,7 +22,7 @@ import Control.Lens
 import Control.Monad.Loops ( iterateM_, unfoldM )
 import Control.Concurrent ( threadDelay )
 import Data.Default ( Default(def) )
-import Data.Maybe ( fromMaybe, isJust )
+import Data.Maybe ( fromMaybe, isJust, listToMaybe )
 import Data.Text (Text, pack)
 import TextShow ( TextShow(showt) )
 import Data.Time ( UTCTime, diffUTCTime, getCurrentTime )
@@ -154,7 +156,9 @@ logEntryRow wenv model le = row where
                 LECOther -> label txt `styleBasic` otherStyle
             )
         ) txtComps ) where
-        txtColor = (model^. logColorDistrib) M.! (le^. leData.tag)
+        txtColor = fromMaybe
+            white
+            (M.lookup (le^. leData.tag) (model^. logColorDistrib))
         jobStyle = [ textUnderline | cfg^. acJobDecorUnderline ]
             ++ [ textColor (fromMaybe txtColor (cfg^. acJobDecorFgColor))
                , bgColor (fromMaybe logWindowBgColor (cfg^. acJobDecorBgColor))
@@ -196,7 +200,9 @@ logEntryRow wenv model le = row where
 logScreen :: AppWenv -> AppModel -> AppNode
 logScreen wenv model = widgetTree where
     ws = model^.mainConfig.acLogWindows
-    getWindow le = (model^.logWindowDistrib) M.! (le^.leData.tag)
+    getWindow le = fromMaybe
+        4
+        (M.lookup (le^.leData.tag) (model^.logWindowDistrib))
     isMergeReqired _ newModel = newModel^.logMergeMode/=LMNo
     logWindow key w = vscroll_ [scrollFollowFocus, barWidth 10] 
         (vstack (logEntryRow wenv model <$> reverse ( 
@@ -441,8 +447,10 @@ readColorConfig path = do
     logColorDistrib <- catch ( 
         readFile (path </> colorConfigFile)
         ) (\(e::SomeException) -> throw ExReadColorConfig)
-    return $ read logColorDistrib
-
+    return $ fromMaybe 
+        (throw ExReadColorConfig)
+        (fmap fst . listToMaybe . reads $ logColorDistrib)
+        
 saveWindowConfig :: FilePath -> LogWindowDistrib -> IO AppEvent
 saveWindowConfig path logWindowDistrib = do
     writeFile (path </> windowConfigFile) (show logWindowDistrib)
@@ -454,7 +462,9 @@ readWindowConfig path = do
     logWindowDistrib <- catch ( 
         readFile (path </> windowConfigFile)
         ) (\(e::SomeException) -> throw ExReadWindowConfig)
-    return $ read logWindowDistrib
+    return $ fromMaybe 
+        (throw ExReadWindowConfig)
+        (fmap fst . listToMaybe . reads $ logWindowDistrib)
 
 -- *****************************************************************************
 
