@@ -24,5 +24,12 @@ Alternatively, you can specify the path to gamelog.txt in dflv.yaml
 or on the command line of the program dflv(.exe).
 
 
+## Fonts
 
+You can specifiy your own fonts; place them in assets folder,
+and specify fonts' filenames in dflv.yaml. By default, we use 
+[Roboto](https://fonts.google.com/specimen/Roboto) fonts family,
+licensed under the [Apache license](http://www.apache.org/licenses/LICENSE-2.0).
+
+Correctness of word wrapping in log windows for other fonts is not tested.
 
