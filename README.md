@@ -3,9 +3,7 @@
 Convenient (hopefully) viewer for announcements of 
 [Dwarf Fortress game](http://www.bay12games.com/dwarves/) .
 
-I did the starting bulk push ahead of time, so with the start of the war, 
-I am not sure if github.com will be accessible.
-Almost everything is ready, except for reencoding of some characters,
+At the time, almost everything is ready, except for reencoding of some characters,
 and many parsing rules are not done.
 
 The app heavily relies on Francisco Vallarino [Monomer framework](https://github.com/fjvallarino/monomer), and 
@@ -13,7 +11,7 @@ in principle, it can run on Windows, Linux and macOS.
 
 ## Installation
 
-On windows you can use [this binaries](https://drive.google.com/file/d/11teNPY7dQbf0PWJwYPqMBFyVDcfpCRPL/view?usp=sharing).
+On windows you can use [this binary](https://drive.google.com/file/d/11teNPY7dQbf0PWJwYPqMBFyVDcfpCRPL/view?usp=sharing).
 
 To build from source, follow similar 
 [instructions](https://github.com/fjvallarino/monomer/blob/main/docs/tutorials/00-setup.md) 
