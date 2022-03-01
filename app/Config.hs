@@ -151,15 +151,15 @@ instance ToYAML MainConfig where
         ]
 
 writeMainConfig :: FilePath -> MainConfig -> IO ()
-writeMainConfig fname cfg = do
-    BS.L.writeFile fname (encode1 cfg)
+writeMainConfig path cfg = do
+    BS.L.writeFile path (encode1 cfg)
         `catch` \(e::SomeException) -> throw ExSaveMainConfig
 
 readMainConfig :: FilePath -> IO MainConfig
-readMainConfig fname = do
+readMainConfig path = do
     raw <- catch (
-        BS.L.readFile fname
-        ) (\(e::SomeException) -> throw ExReadMainConfig)
+        BS.L.readFile path
+        ) (\(e::SomeException) -> throw (ExReadMainConfig $ show e))
     case decode1 raw of
         Left (loc, emsg)    -> throw $ 
             ExDecodeMainConfig (prettyPosWithSource loc raw "") emsg

@@ -10,7 +10,7 @@ Main application module
 -}
 module Main where
 
-import System.FilePath ( takeDirectory )
+import System.FilePath ( takeDirectory, (</>) )
 import System.Environment ( getArgs, getExecutablePath )
 import System.Exit ( exitSuccess )
 import Control.Exception
@@ -58,12 +58,12 @@ main = do
     (pathArg, logFile) <- case argsParsed of
         Just as -> return as
         Nothing -> putStrLn commandLineHelp >> exitSuccess
-    check <- checkMainConfig <$> readMainConfig mainConfigFile
+    pathExe <- takeDirectory <$> getExecutablePath
+    let path = fromMaybe pathExe pathArg
+    check <- checkMainConfig <$> readMainConfig (path </> mainConfigFile)
     cfg <- case check of
         Left msg    -> throw $ ExConfigCheck msg
         Right cfg'  -> return cfg'
-    pathExe <- takeDirectory <$> getExecutablePath
-    let path = fromMaybe pathExe pathArg
     logFileName <- getLogFileName path logFile (unpack <$> _acLogFilePath cfg)
     aws <- readAppWindowSize path cfg
     gui path cfg aws logFileName

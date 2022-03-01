@@ -9,6 +9,8 @@ Portability : non-portable
 Application exceptions definition
 -}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use newtype instead of data" #-}
 
 module AppException where
 
@@ -147,10 +149,10 @@ instance Exception ExSaveMainConfig where
     toException   = appExceptionToException
     fromException = appExceptionFromException
 
-data ExReadMainConfig = ExReadMainConfig
+data ExReadMainConfig = ExReadMainConfig String
 
 instance Show ExReadMainConfig where
-    show ExReadMainConfig = "unable to read main configuration"
+    show (ExReadMainConfig s) = "unable to read main configuration: "++s
 
 instance Exception ExReadMainConfig where
     toException   = appExceptionToException
@@ -159,7 +161,8 @@ instance Exception ExReadMainConfig where
 data ExDecodeMainConfig = ExDecodeMainConfig String String
 
 instance Show ExDecodeMainConfig where
-    show (ExDecodeMainConfig s0 s1) = "unable to decode main configuration: "++s0++": "++s1
+    show (ExDecodeMainConfig s0 s1) = "unable to decode main configuration: "
+                                        ++s0++": "++s1
 
 instance Exception ExDecodeMainConfig where
     toException   = appExceptionToException

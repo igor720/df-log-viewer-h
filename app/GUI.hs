@@ -42,9 +42,9 @@ gui path mainConfig aws logFilePath = do
             appWindowState (MainWindowNormal aws),
             appTheme (customDarkTheme mainConfig),
             appFontDef "Regular" $ T.pack $ 
-                fontsPath </> T.unpack (mainConfig^.acRegularFont),
+                path </> fontsPath </> T.unpack (mainConfig^.acRegularFont),
             appFontDef "Bold" $ T.pack $ 
-                fontsPath </> T.unpack (mainConfig^.acEmphasizeFont),
+                path </> fontsPath </> T.unpack (mainConfig^.acEmphasizeFont),
             appInitEvent AppInit,
             appResizeEvent AppResize
             ]
