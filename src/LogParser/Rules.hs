@@ -16,6 +16,7 @@ module LogParser.Rules where
 import Control.Lens
 import Control.Applicative
 import Data.Text ( pack, unpack, Text )
+import qualified Data.Text as T
 import qualified Data.List as L
 import qualified Text.Parsec as Parsec
 import Text.Parsec ( (<?>) )
@@ -59,14 +60,23 @@ pDorfFull = do
         ) nicknameStartMb
     nameS <- pMany1 (Parsec.noneOf [',','\n'])
     Parsec.string ", "
-    profS <- pGameEntity
-    let dorf = Dorf nameS nickname profS
-    return dorf
+    Dorf nameS nickname <$> pGameEntity
+    -- profS <- pGameEntity
+    -- return $ Dorf nameS nickname profS
 
-pDorfProf :: Parsec.Parsec Text LogParseConfig Dorf
-pDorfProf = do
-    profS <- pMany1 (Parsec.noneOf [' '])
-    return $ Dorf "" Nothing profS
+pDorfAny :: [String] -> Parsec.Parsec Text LogParseConfig Dorf
+pDorfAny endWith = do
+    Parsec.try pDorfFull
+        <|> ( do
+            nameS <- pSomeone endWith
+            Parsec.char ' '
+            return $ Dorf nameS Nothing ""
+            )
+
+-- pDorfProf :: Parsec.Parsec Text LogParseConfig Dorf
+-- pDorfProf = do
+--     profS <- pMany1 (Parsec.noneOf [' '])
+--     return $ Dorf "" Nothing profS
 
 pSomeone :: [String] -> Parsec.Parsec Text LogParseConfig Text
 pSomeone endWith = do
@@ -75,6 +85,9 @@ pSomeone endWith = do
         someone = L.unwords ws
     Parsec.string someone
     return $ pack someone
+
+pSomething :: [String] -> Parsec.Parsec Text LogParseConfig Text
+pSomething = pSomeone
 
 -- ****************************************************************************
 
@@ -86,9 +99,8 @@ pLogEntryData LEDefault = do
     --Parsec.parserTrace "label1"
     --Parsec.endOfLine
     return $ newLogEntryData & warns .~ [warn] 
-
 pLogEntryData t@LECraftCancel = do
-    dorf <- pDorfFull
+    dorfA <- pDorfFull
     Parsec.string "cancels "
     jobS <- pMany1 (Parsec.noneOf [':'])
     Parsec.string ": Needs "
@@ -96,23 +108,82 @@ pLogEntryData t@LECraftCancel = do
     Parsec.char '.'
     Parsec.spaces 
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ dorf
+        & dorf1 ?~ dorfA
         & job ?~ jobS
         & mat ?~ matS
-
-pLogEntryData t@LEJobSuspensionConstructBuilding = do
+pLogEntryData t@LEJobSuspensionBuilding = do
     dorfA <- pDorfFull
     Parsec.string "cancels "
-    jobS <- pack <$> Parsec.string "Construct Building"
+    jobS <- pString "Construct Building"
     Parsec.string ": "
-    warn <- pMany1 (Parsec.noneOf ['.'])
+    warnA <- pMany1 (Parsec.noneOf ['.'])
     Parsec.char '.'
     Parsec.spaces 
     return $ newLogEntryData & tag .~ t
         & dorf1 ?~ dorfA
         & job ?~ jobS
-        & warns .~ [warn] 
-
+        & warns .~ [warnA] 
+pLogEntryData t@LEJobSuspensionLinkage = do
+    Parsec.string "The dwarves suspended a "
+    jobS <- pString "linkage from"
+    Parsec.space
+    matS <- pMany1 (Parsec.noneOf ['.'])
+    Parsec.char '.'
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & job ?~ jobS
+        & mat ?~ matS
+pLogEntryData t@LEJobSuspensionConstruction = do
+    Parsec.string "The dwarves suspended the "
+    jobS <- pString "construction"
+    Parsec.string " of "
+    matS <- pMany1 (Parsec.noneOf ['.'])
+    Parsec.char '.'
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & job ?~ jobS
+        & mat ?~ matS
+pLogEntryData t@LEJobCancel = do
+    dorfA <- pDorfFull
+    Parsec.string "cancels "
+    jobS <- pMany1 (Parsec.noneOf [':'])
+    Parsec.string ": "
+    warnA <- pMany1 (Parsec.noneOf ['.'])
+    Parsec.char '.'
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & dorf1 ?~ dorfA
+        & job ?~ jobS
+        & warns .~ [warnA] 
+pLogEntryData t@LEProductionCompleted = do
+    jobS <- pMany1 (Parsec.noneOf ['('])
+    Parsec.char '('
+    matS <- pMany1 (Parsec.oneOf "0123456789")
+    Parsec.char ')'
+    Parsec.string " has been completed."
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & job ?~ T.init jobS
+        & mat ?~ matS
+pLogEntryData t@LEMasterpieceImproved = do
+    dorfA <- pDorfAny ["has"]
+    Parsec.string "has improved a "
+    matS <- pSomething ["masterfully!"]
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & dorf1 ?~ dorfA
+        & mat ?~ matS
+pLogEntryData t@LEDeathFound = do
+    dorfA <- pDorfFull
+    Parsec.string "has been found dead"
+    warnA <- Parsec.try 
+        (Parsec.lookAhead (Parsec.char '.') >> return "")
+        <|> (Parsec.char ',' >> Parsec.space >> pMany1 (Parsec.noneOf ['.']))
+    Parsec.char '.'
+    Parsec.spaces
+    return $ newLogEntryData & tag .~ t
+        & dorf1 ?~ dorfA
+        & warns .~ [warnA]
 pLogEntryData t@LECrimeTheft = do
     matS <- pGameEntity
     warnA <- pString "is missing from its proper place!"
@@ -120,7 +191,6 @@ pLogEntryData t@LECrimeTheft = do
     return $ newLogEntryData & tag .~ t
         & mat ?~ matS
         & warns .~ [warnA] 
-
 pLogEntryData t@LEDFHackAutomation = do
     Parsec.string "Marked "
     numS <- pMany1 (Parsec.oneOf "0123456789")
@@ -133,7 +203,6 @@ pLogEntryData t@LEDFHackAutomation = do
         & mat ?~ numS
         & job ?~ jobS
         & warns .~ [warnA] 
-
 pLogEntryData t@LEBattleMiss1 = do
     Parsec.string "The "
     someoneA <- pSomeone ["attacks", "strikes"]
@@ -149,7 +218,6 @@ pLogEntryData t@LEBattleMiss1 = do
         & dorf1 ?~ Dorf someoneA Nothing ""
         & dorf2 ?~ Dorf someoneB Nothing ""
         & warns .~ [warnA, warnB] 
-
 pLogEntryData t@LEBattleMiss2 = do
     Parsec.string "The "
     someoneA <- pSomeone ["misses"]
@@ -163,7 +231,6 @@ pLogEntryData t@LEBattleMiss2 = do
         & dorf1 ?~ Dorf someoneA Nothing ""
         & dorf2 ?~ Dorf someoneB Nothing ""
         & warns .~ [warnA] 
-
 pLogEntryData t@LEBattleEvent1 = do
     Parsec.string "The "
     someoneA <- pSomeone ["charges", "collides"]
@@ -179,7 +246,6 @@ pLogEntryData t@LEBattleEvent1 = do
         & dorf1 ?~ Dorf someoneA Nothing ""
         & dorf2 ?~ Dorf someoneB Nothing ""
         & warns .~ [warnA]
-
 pLogEntryData t@LEBattleEvent2 = do
     Parsec.string "The "
     someoneA <- pSomeone ["has", "is", "stands", "passes", "falls", "regains"]
@@ -193,7 +259,6 @@ pLogEntryData t@LEBattleEvent2 = do
     return $ newLogEntryData & tag .~ t
         & dorf1 ?~ Dorf someoneA Nothing ""
         & warns .~ [warnA]
-
 pLogEntryData t@LEBattleStrike = do
     Parsec.string "The "
     -- Parsec.parserTrace "label1"
@@ -226,7 +291,48 @@ pLogEntryData t@LEBattleStrike = do
         & dorf1 ?~ Dorf someoneA Nothing ""
         & dorf2 ?~ Dorf someoneB Nothing ""
         & warns .~ [warnA, warnB]
-
+pLogEntryData t@LEAnimalGrown = do
+    Parsec.string "An animal has grown to become a "
+    matS <- pMany1 (Parsec.noneOf ['.'])
+    Parsec.char '.'
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & mat ?~ matS
+pLogEntryData t@LEWeather = do
+    warnA <- Parsec.try (pString "It has started raining.") 
+        <|> Parsec.try ( do
+                warnA' <- Parsec.string "It is raining "
+                warnA'' <- Parsec.many1 (Parsec.noneOf ['.', '!'])
+                warnA''' <- Parsec.oneOf ['.', '!']
+                return $ pack $ warnA'<>warnA''<>[warnA''']
+                )
+        <|> Parsec.try (do 
+                warnA' <- Parsec.string "A cloud of "
+                warnA'' <- unpack <$> pSomething ["has"]
+                warnA''' <- Parsec.string " has drifted nearby!"
+                return $ pack $ warnA'<>warnA''<>warnA'''
+                )
+        <|> Parsec.try (pString "A snow storm has come.")
+        <|> pString "The weather has cleared."
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & warns .~ [warnA]
+pLogEntryData t@LESeason = do
+    warnA <- Parsec.try ( do
+            warnA' <- Parsec.many1 (Parsec.noneOf [' '])
+            warnA'' <- Parsec.string " has arrived"
+            warnA''' <- Parsec.many (Parsec.noneOf ['\r', '\n'])
+            return $ pack $ warnA'<>warnA''<>warnA'''
+            )
+        <|> Parsec.try (pString "It is now summer.")
+        <|> Parsec.try (pString "Autumn has come.")
+        <|> Parsec.try (pString "Winter is upon you.")
+        <|> Parsec.try (pString "The wet season has arrived!")
+        <|> Parsec.try (pString "The dry season has come")
+        <|> pString "Nothing has arrived on the calendar."
+    Parsec.spaces 
+    return $ newLogEntryData & tag .~ t
+        & warns .~ [warnA]
 pLogEntryData t@LESystem1 = do
     warnA' <- pString "Loaded "
     warnA'' <- pMany1 (Parsec.noneOf ['\r', '\n'])
@@ -234,7 +340,6 @@ pLogEntryData t@LESystem1 = do
     Parsec.spaces 
     return $ newLogEntryData & tag .~ t
         & warns .~ [warnA]
-
 pLogEntryData t@LESystem2 = do
     warnA' <- Parsec.char '*'
     warnA'' <- Parsec.many1 (Parsec.noneOf ['\r', '\n'])
@@ -243,12 +348,17 @@ pLogEntryData t@LESystem2 = do
     return $ newLogEntryData & tag .~ t
         & warns .~ [warnA]
 
-
 -- | Base parsing rule; place move specific and more friquent rules to top
 baseRule :: Parsec.Parsec Text LogParseConfig LogEntryData
 baseRule = 
         Parsec.try (pLogEntryData LECraftCancel)
-    <|> Parsec.try (pLogEntryData LEJobSuspensionConstructBuilding)
+    <|> Parsec.try (pLogEntryData LEJobSuspensionBuilding)
+    <|> Parsec.try (pLogEntryData LEJobSuspensionLinkage)
+    <|> Parsec.try (pLogEntryData LEJobSuspensionConstruction)
+    <|> Parsec.try (pLogEntryData LEJobCancel)
+    <|> Parsec.try (pLogEntryData LEProductionCompleted)
+    <|> Parsec.try (pLogEntryData LEMasterpieceImproved)
+    <|> Parsec.try (pLogEntryData LEDeathFound)
     <|> Parsec.try (pLogEntryData LECrimeTheft)
     <|> Parsec.try (pLogEntryData LEDFHackAutomation)
     <|> Parsec.try (pLogEntryData LEBattleMiss1)
@@ -256,6 +366,9 @@ baseRule =
     <|> Parsec.try (pLogEntryData LEBattleEvent1)
     <|> Parsec.try (pLogEntryData LEBattleEvent2)
     <|> Parsec.try (pLogEntryData LEBattleStrike)
+    <|> Parsec.try (pLogEntryData LEAnimalGrown)
+    <|> Parsec.try (pLogEntryData LEWeather)
+    <|> Parsec.try (pLogEntryData LESeason)
     <|> Parsec.try (pLogEntryData LESystem1)
     <|> Parsec.try (pLogEntryData LESystem2)
     <|> pLogEntryData LEDefault

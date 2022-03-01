@@ -94,10 +94,11 @@ instance Exception ExSaveColorConfig where
     toException   = appExceptionToException
     fromException = appExceptionFromException
 
-data ExReadColorConfig = ExReadColorConfig
+data ExReadColorConfig = ExReadColorConfig String
 
 instance Show ExReadColorConfig where
-    show ExReadColorConfig = "unable to read color configuration"
+    show (ExReadColorConfig s) = "unable to read color configuration: "
+                                    ++s
 
 instance Exception ExReadColorConfig where
     toException   = appExceptionToException
@@ -112,10 +113,11 @@ instance Exception ExSaveWindowConfig where
     toException   = appExceptionToException
     fromException = appExceptionFromException
 
-data ExReadWindowConfig = ExReadWindowConfig
+data ExReadWindowConfig = ExReadWindowConfig String
 
 instance Show ExReadWindowConfig where
-    show ExReadWindowConfig = "unable to read log windows configuration"
+    show (ExReadWindowConfig s) = "unable to read log windows configuration: "
+                                ++s
 
 instance Exception ExReadWindowConfig where
     toException   = appExceptionToException

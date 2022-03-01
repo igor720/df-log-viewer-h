@@ -72,11 +72,10 @@ reassemble reCfg led = ss where
     w :: Lens' LogEntryData [Text] -> Int -> Text
     w l i = res where
         res = if T.null str
-            then "<missed>"
+            then ""
             else str
         str = led^. l.ix i
     ss = case led^. tag of
-
         LEDefault -> ("default", 
             map (LEC LECOther) $ T.words (T.concat (led^.warns))
             )
@@ -87,11 +86,38 @@ reassemble reCfg led = ss where
             , [LEC LECOther "needs"]
             , [LEC LECMat (f mat)]
             ])
-        LEJobSuspensionConstructBuilding -> ("construction: suspension", concat
+        LEJobSuspensionBuilding -> ("suspension: building", concat
             [ map (LEC LECOther) $ T.words (w warns 0)
             , [LEC LECOther ":"]
             , [LEC LECDorf (d dorf1)]
-            , []
+            ])
+        LEJobSuspensionLinkage -> ("suspension: linkage", concat
+            [ map (LEC LECOther) ["from"]
+            , [LEC LECMat (f mat)]
+            ])
+        LEJobSuspensionConstruction -> ("suspension: construction",
+            [ LEC LECMat (f mat)]
+            )
+        LEJobCancel -> ("job: cancel", concat
+            [ [LEC LECJob (f job)]
+            , [LEC LECOther ":"]
+            , [LEC LECDorf (d dorf1)]
+            , [LEC LECOther (w warns 0)]
+            ])
+        LEProductionCompleted -> ("production: completed", concat
+            [ [LEC LECJob (f job)]
+            , [LEC LECOther " ("]
+            , [LEC LECMat (f mat)]
+            , [LEC LECOther ") "]
+            ])
+        LEMasterpieceImproved -> ("masterpiece: improved", concat
+            [ [LEC LECMat (f mat)]
+            , [LEC LECOther "by"]
+            , [LEC LECDorf (d dorf1)]
+            ])
+        LEDeathFound -> ("death: found", concat
+            [ [LEC LECDorf (d dorf1)]
+            , [LEC LECOther (w warns 0)]
             ])
         LECrimeTheft -> ("crime: theft", concat
             [ [LEC LECMat (f mat)]
@@ -131,6 +157,11 @@ reassemble reCfg led = ss where
             , map (LEC LECOther) [w warns 0]
             , [LEC LECDorf (d dorf2)]
             ])
+        LEAnimalGrown -> ("animal: grown", 
+            [LEC LECMat (f mat)]
+            )
+        LEWeather -> ("weather", map (LEC LECOther) [w warns 0])
+        LESeason -> ("season", map (LEC LECOther) [w warns 0])
         LESystem1 -> ("system1", map (LEC LECOther) [w warns 0])
         LESystem2 -> ("system2", map (LEC LECOther) [w warns 0])
 

@@ -20,12 +20,19 @@ data ShowNameType = SNFullName | SNNameOnly | SNNicknameOnly
 data LogEntryTag = 
         LEDefault 
         | LECraftCancel 
-        | LEJobSuspensionConstructBuilding
+        | LEJobSuspensionBuilding | LEJobSuspensionLinkage | LEJobSuspensionConstruction 
+        | LEJobCancel
+        | LEProductionCompleted
+        | LEMasterpieceImproved
+        | LEDeathFound
         | LECrimeTheft
         | LEDFHackAutomation 
         | LEBattleMiss1 | LEBattleMiss2
         | LEBattleEvent1 | LEBattleEvent2
         | LEBattleStrike
+        | LEAnimalGrown
+        | LEWeather
+        | LESeason
         | LESystem1 | LESystem2
     deriving (Show, Eq, Enum, Ord, Read, Bounded)
 

@@ -115,7 +115,7 @@ getLogEntryTextComponents getTextWidth introW logWindowW reas = txtComps where
                 w = getTextWidth txt
                 l = T.length txt
                 hComps
-                    | l==0    = throw $ ExEmptyComponent reas
+                    | l==0    = (hComps0, w0) : cws' -- throw $ ExEmptyComponent reas
                     | l==1    = (comp:hComps0, w+w0) : cws' -- punctuation mark
                     | spaceW+w+w0<=logWindowW =
                                 (comp:spaceComp:hComps0, w+spaceW+w0) : cws'
@@ -446,9 +446,9 @@ readColorConfig :: FilePath -> IO LogColorDistrib
 readColorConfig path = do
     logColorDistrib <- catch ( 
         readFile (path </> colorConfigFile)
-        ) (\(e::SomeException) -> throw ExReadColorConfig)
+        ) (\(e::SomeException) -> throw (ExReadColorConfig $ show e))
     return $ fromMaybe 
-        (throw ExReadColorConfig)
+        (throw (ExReadColorConfig $ show "can't parse"))
         (fmap fst . listToMaybe . reads $ logColorDistrib)
         
 saveWindowConfig :: FilePath -> LogWindowDistrib -> IO AppEvent
@@ -461,9 +461,9 @@ readWindowConfig :: FilePath -> IO LogWindowDistrib
 readWindowConfig path = do
     logWindowDistrib <- catch ( 
         readFile (path </> windowConfigFile)
-        ) (\(e::SomeException) -> throw ExReadWindowConfig)
+        ) (\(e::SomeException) -> throw (ExReadWindowConfig $ show e))
     return $ fromMaybe 
-        (throw ExReadWindowConfig)
+        (throw (ExReadWindowConfig $ show "can't parse"))
         (fmap fst . listToMaybe . reads $ logWindowDistrib)
 
 -- *****************************************************************************
