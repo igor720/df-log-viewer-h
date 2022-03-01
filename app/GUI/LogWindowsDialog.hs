@@ -27,6 +27,7 @@ import GUI.Model.App
 {-# INLINE listingBgColor #-}
 {-# INLINE listingHoverColor #-}
 {-# INLINE textDragColor #-}
+{-# INLINE defaultLogWindow #-}
 
 listingBgColor :: Color
 listingBgColor      = rgbHex "#80B6FD"
@@ -36,6 +37,9 @@ listingHoverColor   = rgbHex "#A0D8FD"
 
 textDragColor :: Color
 textDragColor       = rgbHex "#E0FFFF"
+
+defaultLogWindow :: LogWindow
+defaultLogWindow    = 4
 
 buildLogWindowsDialogComp :: WidgetEnv LWDialogModel LWDialogEvent 
     -> LWDialogModel -> WidgetNode LWDialogModel LWDialogEvent
@@ -93,5 +97,5 @@ logWindowsDialogWidget field =
 defaultLogWindowDistrib :: LogWindowDistrib
 defaultLogWindowDistrib = distr where
     tags = enumFrom minBound :: [LogEntryTag]
-    distr = M.fromList $ zip tags (repeat 1)    -- all to window 1 by default
+    distr = M.fromList $ zip tags (repeat defaultLogWindow)
 

@@ -24,9 +24,13 @@ import GUI.Model.ColorsDialog
 import GUI.Model.App
 
 {-# INLINE logWindowBgColor #-}
+{-# INLINE defaultColor #-}
 
 logWindowBgColor :: Color
 logWindowBgColor = black
+
+defaultColor :: Color
+defaultColor = white
 
 buildColorsDialogComp :: Text -> WidgetEnv CDialogModel CDialogEvent 
     -> CDialogModel -> WidgetNode CDialogModel CDialogEvent
@@ -80,6 +84,6 @@ colorsDialogWidget field colorSampleText =
 defaultColorDistrib :: LogColorDistrib
 defaultColorDistrib = distr where
     tags = enumFrom minBound :: [LogEntryTag]
-    distr = M.fromList $ zip tags (repeat white)-- all are white by default
+    distr = M.fromList $ zip tags (repeat defaultColor)
 
 

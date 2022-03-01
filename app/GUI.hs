@@ -20,6 +20,7 @@ import qualified Data.Text as T
 import qualified Data.Map as M
 import Monomer
 import qualified Monomer.Lens as L
+
 import LogParser.LogEntry
 import LogParser.Reassemble
 import Config
@@ -27,7 +28,8 @@ import GUI.Model.ColorsDialog
 import GUI.Model.LogWindowsDialog
 import GUI.Model.App
 import GUI.App
-
+import GUI.ColorsDialog
+import GUI.LogWindowsDialog
 
 -- | Starts application GUI
 gui :: FilePath -> MainConfig -> AppWindowSize -> FilePath -> IO ()
@@ -62,8 +64,8 @@ gui path mainConfig aws logFilePath = do
                 time0                   -- current time (app start)
                 0                       -- start log entry Id
                 initXRecords            -- init log entries
-                logColorDistrib 
-                logWindowDistrib
+                (M.union logColorDistrib defaultColorDistrib)
+                (M.union logWindowDistrib defaultLogWindowDistrib)
                 colorsModel 
                 windowsModel 
                 logFilePath

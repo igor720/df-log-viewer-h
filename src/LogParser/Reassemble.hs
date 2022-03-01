@@ -132,7 +132,7 @@ reassemble reCfg led = ss where
             , [LEC LECDorf (d dorf2)]
             ])
         LESystem1 -> ("system1", map (LEC LECOther) [w warns 0])
-        LESystem2 -> ("system1", map (LEC LECOther) [w warns 0])
+        LESystem2 -> ("system2", map (LEC LECOther) [w warns 0])
 
 -- *****************************************************************************
 
