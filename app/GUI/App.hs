@@ -157,7 +157,7 @@ logEntryRow wenv model le = row where
             )
         ) txtComps ) where
         txtColor = fromMaybe
-            white
+            defaultColor
             (M.lookup (le^. leData.tag) (model^. logColorDistrib))
         jobStyle = [ textUnderline | cfg^. acJobDecorUnderline ]
             ++ [ textColor (fromMaybe txtColor (cfg^. acJobDecorFgColor))
@@ -201,7 +201,7 @@ logScreen :: AppWenv -> AppModel -> AppNode
 logScreen wenv model = widgetTree where
     ws = model^.mainConfig.acLogWindows
     getWindow le = fromMaybe
-        4
+        defaultLogWindow
         (M.lookup (le^.leData.tag) (model^.logWindowDistrib))
     isMergeReqired _ newModel = newModel^.logMergeMode/=LMNo
     logWindow key w = vscroll_ [scrollFollowFocus, barWidth 10] 
