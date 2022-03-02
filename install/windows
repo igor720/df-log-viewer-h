@@ -1,1 +1,1 @@
-fromList [(LEDefault,3),(LECraftCancel,1),(LEJobSuspensionBuilding,1),(LECrimeTheft,1),(LEDFHackAutomation,1),(LEBattleMiss1,1),(LEBattleMiss2,0),(LEBattleEvent1,0),(LEBattleEvent2,0),(LEBattleStrike,0),(LESystem1,0),(LESystem2,0)]
+fromList [(LEDefault,3),(LECraftCancel,1),(LEJobSuspensionBuilding,1),(LECrimeTheft,1),(LEDFHackAutomation,1),(LEBattleBlock,1),(LEBattleMiss,0),(LEBattleEvent1,0),(LEBattleEvent2,0),(LEBattleStrike,0),(LESystem,0)]

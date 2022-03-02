@@ -27,13 +27,13 @@ data LogEntryTag =
         | LEDeathFound
         | LECrimeTheft
         | LEDFHackAutomation 
-        | LEBattleMiss1 | LEBattleMiss2
+        | LEBattleBlock | LEBattleMiss
         | LEBattleEvent1 | LEBattleEvent2
         | LEBattleStrike
         | LEAnimalGrown
         | LEWeather
         | LESeason
-        | LESystem1 | LESystem2
+        | LESystem
     deriving (Show, Eq, Enum, Ord, Read, Bounded)
 
 $(deriveTextShow ''LogEntryTag)

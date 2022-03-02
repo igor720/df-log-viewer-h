@@ -132,13 +132,13 @@ reassemble reCfg led = ss where
             , [LEC LECOther (f job)]
             , []
             ])
-        LEBattleMiss1 -> ("battle: miss1", concat
+        LEBattleBlock -> ("battle: block", concat
             [ [LEC LECDorf (d dorf1)]
             , map (LEC LECOther) [w warns 0]
             , [LEC LECDorf (d dorf2)]
             , map (LEC LECOther) $ T.words (", "<>w warns 1<>"!")
             ])
-        LEBattleMiss2 -> ("battle: miss2", concat
+        LEBattleMiss -> ("battle: miss", concat
             [ [LEC LECDorf (d dorf1)]
             , map (LEC LECOther) [w warns 0]
             , [LEC LECDorf (d dorf2)]
@@ -162,8 +162,7 @@ reassemble reCfg led = ss where
             )
         LEWeather -> ("weather", map (LEC LECOther) [w warns 0])
         LESeason -> ("season", map (LEC LECOther) [w warns 0])
-        LESystem1 -> ("system1", map (LEC LECOther) [w warns 0])
-        LESystem2 -> ("system2", map (LEC LECOther) [w warns 0])
+        LESystem -> ("system", map (LEC LECOther) [w warns 0])
 
 -- *****************************************************************************
 
