@@ -141,6 +141,22 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["bashes","in the left upper arm with her (+\174copper mace\1031+), lightly tapping the target!"]
+    , let tag=LEGore in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "An artery has been opened by the attack and a tendon has been torn!" ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["An artery has been opened by the attack and a tendon has been torn!"]
+    , let tag=LEGore in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "A ligament in the left wrist has been torn and a tendon has been torn!" ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["A ligament in the left wrist has been torn and a tendon has been torn!"]
     , let tag=LEAnimalGrown in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "An animal has grown to become a Stray Cat." ~?= 
             LogEntryData tag 

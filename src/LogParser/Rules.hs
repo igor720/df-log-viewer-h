@@ -26,6 +26,19 @@ import LogParser.LogEntry
 data LogParseConfig = LogParseConfig    -- empty for now
         deriving Show
 
+ts :: Text
+ts = pack " "
+
+texcl :: Text
+texcl = pack "!"
+
+tp :: Text
+tp = pack "."
+
+pMany :: (Stream Text Identity t) => ParsecT Text u Identity Char 
+    -> ParsecT Text u Identity Text
+pMany p = pack <$> many p
+
 pMany1 :: (Stream Text Identity t) => ParsecT Text u Identity Char 
     -> ParsecT Text u Identity Text
 pMany1 p = pack <$> many1 p
@@ -34,13 +47,16 @@ pString :: (Stream Text Identity t) => String
     -> ParsecT Text u Identity Text
 pString s = pack <$> string s
 
+pWord :: (Stream Text Identity t) => ParsecT Text u Identity Text
+pWord = pack <$> many1 (noneOf [' '])
+
 pLineEnd :: Parsec Text LogParseConfig ()
 pLineEnd = do
     optional endOfLine
 
 pTillChars :: String -> Parsec Text LogParseConfig Text
 pTillChars chars = do
-    s <- pMany1 (noneOf chars)
+    s <- pMany (noneOf chars)
     oneOf chars
     return s
 
@@ -272,6 +288,91 @@ pLogEntryData t@LEBattleStrike = do
         & dorf1 ?~ Dorf someoneA Nothing ""
         & dorf2 ?~ Dorf someoneB Nothing ""
         & warns .~ [warnA, warnB]
+pLogEntryData t@LEGore = do
+    try ( do
+            w1 <- try (pString "A ") <|> pString "An "
+            w2 <- pSomething ["has"]
+            w3 <- pString "has been "
+            w4 <- try (pString "severed") <|> try (pString "torn")
+                <|> try (pString "opened") <|> try (pString "strained")
+                <|> pString "bruised"
+            w5  <- pTillChars "!"
+            return $ newLogEntryData & tag .~ t
+                & warns .~ [w1<>w2<>ts<>w3<>w4<>w5<>texcl]
+            )
+        <|> ( do
+            w1 <- pString "A ligament in "
+            w2 <- pSomething ["has"]
+            w3 <- pString "has been"
+            w5  <- pTillChars "!"
+            return $ newLogEntryData & tag .~ t
+                & warns .~ [w1<>w2<>ts<>w3<>texcl]
+            )
+        <|> ( do
+            w1 <- pString "The "
+            w2 <- pSomething ["has"]
+            w3 <- pString "has lodged firmly in the wound!"
+            return $ newLogEntryData & tag .~ t
+                & warns .~ [w1<>w2<>ts<>w3]
+            )
+        <|> ( do
+            w1 <- pString "The "
+            w2 <- pSomething ["is"]
+            w3 <- pString "is smashed into the "
+            w4 <- pTillChars "!"
+            return $ newLogEntryData & tag .~ t
+                & warns .~ [w1<>w2<>ts<>w3<>w4<>texcl]
+            )
+        <|> ( do
+            w1 <- pSomething ["pulls"]
+            w2 <- try (pString "pulls on the embedded") 
+                    <|> pString "pulls out and releases the"
+            w3 <- pTillChars "."
+            return $ newLogEntryData & tag .~ t
+                & warns .~ [w1<>ts<>w2<>w3<>tp]
+            )
+        <|> ( do
+            w1 <- pSomething ["in"]
+            w2 <- pString "in the "
+            w3 <- pSomething ["with"]
+            w4 <- pString "with "
+            w5 <- pSomething ["and"]
+            w6 <- pString "and the injured part is cloven asunder!"
+            return $ newLogEntryData & tag .~ t
+                & warns .~ [w1<>ts<>w2<>w3<>ts<>w4<>w5<>ts<>w6]
+            )
+        <|> ( do
+            w1 <- pSomething ["blood"]
+            w2 <- pString "blood is sucked out of the wound!"
+            return $ newLogEntryData & tag .~ t
+                & warns .~ [w1<>ts<>w2]
+            )
+        <|> ( do
+            w1 <- pString "The guts pops out of the wound!"
+            return $ newLogEntryData & tag .~ t
+                & warns .~ [w1]
+            )
+        <|> ( do
+            w1 <- pString "Many nerves have been severed "
+            w2 <- pTillChars "!"
+            return $ newLogEntryData & tag .~ t
+                & warns .~ [w1<>w2<>texcl]
+            )
+        <|> ( do
+            w1 <- pString "The "
+            w2 <- pSomething ["gouges"]
+            w3 <- pString "gouges The "
+            w4 <- pTillChars "!"
+            return $ newLogEntryData & tag .~ t
+                & warns .~ [w1<>w2<>ts<>w3<>w4<>texcl]
+            )
+        <|> ( do
+            w1 <- pSomething ["twists"]
+            w2 <- pString "twists the embedded "
+            w3 <- pTillChars "!"
+            return $ newLogEntryData & tag .~ t
+                & warns .~ [w1<>ts<>w2<>w3<>texcl]
+            )
 pLogEntryData t@LEAnimalGrown = do
     string "An animal has grown to become a "
     matS <- pTillChars "."
@@ -339,6 +440,7 @@ baseRule =
     <|> try (pLogEntryData LEBattleEvent1)
     <|> try (pLogEntryData LEBattleEvent2)
     <|> try (pLogEntryData LEBattleStrike)
+    <|> try (pLogEntryData LEGore)
     <|> try (pLogEntryData LEAnimalGrown)
     <|> try (pLogEntryData LEWeather)
     <|> try (pLogEntryData LESeason)

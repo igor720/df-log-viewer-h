@@ -157,6 +157,7 @@ reassemble reCfg led = ss where
             , map (LEC LECOther) [w warns 0]
             , [LEC LECDorf (d dorf2)]
             ])
+        LEGore -> ("gore", map (LEC LECOther) [w warns 0])
         LEAnimalGrown -> ("animal: grown", 
             [LEC LECMat (f mat)]
             )
