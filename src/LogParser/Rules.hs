@@ -13,104 +13,20 @@ Parsing rules module
 
 module LogParser.Rules where
 
-import Control.Lens ( (?~), (.~), (&), Identity )
+import Control.Exception ( throw )
+import Control.Lens ( (?~), (.~), (&) )
 import Data.Text ( pack, unpack, Text )
 import qualified Data.Text as T
-import qualified Data.List as L
 import Text.Parsec
 
-import LogException
 import LogParser.LogEntry
+import LogParser.Rules.Helpers
 
-
-data LogParseConfig = LogParseConfig    -- empty for now
-        deriving Show
-
-ts :: Text
-ts = pack " "
-
-texcl :: Text
-texcl = pack "!"
-
-tp :: Text
-tp = pack "."
-
-pMany :: (Stream Text Identity t) => ParsecT Text u Identity Char 
-    -> ParsecT Text u Identity Text
-pMany p = pack <$> many p
-
-pMany1 :: (Stream Text Identity t) => ParsecT Text u Identity Char 
-    -> ParsecT Text u Identity Text
-pMany1 p = pack <$> many1 p
-
-pString :: (Stream Text Identity t) => String 
-    -> ParsecT Text u Identity Text
-pString s = pack <$> string s
-
-pWord :: (Stream Text Identity t) => ParsecT Text u Identity Text
-pWord = pack <$> many1 (noneOf [' '])
-
-pLineEnd :: Parsec Text LogParseConfig ()
-pLineEnd = do
-    optional endOfLine
-
-pTillChars :: String -> Parsec Text LogParseConfig Text
-pTillChars chars = do
-    s <- pMany (noneOf chars)
-    oneOf chars
-    return s
-
-pGameEntityPart :: Parsec Text LogParseConfig String
-pGameEntityPart = do
-    a <- upper
-    ss <- many1 (noneOf [' ']) -- letter
-    spaces
-    return $ a : ss
-
-pGameEntity :: Parsec Text LogParseConfig Text
-pGameEntity  = do
-    gameEntity <- manyTill pGameEntityPart 
-        (try (lookAhead (lower <|> oneOf ",:.")))
-    return $ pack (L.unwords gameEntity)
-
-pDorfFull :: Parsec Text LogParseConfig Dorf
-pDorfFull = do
-    nicknameStartMb <- optionMaybe (char '`')
-    nickname <- mapM (\_ -> do
-            str <- many1 (noneOf ['\''])
-            _ <- char '\''
-            spaces 
-            return $ pack str
-        ) nicknameStartMb
-    nameS <- pMany1 (noneOf [','])
-    string ", "
-    Dorf nameS nickname <$> pGameEntity
-
-pDorfAny :: [String] -> Parsec Text LogParseConfig Dorf
-pDorfAny endWith = do
-    try pDorfFull
-    <|> ( do
-        nameS <- pSomeone endWith
-        return $ Dorf nameS Nothing ""
-        )
-
-pSomeone :: [String] -> Parsec Text LogParseConfig Text
-pSomeone endWith = do
-    s <- manyTill (noneOf "\r")
-            (try (lookAhead (choice 
-                (map (try . string) endWith)
-            )))
-    return $ pack (if null s then s else init s)
-
-pSomething :: [String] -> Parsec Text LogParseConfig Text
-pSomething = pSomeone
-
--- ****************************************************************************
 
 -- | Parsing rules for each LogEntryTag constructor
 pLogEntryData :: LogEntryTag -> Parsec Text LogParseConfig LogEntryData
 pLogEntryData LEDefault = do
-    warn <- pMany1 (noneOf ['\r'])
+    warn <- pMany1 anyChar
     --parserTrace "label1"
     pLineEnd
     return $ newLogEntryData & warns .~ [warn] 
@@ -206,7 +122,7 @@ pLogEntryData t@LEDFHackAutomation = do
     string " items "
     warnA <- pack <$> try (string "to" <|> string "for")
     space
-    jobS <- pMany1 (noneOf ['\r'])
+    jobS <- pAny
     pLineEnd
     return $ newLogEntryData & tag .~ t
         & mat ?~ numS
@@ -282,7 +198,7 @@ pLogEntryData t@LEBattleStrike = do
         <|> try (pString "places a chokehold on")                 <|> pString "gouges"
     string " the "
     someoneB <- pSomeone ["in"]
-    warnB <- pMany1 (noneOf ['\r'])
+    warnB <- pAny
     pLineEnd
     return $ newLogEntryData & tag .~ t
         & dorf1 ?~ Dorf someoneA Nothing ""
@@ -296,17 +212,17 @@ pLogEntryData t@LEGore = do
             w4 <- try (pString "severed") <|> try (pString "torn")
                 <|> try (pString "opened") <|> try (pString "strained")
                 <|> pString "bruised"
-            w5  <- pTillChars "!"
+            w5  <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>w2<>ts<>w3<>w4<>w5<>texcl]
+                & warns .~ [w1<>w2<>ts<>w3<>w4<>w5]
             )
         <|> ( do
             w1 <- pString "A ligament in "
             w2 <- pSomething ["has"]
             w3 <- pString "has been"
-            w5  <- pTillChars "!"
+            w5 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>w2<>ts<>w3<>texcl]
+                & warns .~ [w1<>w2<>ts<>w3]
             )
         <|> ( do
             w1 <- pString "The "
@@ -319,17 +235,17 @@ pLogEntryData t@LEGore = do
             w1 <- pString "The "
             w2 <- pSomething ["is"]
             w3 <- pString "is smashed into the "
-            w4 <- pTillChars "!"
+            w4 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>w2<>ts<>w3<>w4<>texcl]
+                & warns .~ [w1<>w2<>ts<>w3<>w4]
             )
         <|> ( do
             w1 <- pSomething ["pulls"]
             w2 <- try (pString "pulls on the embedded") 
                     <|> pString "pulls out and releases the"
-            w3 <- pTillChars "."
+            w3 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>ts<>w2<>w3<>tp]
+                & warns .~ [w1<>ts<>w2<>w3]
             )
         <|> ( do
             w1 <- pSomething ["in"]
@@ -354,44 +270,43 @@ pLogEntryData t@LEGore = do
             )
         <|> ( do
             w1 <- pString "Many nerves have been severed "
-            w2 <- pTillChars "!"
+            w2 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>w2<>texcl]
+                & warns .~ [w1<>w2]
             )
         <|> ( do
             w1 <- pString "The "
             w2 <- pSomething ["gouges"]
             w3 <- pString "gouges The "
-            w4 <- pTillChars "!"
+            w4 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>w2<>ts<>w3<>w4<>texcl]
+                & warns .~ [w1<>w2<>ts<>w3<>w4]
             )
         <|> ( do
             w1 <- pSomething ["twists"]
             w2 <- pString "twists the embedded "
-            w3 <- pTillChars "!"
+            w3 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>ts<>w2<>w3<>texcl]
+                & warns .~ [w1<>ts<>w2<>w3]
             )
 pLogEntryData t@LEAnimalGrown = do
     string "An animal has grown to become a "
-    matS <- pTillChars "."
+    matS <- pAny
     pLineEnd
     return $ newLogEntryData & tag .~ t
         & mat ?~ matS
 pLogEntryData t@LEWeather = do
     warnA <- try (pString "It has started raining.") 
         <|> try ( do
-                warnA' <- string "It is raining "
-                warnA'' <- many1 (noneOf ".!")
-                warnA''' <- oneOf ".!"
-                return $ pack $ warnA'<>warnA''<>[warnA''']
+                warnA' <- pString "It is raining "
+                warnA'' <- pAny
+                return $ warnA'<>warnA''
                 )
         <|> try (do 
-                warnA' <- string "A cloud of "
-                warnA'' <- unpack <$> pSomething ["has"]
-                warnA''' <- string "has drifted nearby!"
-                return $ pack $ warnA'<>warnA''<>[' ']<>warnA'''
+                warnA' <- pString "A cloud of "
+                warnA'' <- pSomething ["has"]
+                warnA''' <- pString "has drifted nearby!"
+                return $ warnA'<>warnA''<>ts<>warnA'''
                 )
         <|> try (pString "A snow storm has come.")
         <|> pString "The weather has cleared."
@@ -400,10 +315,10 @@ pLogEntryData t@LEWeather = do
         & warns .~ [warnA]
 pLogEntryData t@LESeason = do
     warnA <- try ( do
-            warnA' <- many1 (noneOf [' '])
-            warnA'' <- string " has arrived"
-            warnA''' <- many (noneOf ['\r'])
-            return $ pack $ warnA'<>warnA''<>warnA'''
+            warnA' <- pMany1 (noneOf [' '])
+            warnA'' <- pString " has arrived"
+            warnA''' <- pAny
+            return $ warnA'<>warnA''<>warnA'''
             )
         <|> try (pString "It is now summer.")
         <|> try (pString "Autumn has come.")
@@ -416,11 +331,13 @@ pLogEntryData t@LESeason = do
         & warns .~ [warnA]
 pLogEntryData t@LESystem = do
     warnA' <- try (pString "Loaded ") <|> pString "**"
-    warnA'' <- pMany1 (noneOf ['\r'])
+    warnA'' <- pAny
     let warnA = warnA'<>warnA''
     pLineEnd
     return $ newLogEntryData & tag .~ t
         & warns .~ [warnA]
+
+-- ****************************************************************************
 
 -- | Base parsing rule; place move specific and more friquent rules to top
 baseRule :: Parsec Text LogParseConfig LogEntryData
@@ -447,17 +364,18 @@ baseRule =
     <|> try (pLogEntryData LESystem)
     <|> pLogEntryData LEDefault
 
+-- | Parse one log entry
 parseLogEntry :: LogParseConfig -> Text -> LogEntryData
 parseLogEntry lpCfg txt = 
     case runParser baseRule lpCfg "" txt of
         (Right v)   -> v
-        (Left s)    -> error $ "parse fail: "++show s
+        (Left s)    -> throw $ ExLogParse s
 
--- Used in tests
+-- | Parse one log entry with specific rule. Used in tests
 parseLogEntrySingle :: LogParseConfig 
     -> Parsec Text LogParseConfig LogEntryData -> Text -> LogEntryData
 parseLogEntrySingle lpCfg rule txt = 
     case runParser rule lpCfg "" txt of
         (Right v)   -> v
-        (Left s)    -> error $ "parse fail: "++show s
+        (Left s)    -> throw $ ExLogParse s
 

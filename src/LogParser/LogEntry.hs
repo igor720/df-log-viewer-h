@@ -4,13 +4,12 @@
 
 module LogParser.LogEntry where
 
-import Control.Exception
 import Control.Lens ( makeLenses )
 import Data.Text ( Text )
 import TextShow.TH ( deriveTextShow )
-import qualified Text.Parsec as Parsec
+--import qualified Text.Parsec as Parsec
 
-import LogException
+--import LogException
 
 
 -- | Options of dorf's name display
@@ -65,15 +64,6 @@ newLogEntryData = LogEntryData LEDefault Nothing Nothing Nothing Nothing []
 missedDorf :: Dorf
 missedDorf = Dorf "<missed>" Nothing "<dorf>"
 
--- ****************************************************************************
 
-newtype ExLogParse = ExLogParse Parsec.ParseError
-
-instance Show ExLogParse where
-    show (ExLogParse err) = "parse fail: "++show err
-
-instance Exception ExLogParse where
-    toException   = logExceptionToException
-    fromException = logExceptionFromException
 
 

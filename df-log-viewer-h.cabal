@@ -30,6 +30,7 @@ library
       LogFile
       LogException
       LogParser.LogEntry
+      LogParser.Rules.Helpers
       LogParser.Rules
       LogParser.Reassemble
   other-modules:
@@ -65,6 +66,7 @@ executable dflv
       LogFile
       LogException
       LogParser.LogEntry
+      LogParser.Rules.Helpers
       LogParser.Rules
       LogParser.Reassemble
       GUI.Model.ColorsDialog
@@ -107,6 +109,7 @@ test-suite df-log-viewer-h-test
       LogFile
       LogException
       LogParser.LogEntry
+      LogParser.Rules.Helpers
       LogParser.Rules
       Test.LogFile
       Test.Rules

@@ -7,6 +7,7 @@ import System.FilePath
 import Data.Text (Text)
 import TextShow (TextShow(showt))
 
+import LogParser.Rules.Helpers
 import LogParser.Rules
 import LogParser.LogEntry
 
@@ -163,7 +164,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 Nothing
-                (Just "Stray Cat")
+                (Just "Stray Cat.")
                 []
     , let tag=LEWeather in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "A cloud of fire clay has drifted nearby!" ~?= 

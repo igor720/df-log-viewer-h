@@ -36,6 +36,7 @@ import qualified Monomer.Lens as L
 import Monomer.Core.Lens (HasUnderline(underline))
 
 import LogParser.LogEntry
+import LogParser.Rules.Helpers
 import LogParser.Rules
 import LogParser.Reassemble
 import AppException
