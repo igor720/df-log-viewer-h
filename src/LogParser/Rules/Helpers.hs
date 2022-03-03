@@ -1,12 +1,12 @@
 {-|
-Module      : LogParser.Rules
+Module      : LogParser.Rules.Helpers
 Copyright   : (c) 2022 Igor Chudaev (mamont, igor720)
 License     : BSD-3-Clause (see the LICENSE file)
 Maintainer  : igor720@gmail.com
 Stability   : experimental
 Portability : non-portable
 
-Parsing rules module
+Helpers for parsing rules
 -}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
