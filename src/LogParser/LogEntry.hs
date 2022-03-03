@@ -30,7 +30,10 @@ data LogEntryTag =
         | LEBattleEvent1 | LEBattleEvent2
         | LEBattleStrike
         | LEGore
+        | LEBattleHit
+        | LEBattleStatus
         | LEAnimalGrown
+        | LEAnimalBirth
         | LEWeather
         | LESeason
         | LESystem

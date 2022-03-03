@@ -49,6 +49,7 @@ reassemble reCfg led = ss where
     np1 n p = if T.null n then p else n
     nk nick = "`"<>nick<>"'"
     makeName dorf = case (reCfg, dorf) of
+        (_                        ,     Dorf "" Nothing "")     -> ""
         (ReConfig True  SNFullName,     Dorf n Nothing p)       -> np n p
         (ReConfig True  SNFullName,     Dorf n (Just nick) p)   -> nk nick<>" "<>np n p
         (ReConfig True  SNNameOnly,     Dorf n Nothing p)       -> np n p 
@@ -67,7 +68,8 @@ reassemble reCfg led = ss where
         (led^. l)
     d :: Lens' LogEntryData (Maybe Dorf) -> Text
     d l = makeName $ fromMaybe 
-        (Dorf "<dorf missed>" Nothing "<profession missed>")
+        -- (Dorf "<dorf missed>" Nothing "<profession missed>")
+        (Dorf "" Nothing "")
         (led^. l)
     w :: Lens' LogEntryData [Text] -> Int -> Text
     w l i = res where
@@ -75,6 +77,8 @@ reassemble reCfg led = ss where
             then ""
             else str
         str = led^. l.ix i
+    isNoDorf "" = True
+    isNoDorf _ = False
     ss = case led^. tag of
         LEDefault -> ("default", 
             map (LEC LECOther) $ T.words (T.concat (led^.warns))
@@ -157,10 +161,19 @@ reassemble reCfg led = ss where
             , map (LEC LECOther) [w warns 0]
             , [LEC LECDorf (d dorf2)]
             ])
+        LEBattleHit -> ("battle: hit", map (LEC LECOther) [w warns 0])
+        LEBattleStatus -> ("battle: status", concat $
+            ( if isNoDorf (d dorf1) then [LEC LECOther ""] else [LEC LECDorf (d dorf1)])
+            : [ map (LEC LECOther) [w warns 0] ]
+            )
         LEGore -> ("gore", map (LEC LECOther) [w warns 0])
         LEAnimalGrown -> ("animal: grown", 
             [LEC LECMat (f mat)]
             )
+        LEAnimalBirth -> ("animal: birth", concat
+            [ [LEC LECMat (f mat)]
+            , map (LEC LECOther) [w warns 0]
+            ])
         LEWeather -> ("weather", map (LEC LECOther) [w warns 0])
         LESeason -> ("season", map (LEC LECOther) [w warns 0])
         LESystem -> ("system", map (LEC LECOther) [w warns 0])

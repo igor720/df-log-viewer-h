@@ -142,6 +142,22 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["bashes","in the left upper arm with her (+\174copper mace\1031+), lightly tapping the target!"]
+    , let tag=LEBattleHit in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The force twists the left hip, tearing apart the muscle and bruising the bone and tearing apart the muscle and bruising the bone!" ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["The force twists the left hip, tearing apart the muscle and bruising the bone and tearing apart the muscle and bruising the bone!"]
+    , let tag=LEBattleStatus in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The dingo vomits." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "The dingo", _nickname = Nothing, _prof = ""}))
+                Nothing
+                Nothing
+                Nothing
+                ["vomits."]
     , let tag=LEGore in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "An artery has been opened by the attack and a tendon has been torn!" ~?= 
             LogEntryData tag 
@@ -166,6 +182,14 @@ tpLogEntryData = TestList
                 Nothing
                 (Just "Stray Cat.")
                 []
+    , let tag=LEAnimalBirth in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Stray Horse (Tame) has given birth to a horse foal." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                (Just "Stray Horse (Tame)")
+                ["has given birth to a horse foal."]
     , let tag=LEWeather in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "A cloud of fire clay has drifted nearby!" ~?= 
             LogEntryData tag 

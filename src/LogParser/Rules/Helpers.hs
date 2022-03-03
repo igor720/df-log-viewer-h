@@ -35,6 +35,12 @@ texcl = pack "!"
 tp :: Text
 tp = pack "."
 
+tc :: Text
+tc = pack ","
+
+tcol :: Text
+tcol = pack ":"
+
 pMany :: (Stream Text Identity t) => ParsecT Text u Identity Char 
     -> ParsecT Text u Identity Text
 pMany p = pack <$> many p
@@ -46,6 +52,10 @@ pMany1 p = pack <$> many1 p
 pAny :: (Stream Text Identity t) => ParsecT Text u Identity Text
 pAny = pMany anyChar
 
+pChar :: (Stream Text Identity t) => Char 
+    -> ParsecT Text u Identity Text
+pChar c = pack . (:[]) <$> char c
+
 pString :: (Stream Text Identity t) => String 
     -> ParsecT Text u Identity Text
 pString s = pack <$> string s
@@ -53,9 +63,9 @@ pString s = pack <$> string s
 pWord :: (Stream Text Identity t) => ParsecT Text u Identity Text
 pWord = pack <$> many1 (noneOf [' '])
 
-pLineEnd :: Parsec Text LogParseConfig ()
-pLineEnd = do
-    optional endOfLine
+-- pLineEnd :: Parsec Text LogParseConfig ()
+-- pLineEnd = do
+--     optional endOfLine
 
 pTillChars :: String -> Parsec Text LogParseConfig Text
 pTillChars chars = do
