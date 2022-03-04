@@ -109,7 +109,7 @@ tpLogEntryData = TestList
                 (Just (Creature "hammerdwarf"))
                 Nothing
                 Nothing
-                ["strikes at","but the shot is parried by the (bismuth bronze battle axe)"]
+                ["strikes at",", but the shot is parried by the (bismuth bronze battle axe)!"]
     , let tag=LEBattleMiss in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The axedwarf misses the hammerdwarf!" ~?= 
             LogEntryData tag 
@@ -153,7 +153,7 @@ tpLogEntryData = TestList
     , let tag=LEBattleStatus in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The dingo vomits." ~?= 
             LogEntryData tag 
-                (Just (Creature "The dingo"))
+                (Just (Creature "dingo"))
                 Nothing
                 Nothing
                 Nothing

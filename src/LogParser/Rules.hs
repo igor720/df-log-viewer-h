@@ -123,11 +123,11 @@ pLogEntryData t@LEBattleBlock = do
     wA <- pString "attacks" <|> pString "strikes at"
     string " the "
     someoneB <- pSomeone ["but"]
-    wB <- pTillChars "!"
+    wB <- pAny
     return $ newLogEntryData & tag .~ t
         & ac1 ?~ Creature someoneA
         & ac2 ?~ Creature someoneB
-        & strs .~ [wA, wB] 
+        & strs .~ [wA, tc<>ts<>wB] 
 pLogEntryData t@LEBattleMiss = do
     string "The "
     someoneA <- pSomeone ["misses"]
@@ -239,6 +239,7 @@ pLogEntryData t@LEBattleHit = do
 pLogEntryData t@LEBattleStatus = do
     try ( do
         (dA'', w1s'') <- try ( do
+                option "" (pString "The ")
                 dA <- pActor [ "skids", "has", "is", "gives", "passes", "looks"
                             , "vomits", "retches", "regains" ]
                 w2 <- try (pString "skids along the ground!")
@@ -268,6 +269,7 @@ pLogEntryData t@LEBattleStatus = do
                 return (dA, [w2, w3])
                 )
             <|> try ( do
+                option "" (pString "The ")
                 dA <- pActor ["cancels"]
                 w2 <- pString "cancels"
                 w3 <- pTillChars ":"

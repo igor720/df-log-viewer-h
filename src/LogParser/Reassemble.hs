@@ -49,7 +49,6 @@ reassemble reCfg led = ss where
     np1 n p = if T.null n then p else n
     nk nick = "`"<>nick<>"'"
     makeName dorf = case (reCfg, dorf) of
-        --(_                        ,     Dorf "" Nothing "")     -> ""
         (ReConfig True  SNFullName,     Dorf n Nothing p)       -> np n p
         (ReConfig True  SNFullName,     Dorf n (Just nick) p)   -> nk nick<>" "<>np n p
         (ReConfig True  SNNameOnly,     Dorf n Nothing p)       -> np n p 
@@ -62,124 +61,69 @@ reassemble reCfg led = ss where
         (ReConfig False SNNameOnly,     Dorf n (Just nick) p)   -> np1 n p
         (ReConfig False SNNicknameOnly, Dorf n Nothing p)       -> np1 n p
         (ReConfig False SNNicknameOnly, Dorf n (Just nick) p)   -> nick
-        _ -> error "" --throw MissedDorf
-    f :: Lens' LogEntryData (Maybe Text) -> Text
-    f l = fromMaybe 
-        "<field missed>"
-        (led^. l)
-    a :: Lens' LogEntryData (Maybe Actor) -> Text
-    a l = case led^. l of
-            Nothing -> ""
-            Just a -> case a of
-                Nobody -> ""
-                Creature n -> n
-                d@Dorf {} -> makeName d
-    w :: Lens' LogEntryData [Text] -> Int -> Text
-    w l i = res where
-        res = if T.null str
-            then ""
-            else str
-        str = led^. l.ix i
-    isNoDorf "" = True
-    isNoDorf _ = False
+        _ -> throw $ MissedDorf led
+    j :: [LEComponent]
+    j = [LEC LECJob (fromMaybe "<missed job>" (led^. job))]
+    m :: [LEComponent]
+    m = [LEC LECMat (fromMaybe "<missed material>" (led^. mat))]
+    a :: Maybe Actor -> [LEComponent]
+    a ac = case ac of
+            Nothing -> []
+            Just a  -> case a of
+                Nobody      -> []
+                Creature n  -> [LEC LECDorf n]
+                d@Dorf {}   -> [LEC LECDorf (makeName d)]
+    a1 :: [LEComponent]
+    a1 = a (led^. ac1)
+    a2 :: [LEComponent]
+    a2 = a (led^. ac2)
+    w :: Int -> [LEComponent]
+    w i = map (LEC LECOther) $ T.words (led^. strs.ix i)
+    o :: Text -> [LEComponent]
+    o txt = map (LEC LECOther) $ T.words txt
+    o1 :: Text -> [LEComponent]
+    o1 txt = [LEC LECOther txt]
     ss = case led^. tag of
-        LEDefault -> ("default", 
-            map (LEC LECOther) $ T.words (T.concat (led^.strs))
-            )
-        LECraftCancel -> ("craft: cancelation1", concat
-            [ [LEC LECJob (f job)]
-            , [LEC LECOther ":"]
-            , [LEC LECDorf (a ac1)]
-            , [LEC LECOther "needs"]
-            , [LEC LECMat (f mat)]
-            ])
+        LEDefault -> ("default", w 0)
+        LECraftCancel -> ("craft: cancelation1", concat 
+            [ j, o1 ":", a1, o1 "needs", m ])
         LEJobSuspensionBuilding -> ("suspension: building", concat
-            [ map (LEC LECOther) $ T.words (w strs 0)
-            , [LEC LECOther ":"]
-            , [LEC LECDorf (a ac1)]
-            ])
+            [ w 0, o1 ":", a1 ])
         LEJobSuspensionLinkage -> ("suspension: linkage", concat
-            [ map (LEC LECOther) ["from"]
-            , [LEC LECMat (f mat)]
-            ])
-        LEJobSuspensionConstruction -> ("suspension: construction",
-            [ LEC LECMat (f mat)]
-            )
+            [ o1 "from", m ])
+        LEJobSuspensionConstruction -> ("suspension: construction", m)
         LEJobCancel -> ("job: cancel", concat
-            [ [LEC LECJob (f job)]
-            , [LEC LECOther ":"]
-            , [LEC LECDorf (a ac1)]
-            , [LEC LECOther (w strs 0)]
-            ])
+            [ j, o1 ":", a1, w 0 ])
         LEProductionCompleted -> ("production: completed", concat
-            [ [LEC LECJob (f job)]
-            , [LEC LECOther " ("]
-            , [LEC LECMat (f mat)]
-            , [LEC LECOther ") "]
-            ])
+            [ j, o1 " (", m, o1 ") " ])
         LEMasterpieceImproved -> ("masterpiece: improved", concat
-            [ [LEC LECMat (f mat)]
-            , [LEC LECOther "by"]
-            , [LEC LECDorf (a ac1)]
-            ])
+            [ m, o1 "by", a1 ])
         LEDeathFound -> ("death: found", concat
-            [ [LEC LECDorf (a ac1)]
-            , [LEC LECOther (w strs 0)]
-            ])
+            [ a1, w 0 ])
         LECrimeTheft -> ("crime: theft", concat
-            [ [LEC LECMat (f mat)]
-            , [LEC LECOther (w strs 0)]
-            , []
-            ])
+            [ m, w 0 ])
         LEDFHackAutomation -> ("dfhack: automation", concat
-            [ [LEC LECOther "Marked "]
-            , [LEC LECMat (f mat)]
-            , [LEC LECMat "items"]
-            , [LEC LECOther (w strs 0)]
-            , [LEC LECOther (f job)]
-            , []
-            ])
+            [ o1 "Marked ", m, o1 "items", w 0, j ])
         LEBattleBlock -> ("battle: block", concat
-            [ [LEC LECDorf (a ac1)]
-            , map (LEC LECOther) [w strs 0]
-            , [LEC LECDorf (a ac2)]
-            , map (LEC LECOther) $ T.words (", "<>w strs 1<>"!")
-            ])
+            [ a1, w 0, a2, w 1 ])
         LEBattleMiss -> ("battle: miss", concat
-            [ [LEC LECDorf (a ac1)]
-            , map (LEC LECOther) [w strs 0]
-            , [LEC LECDorf (a ac2)]
-            ])
+            [ a1, w 0, a2 ])
         LEBattleEvent1 -> ("battle: event1", concat
-            [ [LEC LECDorf (a ac1)]
-            , map (LEC LECOther) [w strs 0]
-            , [LEC LECDorf (a ac2)]
-            ])
+            [ a1, w 0, a2 ])
         LEBattleEvent2 -> ("battle: event2", concat
-            [ [LEC LECDorf (a ac1)]
-            , map (LEC LECOther) [w strs 0]
-            ])
+            [ a1, w 0 ])
         LEBattleStrike -> ("battle: strike", concat
-            [ [LEC LECDorf (a ac1)]
-            , map (LEC LECOther) [w strs 0]
-            , [LEC LECDorf (a ac2)]
-            ])
-        LEBattleHit -> ("battle: hit", map (LEC LECOther) [w strs 0])
-        LEBattleStatus -> ("battle: status", concat $
-            ( if isNoDorf (a ac1) then [LEC LECOther ""] else [LEC LECDorf (a ac1)])
-            : [ map (LEC LECOther) [w strs 0] ]
-            )
-        LEGore -> ("gore", map (LEC LECOther) [w strs 0])
-        LEAnimalGrown -> ("animal: grown", 
-            [LEC LECMat (f mat)]
-            )
+            [ a1, w 0, a2 ])
+        LEBattleHit -> ("battle: hit", w 0)
+        LEBattleStatus -> ("battle: status", concat
+            [ a1, w 0 ])
+        LEGore -> ("gore", w 0)
+        LEAnimalGrown -> ("animal: grown", m)
         LEAnimalBirth -> ("animal: birth", concat
-            [ [LEC LECMat (f mat)]
-            , map (LEC LECOther) [w strs 0]
-            ])
-        LEWeather -> ("weather", map (LEC LECOther) [w strs 0])
-        LESeason -> ("season", map (LEC LECOther) [w strs 0])
-        LESystem -> ("system", map (LEC LECOther) [w strs 0])
+            [ m, w 0 ])
+        LEWeather -> ("weather", w 0)
+        LESeason -> ("season", w 0)
+        LESystem -> ("system", w 0)
 
 -- *****************************************************************************
 
@@ -206,7 +150,9 @@ instance Exception MissedField where
     fromException = logEntryExceptionFromException
 
 newtype MissedDorf = MissedDorf LogEntryData
-    deriving Show
+
+instance Show MissedDorf where
+    show (MissedDorf led) = "reassemble fail: "++show led
 
 instance Exception MissedDorf where
     toException   = logEntryExceptionToException
