@@ -104,10 +104,8 @@ reassemble reCfg led = ss where
             [ m, w 0 ])
         LEDFHackAutomation -> ("dfhack: automation", concat
             [ o1 "Marked ", m, o1 "items", w 0, j ])
-        LEBattleBlock -> ("battle: block", concat
-            [ a1, w 0, a2, w 1 ])
         LEBattleMiss -> ("battle: miss", concat
-            [ a1, w 0, a2 ])
+            [ w 0, a1, w 1, a2, w 2 ])
         LEBattleEvent -> ("battle: event", concat
             [ w 0, a1, w 1, a2, w 3 ])
         LEBattleStrike -> ("battle: strike", concat

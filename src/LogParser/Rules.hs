@@ -118,27 +118,44 @@ pLogEntryData t@LEDFHackAutomation = do
         & mat ?~ numS
         & job ?~ jobS
         & strs .~ [wA] 
-pLogEntryData t@LEBattleBlock = do
-    string "The "
-    someoneA <- pSomeone ["attacks", "strikes"]
-    wA <- pString "attacks" <|> pString "strikes at"
-    string " the "
-    someoneB <- pSomeone ["but"]
-    wB <- pAny
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ Creature someoneA
-        & ac2 ?~ Creature someoneB
-        & strs .~ [wA, tc<>ts<>wB] 
 pLogEntryData t@LEBattleMiss = do
-    string "The "
-    someoneA <- pSomeone ["misses"]
-    wA <- pString "misses"
-    string " the "
-    someoneB <- pTillChars "!"
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ Creature someoneA
-        & ac2 ?~ Creature someoneB
-        & strs .~ [wA] 
+    try ( do
+        w1' <- option "" (pString "The")
+        spaces
+        (w2s', a1', a2') <- try ( do
+                a1 <- pSomeone ["attacks", "strikes"]
+                w1 <- try (pString "attacks the") <|> pString "strikes at the"
+                space
+                a2 <- pSomeone ["but"]
+                w2 <- pAny
+                return ([w1, w2], Just a1, Just a2)
+                )
+            <|> try ( do
+                a1 <- pSomeone ["misses"]
+                w1 <- pString "misses the"
+                space
+                a2 <- pTillChars "!"
+                return ([w1, texcl], Just a1, Just a2)
+                )
+            <|> ( do
+                a1 <- pSomeone ["blocks"]
+                w1 <- pString "blocks The flying"
+                w2 <- pAny
+                return ([w1<>w2, T.empty], Just a1, Nothing)
+                )
+        return $ newLogEntryData & tag .~ t
+                & ac1 ?~ maybe Nobody Creature a1'
+                & ac2 ?~ maybe Nobody Creature a2'
+                & strs .~ (w1' : w2s')
+        )
+    <|> ( do
+        w1 <- pString "The flying "
+        w2 <- pSomething ["misses"]
+        a1 <- pTillChars "!"
+        return $ newLogEntryData & tag .~ t
+                & ac1 ?~ Creature a1
+                & strs .~ [w1<>w2, texcl]
+        )
 pLogEntryData t@LEBattleEvent = do
     try ( do
         w1' <- pString "The"
@@ -548,7 +565,6 @@ baseRule =
     <|> try (pLogEntryData LEDeathFound)
     <|> try (pLogEntryData LECrimeTheft)
     <|> try (pLogEntryData LEDFHackAutomation)
-    <|> try (pLogEntryData LEBattleBlock)
     <|> try (pLogEntryData LEBattleMiss)
     <|> try (pLogEntryData LEBattleEvent)
     <|> try (pLogEntryData LEBattleStrike)

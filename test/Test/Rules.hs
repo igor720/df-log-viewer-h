@@ -102,14 +102,14 @@ tpLogEntryData = TestList
                 (Just "melt")
                 (Just "47")
                 ["to"]
-    , let tag=LEBattleBlock in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+    , let tag=LEBattleMiss in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The hammerdwarf strikes at the hammerdwarf but the shot is parried by the (bismuth bronze battle axe)!" ~?= 
             LogEntryData tag 
                 (Just (Creature "hammerdwarf"))
                 (Just (Creature "hammerdwarf"))
                 Nothing
                 Nothing
-                ["strikes at",", but the shot is parried by the (bismuth bronze battle axe)!"]
+                ["The","strikes at the","but the shot is parried by the (bismuth bronze battle axe)!"]
     , let tag=LEBattleMiss in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The axedwarf misses the hammerdwarf!" ~?= 
             LogEntryData tag 
@@ -117,7 +117,7 @@ tpLogEntryData = TestList
                 (Just (Creature "hammerdwarf"))
                 Nothing
                 Nothing
-                ["misses"]
+                ["The","misses the","!"]
     , let tag=LEBattleEvent in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The stray war dog charges at the weasel!" ~?= 
             LogEntryData tag 

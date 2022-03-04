@@ -63,10 +63,6 @@ pString s = pack <$> string s
 pWord :: (Stream Text Identity t) => ParsecT Text u Identity Text
 pWord = pack <$> many1 (noneOf [' '])
 
--- pLineEnd :: Parsec Text LogParseConfig ()
--- pLineEnd = do
---     optional endOfLine
-
 pTillChars :: String -> Parsec Text LogParseConfig Text
 pTillChars chars = do
     s <- pMany (noneOf chars)

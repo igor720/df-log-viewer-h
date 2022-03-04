@@ -26,7 +26,7 @@ data LogEntryTag =
         | LEDeathFound
         | LECrimeTheft
         | LEDFHackAutomation 
-        | LEBattleBlock | LEBattleMiss
+        | LEBattleMiss
         | LEBattleEvent 
         | LEBattleStrike
         | LEGore
