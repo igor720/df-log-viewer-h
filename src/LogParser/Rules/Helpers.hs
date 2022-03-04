@@ -73,40 +73,6 @@ pTillChars chars = do
     oneOf chars
     return s
 
-pGameEntityPart :: Parsec Text LogParseConfig String
-pGameEntityPart = do
-    a <- upper
-    ss <- many1 (noneOf [' '])
-    spaces
-    return $ a : ss
-
-pGameEntity :: Parsec Text LogParseConfig Text
-pGameEntity  = do
-    gameEntity <- manyTill pGameEntityPart 
-        (try (lookAhead (lower <|> oneOf ",:.")))
-    return $ pack (L.unwords gameEntity)
-
-pDorfFull :: Parsec Text LogParseConfig Dorf
-pDorfFull = do
-    nicknameStartMb <- optionMaybe (char '`')
-    nickname <- mapM (\_ -> do
-            str <- many1 (noneOf ['\''])
-            _ <- char '\''
-            spaces 
-            return $ pack str
-        ) nicknameStartMb
-    nameS <- pMany1 (noneOf [','])
-    string ", "
-    Dorf nameS nickname <$> pGameEntity
-
-pDorfAny :: [String] -> Parsec Text LogParseConfig Dorf
-pDorfAny endWith = do
-    try pDorfFull
-    <|> ( do
-        nameS <- pSomeone endWith
-        return $ Dorf nameS Nothing ""
-        )
-
 pSomeone :: [String] -> Parsec Text LogParseConfig Text
 pSomeone endWith = do
     s <- manyTill anyChar
@@ -117,6 +83,40 @@ pSomeone endWith = do
 
 pSomething :: [String] -> Parsec Text LogParseConfig Text
 pSomething = pSomeone
+
+pNamePart :: Parsec Text LogParseConfig String
+pNamePart = do
+    a <- upper
+    ss <- many1 (noneOf [' '])
+    spaces
+    return $ a : ss
+
+pFullName :: Parsec Text LogParseConfig Text
+pFullName  = do
+    gameEntity <- manyTill pNamePart 
+        (try (lookAhead (lower <|> oneOf ",:.")))
+    return $ pack (L.unwords gameEntity)
+
+pDorf :: Parsec Text LogParseConfig Actor
+pDorf = do
+    nicknameStartMb <- optionMaybe (char '`')
+    nickname <- mapM (\_ -> do
+            str <- many1 (noneOf ['\''])
+            _ <- char '\''
+            spaces 
+            return $ pack str
+        ) nicknameStartMb
+    nameS <- pMany1 (noneOf [','])
+    string ", "
+    Dorf nameS nickname <$> pFullName
+
+pActor :: [String] -> Parsec Text LogParseConfig Actor
+pActor endWith = do
+    try pDorf
+    <|> ( do
+        nameS <- pSomeone endWith
+        return $ Creature nameS
+        )
 
 -- ****************************************************************************
 

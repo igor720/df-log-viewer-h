@@ -73,7 +73,7 @@ tpLogEntryData = TestList
     , let tag=LEMasterpieceImproved in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Stѓkud Idstorlut has improved a 1mussel shell earring1 masterfully!" ~?= 
             LogEntryData tag 
-                (Just (Dorf {_name = "Stѓkud Idstorlut", _nickname = Nothing, _prof = ""}))
+                (Just (Creature "Stѓkud Idstorlut"))
                 Nothing 
                 Nothing 
                 (Just "1mussel shell earring1")
@@ -105,31 +105,31 @@ tpLogEntryData = TestList
     , let tag=LEBattleBlock in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The hammerdwarf strikes at the hammerdwarf but the shot is parried by the (bismuth bronze battle axe)!" ~?= 
             LogEntryData tag 
-                (Just (Dorf {_name = "hammerdwarf", _nickname = Nothing, _prof = ""}))
-                (Just (Dorf {_name = "hammerdwarf", _nickname = Nothing, _prof = ""}))
+                (Just (Creature "hammerdwarf"))
+                (Just (Creature "hammerdwarf"))
                 Nothing
                 Nothing
                 ["strikes at","but the shot is parried by the (bismuth bronze battle axe)"]
     , let tag=LEBattleMiss in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The axedwarf misses the hammerdwarf!" ~?= 
             LogEntryData tag 
-                (Just (Dorf {_name = "axedwarf", _nickname = Nothing, _prof = ""}))
-                (Just (Dorf {_name = "hammerdwarf", _nickname = Nothing, _prof = ""}))
+                (Just (Creature "axedwarf"))
+                (Just (Creature "hammerdwarf"))
                 Nothing
                 Nothing
                 ["misses"]
     , let tag=LEBattleEvent1 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The stray war dog charges at the weasel!" ~?= 
             LogEntryData tag 
-                (Just (Dorf {_name = "stray war dog", _nickname = Nothing, _prof = ""}))
-                (Just (Dorf {_name = "weasel", _nickname = Nothing, _prof = ""}))
+                (Just (Creature "stray war dog"))
+                (Just (Creature "weasel"))
                 Nothing
                 Nothing
                 ["charges at"]
     , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The hammerdwarf is knocked over!" ~?= 
             LogEntryData tag 
-                (Just (Dorf {_name = "hammerdwarf", _nickname = Nothing, _prof = ""}))
+                (Just (Creature "hammerdwarf"))
                 Nothing
                 Nothing
                 Nothing
@@ -137,8 +137,8 @@ tpLogEntryData = TestList
     , let tag=LEBattleStrike in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The macedwarf bashes the axedwarf in the left upper arm with her (+®copper maceЇ+), lightly tapping the target!" ~?= 
             LogEntryData tag 
-                (Just (Dorf {_name = "macedwarf", _nickname = Nothing, _prof = ""}))
-                (Just (Dorf {_name = "axedwarf", _nickname = Nothing, _prof = ""}))
+                (Just (Creature "macedwarf"))
+                (Just (Creature "axedwarf"))
                 Nothing
                 Nothing
                 ["bashes","in the left upper arm with her (+\174copper mace\1031+), lightly tapping the target!"]
@@ -153,7 +153,7 @@ tpLogEntryData = TestList
     , let tag=LEBattleStatus in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The dingo vomits." ~?= 
             LogEntryData tag 
-                (Just (Dorf {_name = "The dingo", _nickname = Nothing, _prof = ""}))
+                (Just (Creature "The dingo"))
                 Nothing
                 Nothing
                 Nothing

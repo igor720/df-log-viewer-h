@@ -28,27 +28,27 @@ pLogEntryData :: LogEntryTag -> Parsec Text LogParseConfig LogEntryData
 pLogEntryData LEDefault = do
     w <- pMany1 anyChar
     --parserTrace "label1"
-    return $ newLogEntryData & warns .~ [w] 
+    return $ newLogEntryData & strs .~ [w] 
 pLogEntryData t@LECraftCancel = do
-    dorfA <- pDorfAny ["cancels"]
+    acA <- pActor ["cancels"]
     string "cancels "
     jobS <- pTillChars ":"
     string " Needs "
     matS <- pTillChars "."
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ dorfA
+        & ac1 ?~ acA
         & job ?~ jobS
         & mat ?~ matS
 pLogEntryData t@LEJobSuspensionBuilding = do
-    dorfA <- pDorfAny ["cancels"]
+    acA <- pActor ["cancels"]
     string "cancels "
     jobS <- pString "Construct Building"
     string ": "
     wA <- pTillChars "."
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ dorfA
+        & ac1 ?~ acA
         & job ?~ jobS
-        & warns .~ [wA] 
+        & strs .~ [wA] 
 pLogEntryData t@LEJobSuspensionLinkage = do
     string "The dwarves suspended a "
     jobS <- pString "linkage from"
@@ -66,15 +66,15 @@ pLogEntryData t@LEJobSuspensionConstruction = do
         & job ?~ jobS
         & mat ?~ matS
 pLogEntryData t@LEJobCancel = do
-    dorfA <- pDorfAny ["cancels"]
+    acA <- pActor ["cancels"]
     string "cancels "
     jobS <- pMany1 (noneOf [':'])
     string ": "
     wA <- pTillChars "."
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ dorfA
+        & ac1 ?~ acA
         & job ?~ jobS
-        & warns .~ [wA] 
+        & strs .~ [wA] 
 pLogEntryData t@LEProductionCompleted = do
     jobS <- pTillChars "("
     matS <- pMany1 digit
@@ -84,28 +84,28 @@ pLogEntryData t@LEProductionCompleted = do
         & job ?~ T.init jobS
         & mat ?~ matS
 pLogEntryData t@LEMasterpieceImproved = do
-    dorfA <- pDorfAny ["has"]
+    acA <- pActor ["has"]
     string "has improved a "
     matS <- pSomething ["masterfully!"]
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ dorfA
+        & ac1 ?~ acA
         & mat ?~ matS
 pLogEntryData t@LEDeathFound = do
-    dorfA <- pDorfAny ["has"]
+    acA <- pActor ["has"]
     string "has been found dead"
     wA <- try 
         (lookAhead (char '.') >> return "")
         <|> (char ',' >> space >> pMany1 (noneOf ['.']))
     char '.'
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ dorfA
-        & warns .~ [wA]
+        & ac1 ?~ acA
+        & strs .~ [wA]
 pLogEntryData t@LECrimeTheft = do
-    matS <- pGameEntity
+    matS <- pFullName
     wA <- pString "is missing from its proper place!"
     return $ newLogEntryData & tag .~ t
         & mat ?~ matS
-        & warns .~ [wA] 
+        & strs .~ [wA] 
 pLogEntryData t@LEDFHackAutomation = do
     string "Marked "
     numS <- pMany1 digit
@@ -116,7 +116,7 @@ pLogEntryData t@LEDFHackAutomation = do
     return $ newLogEntryData & tag .~ t
         & mat ?~ numS
         & job ?~ jobS
-        & warns .~ [wA] 
+        & strs .~ [wA] 
 pLogEntryData t@LEBattleBlock = do
     string "The "
     someoneA <- pSomeone ["attacks", "strikes"]
@@ -125,9 +125,9 @@ pLogEntryData t@LEBattleBlock = do
     someoneB <- pSomeone ["but"]
     wB <- pTillChars "!"
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ Dorf someoneA Nothing ""
-        & dorf2 ?~ Dorf someoneB Nothing ""
-        & warns .~ [wA, wB] 
+        & ac1 ?~ Creature someoneA
+        & ac2 ?~ Creature someoneB
+        & strs .~ [wA, wB] 
 pLogEntryData t@LEBattleMiss = do
     string "The "
     someoneA <- pSomeone ["misses"]
@@ -135,9 +135,9 @@ pLogEntryData t@LEBattleMiss = do
     string " the "
     someoneB <- pTillChars "!"
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ Dorf someoneA Nothing ""
-        & dorf2 ?~ Dorf someoneB Nothing ""
-        & warns .~ [wA] 
+        & ac1 ?~ Creature someoneA
+        & ac2 ?~ Creature someoneB
+        & strs .~ [wA] 
 pLogEntryData t@LEBattleEvent1 = do
     string "The "
     someoneA <- pSomeone ["charges", "collides"]
@@ -147,9 +147,9 @@ pLogEntryData t@LEBattleEvent1 = do
     string " the "
     someoneB <- pTillChars "!"
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ Dorf someoneA Nothing ""
-        & dorf2 ?~ Dorf someoneB Nothing ""
-        & warns .~ [wA]
+        & ac1 ?~ Creature someoneA
+        & ac2 ?~ Creature someoneB
+        & strs .~ [wA]
 pLogEntryData t@LEBattleEvent2 = do
     string "The "
     someoneA <- pSomeone ["has", "is", "stands", "passes", "falls", "regains"]
@@ -159,8 +159,8 @@ pLogEntryData t@LEBattleEvent2 = do
         <|> try (pString "regains consciousness")        <|> pString "is no longer stunned"
     char '!' <|> char '.'
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ Dorf someoneA Nothing ""
-        & warns .~ [wA]
+        & ac1 ?~ Creature someoneA
+        & strs .~ [wA]
 pLogEntryData t@LEBattleStrike = do
     string "The "
     someoneA <- pSomeone 
@@ -185,9 +185,9 @@ pLogEntryData t@LEBattleStrike = do
     someoneB <- pSomeone ["in"]
     wB <- pAny
     return $ newLogEntryData & tag .~ t
-        & dorf1 ?~ Dorf someoneA Nothing ""
-        & dorf2 ?~ Dorf someoneB Nothing ""
-        & warns .~ [wA, wB]
+        & ac1 ?~ Creature someoneA
+        & ac2 ?~ Creature someoneB
+        & strs .~ [wA, wB]
 pLogEntryData t@LEBattleHit = do
     w1'' <- pString "The "
     w2s'' <- try ( do
@@ -235,11 +235,11 @@ pLogEntryData t@LEBattleHit = do
             return [w1', w2', w3']
             )
     return $ newLogEntryData & tag .~ t
-        & warns .~ [T.concat (w1'':w2s'')]
+        & strs .~ [T.concat (w1'':w2s'')]
 pLogEntryData t@LEBattleStatus = do
     try ( do
         (dA'', w1s'') <- try ( do
-                dA <- pDorfAny [ "skids", "has", "is", "gives", "passes", "looks"
+                dA <- pActor [ "skids", "has", "is", "gives", "passes", "looks"
                             , "vomits", "retches", "regains" ]
                 w2 <- try (pString "skids along the ground!")
                     <|> try (pString "has been stunned")
@@ -268,7 +268,7 @@ pLogEntryData t@LEBattleStatus = do
                 return (dA, [w2, w3])
                 )
             <|> try ( do
-                dA <- pDorfAny ["cancels"]
+                dA <- pActor ["cancels"]
                 w2 <- pString "cancels"
                 w3 <- pTillChars ":"
                 w4 <- try (pString " Paralyzed.") 
@@ -279,7 +279,7 @@ pLogEntryData t@LEBattleStatus = do
                 w1' <- pack . (:[]) <$> oneOf "tT"
                 w2' <- pString "he "
                 (dA', w3s') <- try ( do
-                        dA <- pDorfAny ["vomits", "retches", "looks", "trouble"]
+                        dA <- pActor ["vomits", "retches", "looks", "trouble"]
                         w2 <- try (pString "vomits")
                             <|> try (pString "retches")
                             <|> try (pString "looks sick")
@@ -289,7 +289,7 @@ pLogEntryData t@LEBattleStatus = do
                         return (dA, [w2, w3])
                         )
                     <|> try ( do
-                        dA <- pDorfAny ["skips", "rolls", "unrolls"]
+                        dA <- pActor ["skips", "rolls", "unrolls"]
                         w2 <- try (pString "skips across the water!")
                             <|> try (pString "rolls into a ball.")
                             <|> pString "unrolls."
@@ -298,8 +298,8 @@ pLogEntryData t@LEBattleStatus = do
                 return (dA', w1':w2':w3s')
                 )
         return $ newLogEntryData & tag .~ t
-            & warns .~ [T.concat w1s'']
-            & dorf1 ?~ dA''
+            & strs .~ [T.concat w1s'']
+            & ac1 ?~ dA''
         )
     <|> ( do
         w1 <- pString "The vomit "
@@ -307,7 +307,7 @@ pLogEntryData t@LEBattleStatus = do
             <|> try (pString "burns away in the lava.")
             <|> pString "splatters into the shallow puddle of water."
         return $ newLogEntryData & tag .~ t
-            & warns .~ [T.concat [w1, w2]]
+            & strs .~ [T.concat [w1, w2]]
         )
 pLogEntryData t@LEGore = do
     try ( do
@@ -319,7 +319,7 @@ pLogEntryData t@LEGore = do
                 <|> pString "bruised"
             w5  <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>w2<>ts<>w3<>w4<>w5]
+                & strs .~ [w1<>w2<>ts<>w3<>w4<>w5]
             )
     <|> try ( do
             w1 <- pString "A ligament in "
@@ -327,14 +327,14 @@ pLogEntryData t@LEGore = do
             w3 <- pString "has been"
             w5 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>w2<>ts<>w3]
+                & strs .~ [w1<>w2<>ts<>w3]
             )
     <|> try ( do
             w1 <- pString "The "
             w2 <- pSomething ["has"]
             w3 <- pString "has lodged firmly in the wound!"
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>w2<>ts<>w3]
+                & strs .~ [w1<>w2<>ts<>w3]
             )
     <|> try ( do
             w1 <- pString "The "
@@ -342,7 +342,7 @@ pLogEntryData t@LEGore = do
             w3 <- pString "is smashed into the "
             w4 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>w2<>ts<>w3<>w4]
+                & strs .~ [w1<>w2<>ts<>w3<>w4]
             )
     <|> try ( do
             w1 <- pSomething ["pulls"]
@@ -350,7 +350,7 @@ pLogEntryData t@LEGore = do
                     <|> pString "pulls out and releases the"
             w3 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>ts<>w2<>w3]
+                & strs .~ [w1<>ts<>w2<>w3]
             )
     <|> try ( do
             w1 <- pSomething ["in"]
@@ -360,24 +360,24 @@ pLogEntryData t@LEGore = do
             w5 <- pSomething ["and"]
             w6 <- pString "and the injured part is cloven asunder!"
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>ts<>w2<>w3<>ts<>w4<>w5<>ts<>w6]
+                & strs .~ [w1<>ts<>w2<>w3<>ts<>w4<>w5<>ts<>w6]
             )
     <|> try ( do
             w1 <- pSomething ["blood"]
             w2 <- pString "blood is sucked out of the wound!"
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>ts<>w2]
+                & strs .~ [w1<>ts<>w2]
             )
     <|> try ( do
             w1 <- pString "The guts pops out of the wound!"
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1]
+                & strs .~ [w1]
             )
     <|> try ( do
             w1 <- pString "Many nerves have been severed "
             w2 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>w2]
+                & strs .~ [w1<>w2]
             )
     <|> try ( do
             w1 <- pString "The "
@@ -385,14 +385,14 @@ pLogEntryData t@LEGore = do
             w3 <- pString "gouges The "
             w4 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>w2<>ts<>w3<>w4]
+                & strs .~ [w1<>w2<>ts<>w3<>w4]
             )
     <|> ( do
             w1 <- pSomething ["twists"]
             w2 <- pString "twists the embedded "
             w3 <- pAny
             return $ newLogEntryData & tag .~ t
-                & warns .~ [w1<>ts<>w2<>w3]
+                & strs .~ [w1<>ts<>w2<>w3]
             )
 pLogEntryData t@LEAnimalGrown = do
     string "An animal has grown to become a "
@@ -406,14 +406,14 @@ pLogEntryData t@LEAnimalBirth =
         w2 <- pAny
         return $ newLogEntryData & tag .~ t
             & mat ?~ s1
-            & warns .~ [w1<>w2]
+            & strs .~ [w1<>w2]
         )
     <|> ( do
         s1 <- pSomeone ["have"]
         w1 <- pString "have hatched."
         return $ newLogEntryData & tag .~ t
             & mat ?~ s1
-            & warns .~ [w1]
+            & strs .~ [w1]
         )
 pLogEntryData t@LEWeather = do
     wA <- try (pString "It has started raining.") 
@@ -431,7 +431,7 @@ pLogEntryData t@LEWeather = do
         <|> try (pString "A snow storm has come.")
         <|> pString "The weather has cleared."
     return $ newLogEntryData & tag .~ t
-        & warns .~ [wA]
+        & strs .~ [wA]
 pLogEntryData t@LESeason = do
     wA <- try ( do
             wA' <- pMany1 (noneOf [' '])
@@ -446,24 +446,23 @@ pLogEntryData t@LESeason = do
         <|> try (pString "The dry season has come")
         <|> pString "Nothing has arrived on the calendar."
     return $ newLogEntryData & tag .~ t
-        & warns .~ [wA]
+        & strs .~ [wA]
 pLogEntryData t@LESystem =
     try ( do
             wA' <- try (pString "Loaded ") <|> pString "**"
             wA'' <- pAny
             let wA = wA'<>wA''
             return $ newLogEntryData & tag .~ t
-                & warns .~ [wA]
+                & strs .~ [wA]
         )
     <|> ( do
         wA' <- pChar 'x'
         wA'' <- pMany1 digit
         return $ newLogEntryData & tag .~ t
-            & warns .~ [wA'<>wA'']
+            & strs .~ [wA'<>wA'']
         )
 
 
---Stray Horse (Tame) has given birth to a horse foal.
 
 -- ****************************************************************************
 

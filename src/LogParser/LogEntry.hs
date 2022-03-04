@@ -41,31 +41,37 @@ data LogEntryTag =
 
 $(deriveTextShow ''LogEntryTag)
 
-data Dorf = Dorf
-        { _name     :: Text
-        , _nickname :: Maybe Text
-        , _prof     :: Text
-    } deriving (Show, Eq)
+type Name = Text
+
+data Actor 
+        = Dorf
+            { _name     :: Name
+            , _nickname :: Maybe Name
+            , _prof     :: Name
+            } 
+        | Creature Name
+        | Nobody
+        deriving (Show, Eq)
 
 data LogEntryData = LogEntryData
         { _tag      :: LogEntryTag
-        , _dorf1    :: Maybe Dorf
-        , _dorf2    :: Maybe Dorf
-        , _job      :: Maybe Text
-        , _mat      :: Maybe Text
-        , _warns    :: [Text]
+        , _ac1      :: Maybe Actor
+        , _ac2      :: Maybe Actor
+        , _job      :: Maybe Name
+        , _mat      :: Maybe Name
+        , _strs     :: [Text]
     } deriving (Show, Eq)
 
-makeLenses ''Dorf
+makeLenses ''Actor
 makeLenses ''LogEntryData
 
 {-# INLINE newLogEntryData #-}
 newLogEntryData :: LogEntryData
 newLogEntryData = LogEntryData LEDefault Nothing Nothing Nothing Nothing []
 
-{-# INLINE missedDorf #-}
-missedDorf :: Dorf
-missedDorf = Dorf "<missed>" Nothing "<dorf>"
+-- {-# INLINE missedDorf #-}
+-- missedDorf :: Dorf
+-- missedDorf = Dorf "<missed>" Nothing "<dorf>"
 
 
 
