@@ -108,13 +108,13 @@ reassemble reCfg led = ss where
             [ a1, w 0, a2, w 1 ])
         LEBattleMiss -> ("battle: miss", concat
             [ a1, w 0, a2 ])
-        LEBattleEvent1 -> ("battle: event1", concat
-            [ a1, w 0, a2 ])
-        LEBattleEvent2 -> ("battle: event2", concat
-            [ a1, w 0 ])
+        LEBattleEvent -> ("battle: event", concat
+            [ w 0, a1, w 1, a2, w 3 ])
         LEBattleStrike -> ("battle: strike", concat
             [ a1, w 0, a2 ])
         LEBattleHit -> ("battle: hit", w 0)
+        LEBattleEvade -> ("battle: evade", concat
+            [ w 0, a1, w 1, a2, w 3 ])
         LEBattleStatus -> ("battle: status", concat
             [ a1, w 0 ])
         LEGore -> ("gore", w 0)

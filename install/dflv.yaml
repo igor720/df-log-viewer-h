@@ -30,7 +30,7 @@ spacerWidth: 8.0
 ## Sample text for color configuration dialog
 colorSampleText: "Losing is fun!"
 ## Max number of recent records at the time of app start that will be displayed
-previousLogEntries: 300
+previousLogEntries: 1000
 
 ## Decorators for log entities
 jobDecorUnderline: False

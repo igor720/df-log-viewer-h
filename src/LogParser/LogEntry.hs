@@ -27,10 +27,11 @@ data LogEntryTag =
         | LECrimeTheft
         | LEDFHackAutomation 
         | LEBattleBlock | LEBattleMiss
-        | LEBattleEvent1 | LEBattleEvent2
+        | LEBattleEvent 
         | LEBattleStrike
         | LEGore
         | LEBattleHit
+        | LEBattleEvade
         | LEBattleStatus
         | LEAnimalGrown
         | LEAnimalBirth

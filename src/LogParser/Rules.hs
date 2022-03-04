@@ -18,6 +18,7 @@ import Control.Lens ( (?~), (.~), (&) )
 import Data.Text ( pack, unpack, Text )
 import qualified Data.Text as T
 import Text.Parsec
+import Data.Maybe
 
 import LogParser.LogEntry
 import LogParser.Rules.Helpers
@@ -138,29 +139,59 @@ pLogEntryData t@LEBattleMiss = do
         & ac1 ?~ Creature someoneA
         & ac2 ?~ Creature someoneB
         & strs .~ [wA] 
-pLogEntryData t@LEBattleEvent1 = do
-    string "The "
-    someoneA <- pSomeone ["charges", "collides"]
-    wA' <- char 'c'
-    wA''<- string "harges at" <|> string "ollides with"
-    let wA = pack $ wA':wA''
-    string " the "
-    someoneB <- pTillChars "!"
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ Creature someoneA
-        & ac2 ?~ Creature someoneB
-        & strs .~ [wA]
-pLogEntryData t@LEBattleEvent2 = do
-    string "The "
-    someoneA <- pSomeone ["has", "is", "stands", "passes", "falls", "regains"]
-    wA <- try (pString "has been stunned")            <|> try (pString "is knocked over")
-        <|> try (pString "has been knocked unconscious") <|> try (pString "stands up")  
-        <|> try (pString "passes out")                   <|> try (pString "falls over")
-        <|> try (pString "regains consciousness")        <|> pString "is no longer stunned"
-    char '!' <|> char '.'
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ Creature someoneA
-        & strs .~ [wA]
+pLogEntryData t@LEBattleEvent = do
+    try ( do
+        w1' <- pString "The"
+        spaces
+        (w2s', a1', a2') <- try (do 
+                someoneA <- pSomeone ["charges", "collides"]
+                w1 <- try (pString "charges at") <|> pString "collides with"
+                string " the "
+                someoneB <- pTillChars "!"
+                return ([w1, texcl], Just someoneA, Just someoneB)
+                )
+            <|> try ( do
+                someoneA <- pSomeone ["has", "is", "stands", "passes", "falls", "regains"]
+                w1 <- try (pString "has been stunned")            
+                    <|> try (pString "is knocked over")
+                    <|> try (pString "has been knocked unconscious") 
+                    <|> try (pString "stands up")  
+                    <|> try (pString "passes out")                   
+                    <|> try (pString "falls over")
+                    <|> try (pString "regains consciousness")        
+                    <|> pString "is no longer stunned"
+                w2 <- pack . (:[]) <$> (char '!' <|> char '.')
+                return ([w1<>w2, T.empty], Just someoneA, Nothing)
+                )
+            <|> try ( do
+                someoneA <- pSomeone ["bounces"]
+                w1 <- pString "bounces backward!"
+                return ([w1, T.empty], Just someoneA, Nothing)
+                )
+            <|> try ( do
+                someoneA <- pSomeone ["collapses"]
+                w1 <- pString "collapses and falls to the ground from over-exertion."
+                return ([w1, T.empty], Just someoneA, Nothing)
+                )
+            <|> ( do
+                someoneA <- pSomeone ["looks"]
+                w1 <- pString "looks surprised by the ferocity of"
+                w2 <- option "" (pString "The ")
+                someoneB <- pSomeone ["onslaught"]
+                w3 <- pString "onslaught!"
+                return ([w1<>ts<>w2, w3], Just someoneA, Just someoneB)
+                )
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ maybe Nobody Creature a1'
+            & ac2 ?~ maybe Nobody Creature a2'
+            & strs .~ (w1' : w2s')
+        )
+    <|> ( do
+        w1 <- pString "They tangle together and "
+        w2 <- pAny
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1<>w2]
+        )
 pLogEntryData t@LEBattleStrike = do
     string "The "
     someoneA <- pSomeone 
@@ -236,6 +267,44 @@ pLogEntryData t@LEBattleHit = do
             )
     return $ newLogEntryData & tag .~ t
         & strs .~ [T.concat (w1'':w2s'')]
+pLogEntryData t@LEBattleEvade = do
+    try ( do
+        w1' <- option "" (pString "The")
+        spaces
+        (w1s', a1', a2') <- try ( do
+                a <- pActor ["jumps","scrambles","rolls","falls","bats"]
+                w1 <- try (pString "jumps away")
+                    <|> try (pString "jumps out")
+                    <|> try (pString "jump away")
+                    <|> try (pString "scrambles out of")
+                    <|> try (pString "scrambles away")
+                    <|> try (pString "rolls out of")
+                    <|> try (pString "rolls away")
+                    <|> try (pString "bats The")
+                    <|> pString "falls over"
+                w2 <- pAny
+                return ([w1<>w2, T.empty], a, Nothing)
+                )
+            <|> try ( do 
+                a <- pActor ["blocks","miss"]
+                w1 <- try (pString "blocks")
+                    <|> pString "miss"
+                w2 <- pAny
+                return ([w1<>w2, T.empty], a, Nothing)
+                )
+            <|> try ( do 
+                a1 <- pActor ["strikes"]
+                w1 <- pString "strikes at"
+                a2 <- pActor ["but"]
+                w2 <- pString "but the shot is blocked"
+                w3 <- pAny
+                return ([w1, w2<>w3], a1, Just a2)
+                )
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ a1'
+            & ac2 .~ (Just =<< a2')
+            & strs .~ w1':w1s'
+        )
 pLogEntryData t@LEBattleStatus = do
     try ( do
         (dA'', w1s'') <- try ( do
@@ -464,9 +533,7 @@ pLogEntryData t@LESystem =
             & strs .~ [wA'<>wA'']
         )
 
-
-
--- ****************************************************************************
+-- *****************************************************************************
 
 -- | Base parsing rule; place move specific and more friquent rules to top
 baseRule :: Parsec Text LogParseConfig LogEntryData
@@ -483,10 +550,10 @@ baseRule =
     <|> try (pLogEntryData LEDFHackAutomation)
     <|> try (pLogEntryData LEBattleBlock)
     <|> try (pLogEntryData LEBattleMiss)
-    <|> try (pLogEntryData LEBattleEvent1)
-    <|> try (pLogEntryData LEBattleEvent2)
+    <|> try (pLogEntryData LEBattleEvent)
     <|> try (pLogEntryData LEBattleStrike)
     <|> try (pLogEntryData LEBattleHit)
+    <|> try (pLogEntryData LEBattleEvade)
     <|> try (pLogEntryData LEBattleStatus)
     <|> try (pLogEntryData LEGore)
     <|> try (pLogEntryData LEAnimalGrown)

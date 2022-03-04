@@ -118,22 +118,22 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["misses"]
-    , let tag=LEBattleEvent1 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+    , let tag=LEBattleEvent in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The stray war dog charges at the weasel!" ~?= 
             LogEntryData tag 
                 (Just (Creature "stray war dog"))
                 (Just (Creature "weasel"))
                 Nothing
                 Nothing
-                ["charges at"]
-    , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+                ["The","charges at","!"]
+    , let tag=LEBattleEvent in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The hammerdwarf is knocked over!" ~?= 
             LogEntryData tag 
                 (Just (Creature "hammerdwarf"))
+                (Just Nobody)
                 Nothing
                 Nothing
-                Nothing
-                ["is knocked over"]
+                ["The","is knocked over!",""]
     , let tag=LEBattleStrike in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The macedwarf bashes the axedwarf in the left upper arm with her (+®copper maceЇ+), lightly tapping the target!" ~?= 
             LogEntryData tag 
@@ -150,6 +150,14 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The force twists the left hip, tearing apart the muscle and bruising the bone and tearing apart the muscle and bruising the bone!"]
+    , let tag=LEBattleEvade in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The osprey jumps away from The flying ({bismuth bronze bolt})!" ~?= 
+            LogEntryData tag 
+                (Just (Creature "osprey"))
+                Nothing
+                Nothing
+                Nothing
+                ["The","jumps away from The flying ({bismuth bronze bolt})!",""]
     , let tag=LEBattleStatus in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The dingo vomits." ~?= 
             LogEntryData tag 
