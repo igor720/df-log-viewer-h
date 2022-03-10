@@ -18,8 +18,8 @@ data ShowNameType = SNFullName | SNNameOnly | SNNicknameOnly
 
 data LogEntryTag = 
         LEDefault 
+        | LEJobSuspension
         | LECraftCancel 
-        | LEJobSuspensionBuilding | LEJobSuspensionLinkage | LEJobSuspensionConstruction 
         | LEJobCancel
         | LEProductionCompleted
         | LEMasterpieceImproved

@@ -30,51 +30,79 @@ pLogEntryData LEDefault = do
     w <- pMany1 anyChar
     --parserTrace "label1"
     return $ newLogEntryData & strs .~ [w] 
+pLogEntryData t@LEJobSuspension = do
+    try ( do
+        acA <- pActor ["cancels"]
+        string "cancels "
+        j <- pString "Construct Building"
+        string ": "
+        w1 <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ acA
+            & job ?~ j
+            & strs .~ [T.empty, w1, tcol] 
+        )
+    <|> try ( do
+        acA <- pActor ["cancels"]
+        string "cancels "
+        j <- pString "Link a Building to Trigger"
+        string ": "
+        w1 <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ acA
+            & job ?~ j
+            & strs .~ [T.empty, w1, tcol] 
+        )
+    <|> try ( do
+        string "The dwarves were "
+        j <- pString "unable to complete the"
+        space
+        m <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & job ?~ j
+            & mat ?~ m
+            & strs .~ [T.empty, T.empty, T.empty] 
+        )
+    <|> try ( do 
+        string "The dwarves suspended a "
+        j <- pString "linkage from"
+        space
+        m <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & job ?~ j
+            & mat ?~ m
+            & strs .~ [T.empty, T.empty, T.empty] 
+        )
+    <|> ( do 
+        string "The dwarves suspended the "
+        j <- pString "construction"
+        string " of "
+        m <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & job ?~ j
+            & mat ?~ m
+            & strs .~ [T.empty, T.empty, T.empty] 
+        )
 pLogEntryData t@LECraftCancel = do
     acA <- pActor ["cancels"]
     string "cancels "
-    jobS <- pTillChars ":"
-    string " Needs "
-    matS <- pTillChars "."
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ acA
-        & job ?~ jobS
-        & mat ?~ matS
-pLogEntryData t@LEJobSuspensionBuilding = do
-    acA <- pActor ["cancels"]
-    string "cancels "
-    jobS <- pString "Construct Building"
-    string ": "
-    wA <- pTillChars "."
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ acA
-        & job ?~ jobS
-        & strs .~ [wA] 
-pLogEntryData t@LEJobSuspensionLinkage = do
-    string "The dwarves suspended a "
-    jobS <- pString "linkage from"
+    j <- pTillChars ":"
     space
-    matS <- pTillChars "."
+    string "Needs "
+    m <- pTillChars "." 
     return $ newLogEntryData & tag .~ t
-        & job ?~ jobS
-        & mat ?~ matS
-pLogEntryData t@LEJobSuspensionConstruction = do
-    string "The dwarves suspended the "
-    jobS <- pString "construction"
-    string " of "
-    matS <- pTillChars "."
-    return $ newLogEntryData & tag .~ t
-        & job ?~ jobS
-        & mat ?~ matS
+        & ac1 ?~ acA
+        & job ?~ j
+        & mat ?~ m
 pLogEntryData t@LEJobCancel = do
     acA <- pActor ["cancels"]
     string "cancels "
-    jobS <- pMany1 (noneOf [':'])
+    j <- pMany1 (noneOf [':'])
     string ": "
     wA <- pTillChars "."
     return $ newLogEntryData & tag .~ t
         & ac1 ?~ acA
-        & job ?~ jobS
+        & job ?~ j
         & strs .~ [wA] 
 pLogEntryData t@LEProductionCompleted = do
     jobS <- pTillChars "("
@@ -555,11 +583,9 @@ pLogEntryData t@LESystem =
 -- | Base parsing rule; place move specific and more friquent rules to top
 baseRule :: Parsec Text LogParseConfig LogEntryData
 baseRule = 
-        try (pLogEntryData LECraftCancel)
-    <|> try (pLogEntryData LEJobSuspensionBuilding)
-    <|> try (pLogEntryData LEJobSuspensionLinkage)
-    <|> try (pLogEntryData LEJobSuspensionConstruction)
-    <|> try (pLogEntryData LEJobCancel)
+    try (pLogEntryData LEJobSuspension)     -- needs be on top of LECraftCancel and LEJobCancel
+    <|> try (pLogEntryData LECraftCancel)   -- needs be beetwean of LEJobSuspension and LEJobCancel
+    <|> try (pLogEntryData LEJobCancel)     -- needs be on bottom of of LEJobSuspension and LECraftCancel
     <|> try (pLogEntryData LEProductionCompleted)
     <|> try (pLogEntryData LEMasterpieceImproved)
     <|> try (pLogEntryData LEDeathFound)

@@ -22,6 +22,30 @@ tpLogEntryData = TestList
                 Nothing 
                 Nothing 
                 ["default rule parsing"]
+    , let tag=LEJobSuspension in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Doctor' Ducimmuzish, Suturer cancels Construct Building: Building site submerged." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Ducimmuzish", _nickname = Just "Doctor", _prof = "Suturer"}))
+                Nothing
+                (Just "Construct Building")
+                Nothing
+                ["","Building site submerged",":"]
+    , let tag=LEJobSuspension in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The dwarves suspended a linkage from Pressure Plate." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                (Just "linkage from")
+                (Just "Pressure Plate")
+                ["","",""]
+    , let tag=LEJobSuspension in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The dwarves suspended the construction of Wall." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                (Just "construction")
+                (Just "Wall")
+                ["","",""]
     , let tag=LECraftCancel in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Gem Setter' Idstorlut, Gem Setter cancels Encrust Finished Goods With resin opal: Needs resin opals." ~?= 
             LogEntryData tag 
@@ -30,29 +54,13 @@ tpLogEntryData = TestList
                 (Just "Encrust Finished Goods With resin opal")
                 (Just "resin opals")
                 []
-    , let tag=LEJobSuspensionBuilding in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "`Doctor' Ducimmuzish, Suturer cancels Construct Building: Building site submerged." ~?= 
+    , let tag=LECraftCancel in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Carpenter' Shorastsanreb, broker cancels Construct coconut palm Bin: Needs coconut palm logs." ~?= 
             LogEntryData tag 
-                (Just (Dorf {_name = "Ducimmuzish", _nickname = Just "Doctor", _prof = "Suturer"}))
-                Nothing
-                (Just "Construct Building")
-                Nothing
-                ["Building site submerged"]
-    , let tag=LEJobSuspensionLinkage in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "The dwarves suspended a linkage from Pressure Plate." ~?= 
-            LogEntryData tag 
-                Nothing
-                Nothing
-                (Just "linkage from")
-                (Just "Pressure Plate")
-                []
-    , let tag=LEJobSuspensionConstruction in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "The dwarves suspended the construction of Wall." ~?= 
-            LogEntryData tag 
-                Nothing
-                Nothing
-                (Just "construction")
-                (Just "Wall")
+                (Just (Dorf {_name = "Shorastsanreb", _nickname = Just "Carpenter", _prof = "broker"}))
+                Nothing 
+                (Just "Construct coconut palm Bin")
+                (Just "coconut palm logs")
                 []
     , let tag=LEJobCancel in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Cook' Odomkivish, Farmer cancels Prepare Lavish Meal: Needs unrotten cookable solid item." ~?= 
@@ -234,5 +242,6 @@ tpLogEntryData = TestList
     ] where
         cfg = LogParseConfig
 
+--
 
 

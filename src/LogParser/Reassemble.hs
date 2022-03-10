@@ -63,9 +63,9 @@ reassemble reCfg led = ss where
         (ReConfig False SNNicknameOnly, Dorf n (Just nick) p)   -> nick
         _ -> throw $ MissedDorf led
     j :: [LEComponent]
-    j = [LEC LECJob (fromMaybe "<missed job>" (led^. job))]
+    j = [LEC LECJob (fromMaybe "" (led^. job))]
     m :: [LEComponent]
-    m = [LEC LECMat (fromMaybe "<missed material>" (led^. mat))]
+    m = [LEC LECMat (fromMaybe "" (led^. mat))]
     a :: Maybe Actor -> [LEComponent]
     a ac = case ac of
             Nothing -> []
@@ -85,13 +85,10 @@ reassemble reCfg led = ss where
     o1 txt = [LEC LECOther txt]
     ss = case led^. tag of
         LEDefault -> ("default", w 0)
-        LECraftCancel -> ("craft: cancelation1", concat 
+        LEJobSuspension -> ("job: suspension", concat
+            [ w 0, j, w 1, m, w 2, a1, o1 "." ])
+        LECraftCancel -> ("craft: cancel", concat 
             [ j, o1 ":", a1, o1 "needs", m ])
-        LEJobSuspensionBuilding -> ("suspension: building", concat
-            [ w 0, o1 ":", a1 ])
-        LEJobSuspensionLinkage -> ("suspension: linkage", concat
-            [ o1 "from", m ])
-        LEJobSuspensionConstruction -> ("suspension: construction", m)
         LEJobCancel -> ("job: cancel", concat
             [ j, o1 ":", a1, w 0 ])
         LEProductionCompleted -> ("production: completed", concat

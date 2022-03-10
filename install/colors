@@ -2,5 +2,5 @@ fromList [(LEDefault,Color {_colorR = 218, _colorG = 61, _colorB = 8, _colorA = 
 ,(LEDFHackAutomation,Color {_colorR = 218, _colorG = 61, _colorB = 8, _colorA = 1.0})
 ,(LECrimeTheft,Color {_colorR = 218, _colorG = 61, _colorB = 8, _colorA = 1.0})
 ,(LECraftCancel,Color {_colorR = 0, _colorG = 102, _colorB = 255, _colorA = 1.0})
-,(LEJobSuspensionBuilding,Color {_colorR = 255, _colorG = 0, _colorB = 0, _colorA = 1.0})
+,(LEJobSuspension,Color {_colorR = 255, _colorG = 0, _colorB = 0, _colorA = 1.0})
 ,(LEBattleMiss,Color {_colorR = 255, _colorG = 0, _colorB = 255, _colorA = 1.0})]

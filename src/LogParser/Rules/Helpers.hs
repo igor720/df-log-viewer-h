@@ -84,8 +84,8 @@ pNamePart :: Parsec Text LogParseConfig String
 pNamePart = do
     a <- upper
     ss <- many1 (noneOf [' '])
-    spaces
-    return $ a : ss
+    spaces 
+    return $ a:ss
 
 pFullName :: Parsec Text LogParseConfig Text
 pFullName  = do
@@ -104,7 +104,9 @@ pDorf = do
         ) nicknameStartMb
     nameS <- pMany1 (noneOf [','])
     string ", "
-    Dorf nameS nickname <$> pFullName
+    prof <- try (pString "broker") <|> pFullName
+    spaces 
+    return $ Dorf nameS nickname prof
 
 pActor :: [String] -> Parsec Text LogParseConfig Actor
 pActor endWith = do
