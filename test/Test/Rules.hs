@@ -206,6 +206,22 @@ tpLogEntryData = TestList
                 Nothing
                 (Just "Stray Horse (Tame)")
                 ["has given birth to a horse foal."]
+    , let tag=LEVisit in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Imepe Lecececa, Elf Animal Caretaker fallen butcher is visiting." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Imepe Lecececa", _nickname = Nothing, _prof = "Elf Animal Caretaker"}))
+                Nothing
+                Nothing
+                Nothing
+                ["fallen butcher is visiting."]
+    , let tag=LEVisit in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Ormol Budojeha, Human Beast Hunter is visiting." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Ormol Budojeha", _nickname = Nothing, _prof = "Human Beast Hunter"}))
+                Nothing
+                Nothing
+                Nothing
+                ["is visiting."]
     , let tag=LEWeather in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "A cloud of fire clay has drifted nearby!" ~?= 
             LogEntryData tag 

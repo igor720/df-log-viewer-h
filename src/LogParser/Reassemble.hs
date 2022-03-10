@@ -116,6 +116,8 @@ reassemble reCfg led = ss where
         LEAnimalGrown -> ("animal: grown", m)
         LEAnimalBirth -> ("animal: birth", concat
             [ m, w 0 ])
+        LEVisit -> ("visit", concat
+            [ a1, w 0 ])
         LEWeather -> ("weather", w 0)
         LESeason -> ("season", w 0)
         LESystem -> ("system", w 0)

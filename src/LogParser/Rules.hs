@@ -531,6 +531,13 @@ pLogEntryData t@LEAnimalBirth =
             & mat ?~ s1
             & strs .~ [w1]
         )
+pLogEntryData t@LEVisit = do
+    acA <- pActor ["is"]
+    w1 <- try (pSomething ["is"])
+    w2 <- pString "is visiting"
+    return $ newLogEntryData & tag .~ t
+        & ac1 ?~ acA
+        & strs .~ [if T.null w1 then w2<>tp else w1<>ts<>w2<>tp] 
 pLogEntryData t@LEWeather = do
     wA <- try (pString "It has started raining.") 
         <|> try ( do
@@ -600,6 +607,7 @@ baseRule =
     <|> try (pLogEntryData LEGore)
     <|> try (pLogEntryData LEAnimalGrown)
     <|> try (pLogEntryData LEAnimalBirth)
+    <|> try (pLogEntryData LEVisit)
     <|> try (pLogEntryData LEWeather)
     <|> try (pLogEntryData LESeason)
     <|> try (pLogEntryData LESystem)

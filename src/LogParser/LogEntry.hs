@@ -7,9 +7,6 @@ module LogParser.LogEntry where
 import Control.Lens ( makeLenses )
 import Data.Text ( Text )
 import TextShow.TH ( deriveTextShow )
---import qualified Text.Parsec as Parsec
-
---import LogException
 
 
 -- | Options of dorf's name display
@@ -35,6 +32,7 @@ data LogEntryTag =
         | LEBattleStatus
         | LEAnimalGrown
         | LEAnimalBirth
+        | LEVisit
         | LEWeather
         | LESeason
         | LESystem
