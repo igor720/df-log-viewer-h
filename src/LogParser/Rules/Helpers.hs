@@ -104,7 +104,12 @@ pDorf = do
         ) nicknameStartMb
     nameS <- pMany1 (noneOf [','])
     string ", "
-    prof <- try (pString "broker") <|> pFullName
+    prof <- try (pString "broker")              -- TODO: uncomplete list
+        <|> try (pString "militia commander") 
+        <|> try (pString "sacred helm")
+        <|> try (pString "mayor necromancer")
+        <|> try (pString "mayor")
+        <|> pFullName
     spaces 
     return $ Dorf nameS nickname prof
 

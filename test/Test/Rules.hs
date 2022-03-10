@@ -258,6 +258,6 @@ tpLogEntryData = TestList
     ] where
         cfg = LogParseConfig
 
---
+--`Crafter' GimЉrith has become a Bone Carver.
 
 
