@@ -48,6 +48,7 @@ defaultAppConfig = MainConfig
     , _acLogFilePath            = Nothing
     , _acShowProfession         = True
     , _acShowName               = SNFullName
+    , _acColoredTag             = True
     }
 
 

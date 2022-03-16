@@ -49,6 +49,8 @@ showProfession: False
 ## Last variant will show name if nickname is unavailable
 #showName: "FullName"
 showName: "NameOnly"
+## If False all tags (descriptions) have one (white) color
+coloredTag: True
 
 ## Explicit path for gamelog. Used if no command line arg path; 
 ## if none then app will try to find gamelog on its own.

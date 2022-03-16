@@ -149,6 +149,9 @@ logEntryRow wenv model le = row where
     txtComps = getLogEntryTextComponents getTextWidth introW logWindowW reas
 
     -- defining special text styles and constructing log entry text block
+    txtColor = fromMaybe
+        defaultColor
+        (M.lookup (le^. leData.tag) (model^. logColorDistrib))
     txtBlock = vstack ( map (
         hstack . map ( \(LEC lecId txt) -> case lecId of
                 LECJob -> label txt `styleBasic` jobStyle
@@ -157,9 +160,6 @@ logEntryRow wenv model le = row where
                 LECOther -> label txt `styleBasic` otherStyle
             )
         ) txtComps ) where
-        txtColor = fromMaybe
-            defaultColor
-            (M.lookup (le^. leData.tag) (model^. logColorDistrib))
         jobStyle = [ textUnderline | cfg^. acJobDecorUnderline ]
             ++ [ textColor (fromMaybe txtColor (cfg^. acJobDecorFgColor))
                , bgColor (fromMaybe logWindowBgColor (cfg^. acJobDecorBgColor))
@@ -173,8 +173,6 @@ logEntryRow wenv model le = row where
                , bgColor (fromMaybe logWindowBgColor (cfg^. acDorfDecorBgColor))
                ]
         otherStyle = [textColor txtColor]
-
-    tmp = showt $ le^.leId
 
     -- constructing log entry visual row
     rowContent = box_ [alignTop, alignLeft] $ hstack [
@@ -190,7 +188,9 @@ logEntryRow wenv model le = row where
         ] `nodeKey` showt (le^. leId) where
         timeStyle = [ textColor timeColor ]
         timeBoxStyle = [ width timeW ]
-        descStyle = [ textFont "Bold" ]
+        descStyle = [ textFont "Bold"
+                    , textColor (if cfg^. acColoredTag then txtColor else white) 
+                    ]
     row = box_ [expandContent] (
             rowContent `styleBasic` basicStyle `styleHover` hoverStyle
             ) `styleBasic` boxStyle where

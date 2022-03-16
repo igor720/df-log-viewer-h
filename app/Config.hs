@@ -78,6 +78,7 @@ data MainConfig = MainConfig
     , _acLogFilePath            :: Maybe Text
     , _acShowProfession         :: Bool
     , _acShowName               :: ShowNameType
+    , _acColoredTag             :: Bool
     } deriving (Show, Eq)
 
 makeLenses 'MainConfig
@@ -118,11 +119,12 @@ instance FromYAML MainConfig where
         <*> m .:? "logFilePath" .!= Nothing
         <*> m .: "showProfession"
         <*> m .: "showName"
+        <*> m .: "coloredTag"
 
 instance ToYAML MainConfig where
     toYAML (MainConfig mws rf ef ts tc tcs es sw tfw ws cst bc
                 jdu jdfg jdbg mdu mdfg mdbg ddu ddfg ddbg 
-                ple lfp snP sn) = mapping 
+                ple lfp snP sn ct) = mapping 
         [ "mainWindowDefaultSize"   .= mws
         , "regularFont"             .= rf
         , "emphasizeFont"           .= ef
@@ -148,6 +150,7 @@ instance ToYAML MainConfig where
         , "logFilePath"             .= lfp
         , "showProfession"          .= snP
         , "showName"                .= sn
+        , "coloredTag"              .= ct
         ]
 
 writeMainConfig :: FilePath -> MainConfig -> IO ()
@@ -168,7 +171,7 @@ readMainConfig path = do
 checkMainConfig :: MainConfig -> Either String MainConfig
 checkMainConfig cfg@(MainConfig (w,h) _ _ ts _ (tsh0,tsh1) es sw tfw ws cst _
                         _ _ _ _ _ _ _ _ _ 
-                        ple _ snP sn)
+                        ple _ snP sn _)
     | w<400 || h<300    = Left "Too small default window size"
     | ts<7 || ts>36     = Left "Too big font"
     | any (<0) [tsh0, tsh1] = 
