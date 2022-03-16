@@ -61,7 +61,8 @@ pString :: (Stream Text Identity t) => String
 pString s = pack <$> string s
 
 pWord :: (Stream Text Identity t) => ParsecT Text u Identity Text
-pWord = pack <$> many1 (noneOf [' '])
+pWord = pack <$> many1 lower
+--pWord = pack <$> many1 (noneOf [' '])
 
 pTillChars :: String -> Parsec Text LogParseConfig Text
 pTillChars chars = do
@@ -89,6 +90,7 @@ pNamePart = do
 
 pFullName :: Parsec Text LogParseConfig Text
 pFullName  = do
+    lookAhead upper
     gameEntity <- manyTill pNamePart 
         (try (lookAhead (lower <|> oneOf ",:.")))
     return $ pack (L.unwords gameEntity)
@@ -104,12 +106,19 @@ pDorf = do
         ) nicknameStartMb
     nameS <- pMany1 (noneOf [','])
     string ", "
-    prof <- try (pString "broker")              -- TODO: uncomplete list
-        <|> try (pString "militia commander") 
-        <|> try (pString "sacred helm")
-        <|> try (pString "mayor necromancer")
-        <|> try (pString "mayor")
-        <|> pFullName
+    prof <- try pFullName <|> 
+        ( do 
+            a <- pWord
+            space
+            bMb <- optionMaybe (
+                    try (pString "commander")
+                    <|> try (pString "helm")
+                    <|> pString "necromancer"
+                    )
+            return $ a <> case bMb of
+                Nothing -> ""
+                Just b -> " "<>b
+        )
     spaces 
     return $ Dorf nameS nickname prof
 
