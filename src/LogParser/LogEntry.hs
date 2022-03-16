@@ -32,7 +32,12 @@ data LogEntryTag =
         | LEBattleStatus
         | LEAnimalGrown
         | LEAnimalBirth
+        | LEAnimalSlaughtered 
+        | LEDorfHasBecome
+        | LEMandate
         | LEVisit
+        | LESting
+        | LEItem
         | LEWeather
         | LESeason
         | LESystem

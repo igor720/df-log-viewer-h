@@ -206,6 +206,30 @@ tpLogEntryData = TestList
                 Nothing
                 (Just "Stray Horse (Tame)")
                 ["has given birth to a horse foal."]
+    , let tag=LEAnimalSlaughtered in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The Stray Turkey Hen (Tame) has been slaughtered." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                (Just "Stray Turkey Hen (Tame)")
+                []
+    , let tag=LEDorfHasBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Leather' UzoldЉg has become a Leatherworker." ~?= 
+            LogEntryData tag 
+                (Just (Creature "`Leather' UzoldЉg"))
+                Nothing
+                Nothing
+                Nothing
+                ["Leatherworker"]
+    , let tag=LEMandate in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Cheese Necro' Libashnanir, mayor necromancer has mandated the construction of certain goods." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Libashnanir", _nickname = Just "Cheese Necro", _prof = "mayor necromancer"}))
+                Nothing
+                Nothing
+                Nothing
+                ["has mandated the construction of certain goods."]
     , let tag=LEVisit in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Imepe Lecececa, Elf Animal Caretaker fallen butcher is visiting." ~?= 
             LogEntryData tag 
@@ -222,6 +246,22 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["is visiting."]
+    , let tag=LESting in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The stray war dog has been stung by a honey bee!" ~?= 
+            LogEntryData tag 
+                (Just (Creature "stray war dog"))
+                Nothing
+                Nothing
+                Nothing
+                ["has been stung by a honey bee!"]
+    , let tag=LEItem in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Sniper' ‹ngizshoveth, Marksdwarf has grown attached to a iron crossbow!" ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "‹ngizshoveth", _nickname = Just "Sniper", _prof = "Marksdwarf"}))
+                Nothing
+                Nothing
+                Nothing
+                ["has grown attached to a iron crossbow!"]
     , let tag=LEWeather in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "A cloud of fire clay has drifted nearby!" ~?= 
             LogEntryData tag 
@@ -258,6 +298,7 @@ tpLogEntryData = TestList
     ] where
         cfg = LogParseConfig
 
---`Crafter' GimЉrith has become a Bone Carver.
+--
+
 
 

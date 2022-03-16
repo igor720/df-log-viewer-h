@@ -512,25 +512,52 @@ pLogEntryData t@LEGore = do
             )
 pLogEntryData t@LEAnimalGrown = do
     string "An animal has grown to become a "
-    matS <- pAny
+    m <- pAny
     return $ newLogEntryData & tag .~ t
-        & mat ?~ matS
+        & mat ?~ m
 pLogEntryData t@LEAnimalBirth =
     try ( do
-        s1 <- pSomeone ["has"]
+        m <- pSomeone ["has"]
         w1 <- pString "has given birth to "
         w2 <- pAny
         return $ newLogEntryData & tag .~ t
-            & mat ?~ s1
+            & mat ?~ m
             & strs .~ [w1<>w2]
         )
     <|> ( do
-        s1 <- pSomeone ["have"]
+        m <- pSomeone ["have"]
         w1 <- pString "have hatched."
         return $ newLogEntryData & tag .~ t
-            & mat ?~ s1
+            & mat ?~ m
             & strs .~ [w1]
         )
+pLogEntryData t@LEAnimalSlaughtered = do
+    optional (string "The ")
+    m <- pSomething ["has"]
+    string "has been slaughtered."
+    return $ newLogEntryData & tag .~ t
+        & mat ?~ m
+pLogEntryData t@LEDorfHasBecome = do
+    optional (string "The ")
+    dA <- pActor ["has"]
+    string "has become a "
+    w1 <- pTillChars "."
+    return $ newLogEntryData & tag .~ t
+        & ac1 ?~ dA
+        & strs .~ [w1]
+pLogEntryData t@LEMandate = do
+    optional (string "The ")
+    dA <- pActor ["has"]
+    w1 <- pString "has"
+    space
+    w2 <- try (pString "mandated the construction of certain goods.")
+        <|> try (pString "imposed a ban on certain exports.")
+        <|> try (pString "ended a mandate.")
+        <|> try (pString "a new demand.")
+        <|> pString "forgotten a demand."
+    return $ newLogEntryData & tag .~ t
+        & ac1 ?~ dA
+        & strs .~ [w1<>ts<>w2]
 pLogEntryData t@LEVisit = do
     acA <- pActor ["is"]
     w1 <- try (pSomething ["is"])
@@ -538,6 +565,24 @@ pLogEntryData t@LEVisit = do
     return $ newLogEntryData & tag .~ t
         & ac1 ?~ acA
         & strs .~ [if T.null w1 then w2<>tp else w1<>ts<>w2<>tp] 
+pLogEntryData t@LESting = do
+    optional (string "The ")
+    acA <- pActor ["has", "have"]
+    w1 <- try (pString "has") <|> pString "have"
+    space
+    w2 <- pString "been stung by a "
+    w3 <- pTillChars "!"
+    return $ newLogEntryData & tag .~ t
+        & ac1 ?~ acA
+        & strs .~ [w1<>ts<>w2<>w3<>texcl] 
+pLogEntryData t@LEItem = do
+    optional (string "The ")
+    acA <- pActor ["has"]
+    w1 <- pString "has grown attached to a "
+    w2 <- pTillChars "!"
+    return $ newLogEntryData & tag .~ t
+        & ac1 ?~ acA
+        & strs .~ [w1<>w2<>texcl] 
 pLogEntryData t@LEWeather = do
     wA <- try (pString "It has started raining.") 
         <|> try ( do
@@ -607,7 +652,12 @@ baseRule =
     <|> try (pLogEntryData LEGore)
     <|> try (pLogEntryData LEAnimalGrown)
     <|> try (pLogEntryData LEAnimalBirth)
+    <|> try (pLogEntryData LEAnimalSlaughtered)
+    <|> try (pLogEntryData LEDorfHasBecome)
+    <|> try (pLogEntryData LEMandate)
     <|> try (pLogEntryData LEVisit)
+    <|> try (pLogEntryData LESting)
+    <|> try (pLogEntryData LEItem)
     <|> try (pLogEntryData LEWeather)
     <|> try (pLogEntryData LESeason)
     <|> try (pLogEntryData LESystem)
