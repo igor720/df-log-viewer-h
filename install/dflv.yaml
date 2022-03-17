@@ -48,7 +48,7 @@ showProfession: False
 ## How to show dorf's name: FullName, NameOnly, NicknameOnly. 
 ## Last variant will show name if nickname is unavailable
 #showName: "FullName"
-showName: "NameOnly"
+showName: "NicknameOnly"
 ## If False all tags (descriptions) have one (white) color
 coloredTag: True
 

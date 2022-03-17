@@ -113,11 +113,16 @@ pDorf = do
             bMb <- optionMaybe (
                     try (pString "commander")
                     <|> try (pString "helm")
+                    <|> try (pString "of")
                     <|> pString "necromancer"
                     )
-            return $ a <> case bMb of
-                Nothing -> ""
-                Just b -> " "<>b
+            cMb <- if bMb==Just "of"
+                then Just <$> (space >> pFullName)
+                else return Nothing
+            return $ a <> case (bMb, cMb) of
+                (Nothing, _)        -> ""
+                (Just b, Nothing)   -> " "<>b
+                (Just b, Just c)    -> " "<>b<>" "<>c
         )
     spaces 
     return $ Dorf nameS nickname prof

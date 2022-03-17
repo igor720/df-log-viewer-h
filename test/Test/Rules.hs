@@ -221,7 +221,15 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 Nothing
-                ["Leatherworker"]
+                ["has become a Leatherworker"]
+    , let tag=LEDorfHasBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Cheese Necro' Libashnanir, mayor necromancer has been re-elected." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Libashnanir", _nickname = Just "Cheese Necro", _prof = "mayor necromancer"}))
+                Nothing
+                Nothing
+                Nothing
+                ["has been re-elected."]
     , let tag=LEMandate in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Cheese Necro' Libashnanir, mayor necromancer has mandated the construction of certain goods." ~?= 
             LogEntryData tag 
@@ -230,6 +238,22 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["has mandated the construction of certain goods."]
+    , let tag=LEMandate in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Doctor' Tannish, duke of Springwhip has mandated the construction of certain goods." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Tannish", _nickname = Just "Doctor", _prof = "duke of Springwhip"}))
+                Nothing
+                Nothing
+                Nothing
+                ["has mandated the construction of certain goods."]
+    , let tag=LETrade in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "A human caravan from Behal Agal has arrived." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["A human caravan from Behal Agal has arrived."]
     , let tag=LEVisit in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Imepe Lecececa, Elf Animal Caretaker fallen butcher is visiting." ~?= 
             LogEntryData tag 
@@ -237,7 +261,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 Nothing
-                ["fallen butcher is visiting."]
+                ["","fallen butcher is visiting."]
     , let tag=LEVisit in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Ormol Budojeha, Human Beast Hunter is visiting." ~?= 
             LogEntryData tag 
@@ -245,7 +269,15 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 Nothing
-                ["is visiting."]
+                ["","is visiting."]
+    , let tag=LEVisit in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "A goblin diplomat from Behal Agal has arrived." ~?= 
+            LogEntryData tag 
+                (Just (Creature "goblin"))
+                Nothing
+                Nothing
+                Nothing
+                ["A","diplomat from Behal Agal has arrived."]
     , let tag=LESting in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The stray war dog has been stung by a honey bee!" ~?= 
             LogEntryData tag 
@@ -270,6 +302,14 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["A cloud of fire clay has drifted nearby!"]
+    , let tag=LEFishing in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "There is nothing to catch in the southwestern swamps." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["There is nothing to catch in the southwestern swamps."]
     , let tag=LESeason in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Autumn has arrived on the calendar." ~?= 
             LogEntryData tag 

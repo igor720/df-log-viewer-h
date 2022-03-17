@@ -538,13 +538,52 @@ pLogEntryData t@LEAnimalSlaughtered = do
     return $ newLogEntryData & tag .~ t
         & mat ?~ m
 pLogEntryData t@LEDorfHasBecome = do
-    optional (string "The ")
-    dA <- pActor ["has"]
-    string "has become a "
-    w1 <- pTillChars "."
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ dA
-        & strs .~ [w1]
+    try ( do
+        optional (string "The ")
+        dA <- pActor ["has"]
+        w1 <- pString "has become a "
+        w2 <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ dA
+            & strs .~ [w1<>w2]
+        )
+    <|> try ( do
+        dA <- pActor ["has"]
+        w1 <- pString "has been re-elected."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ dA
+            & strs .~ [w1]
+        )
+    <|> try ( do
+        dA <- pActor ["has"]
+        w1 <- pString "has been elected mayor."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ dA
+            & strs .~ [w1]
+        )
+    <|> try ( do
+        dA <- pActor ["became"]
+        w1 <- pString "became "
+        w2 <- try (pString "mayor.") <|> pString "expedition leader."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ dA
+            & strs .~ [w1<>w2]
+        )
+    <|> try ( do
+        w1 <- pString "Mayor position is now vacant."
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1]
+        )
+    <|> try ( do
+        w1 <- pString "Expedition leader was replaced by mayor."
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1]
+        )
+    <|> ( do
+        w1 <- pString "Expedition leader position is now vacant."
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1]
+        )
 pLogEntryData t@LEMandate = do
     optional (string "The ")
     dA <- pActor ["has"]
@@ -558,13 +597,82 @@ pLogEntryData t@LEMandate = do
     return $ newLogEntryData & tag .~ t
         & ac1 ?~ dA
         & strs .~ [w1<>ts<>w2]
+pLogEntryData t@LETrade = do
+    try ( do
+        w1 <- pString "A"
+        space
+        w2Mb <- optionMaybe (
+            try (pString "human") 
+            <|> try (pString "elves") 
+            <|> try (pString "dwarves")
+            <|> pString "goblins"
+            )
+        spaces
+        w3 <- pString "caravan from "
+        w4 <- pSomething ["has"]
+        w5 <- pString "has arrived."
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1<>ts<>fromMaybe "" w2Mb<>ts<>w3<>w4<>ts<>w5]
+        )
+    <|> try ( do
+        w1 <- pString "Merchants have arrived and are unloading their goods."
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1]
+        )
+    <|> try ( do
+        w1 <- pString "Their wagons have bypassed your inaccessible site."
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1]
+        )
+    <|> try ( do
+        w1 <- pString "No outpost liaison? How curious..."
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1]
+        )
+    <|> try ( do
+        w1 <- pString "The merchants "
+        w2 <- try (pString "from ") <|> pString "need "
+        w3 <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1<>w2<>w3<>tp]
+        )
+    <|> try ( do
+        w1 <- pSomething ["cancels"]
+        w2 <- pString "cancels Trade at Depot: "
+        w3 <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1<>w2<>w3<>tp]
+        )
 pLogEntryData t@LEVisit = do
-    acA <- pActor ["is"]
-    w1 <- try (pSomething ["is"])
-    w2 <- pString "is visiting"
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ acA
-        & strs .~ [if T.null w1 then w2<>tp else w1<>ts<>w2<>tp] 
+    try ( do
+        acA <- pActor ["is"]
+        w1 <- pSomething ["is"]
+        w2 <- pString "is visiting"
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ acA
+            & strs .~ ["",if T.null w1 then w2<>tp else w1<>ts<>w2<>tp] 
+        )
+    <|> try ( do
+        w1 <- pString "The"
+        space
+        acA <- pActor ["from"]
+        w2 <- pSomething ["has"]
+        w3 <- pString "has arrived."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ acA
+            & strs .~ [w1, w2<>ts<>w3] 
+        )
+    <|> ( do
+        w1 <- pString "A"
+        space
+        acA <- pActor ["diplomat"]
+        w2 <- pString "diplomat from "
+        w3 <- pSomething ["has"]
+        w4 <- pString "has arrived."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ acA
+            & strs .~ [w1, w2<>w3<>ts<>w4] 
+        )
 pLogEntryData t@LESting = do
     optional (string "The ")
     acA <- pActor ["has", "have"]
@@ -600,6 +708,11 @@ pLogEntryData t@LEWeather = do
         <|> pString "The weather has cleared."
     return $ newLogEntryData & tag .~ t
         & strs .~ [wA]
+pLogEntryData t@LEFishing = do
+    w1 <- pString "There is nothing to catch in the "
+    w2 <- pTillChars "."
+    return $ newLogEntryData & tag .~ t
+        & strs .~ [w1<>w2<>tp]
 pLogEntryData t@LESeason = do
     wA <- try ( do
             wA' <- pMany1 (noneOf [' '])
@@ -635,9 +748,9 @@ pLogEntryData t@LESystem =
 -- | Base parsing rule; place move specific and more friquent rules to top
 baseRule :: Parsec Text LogParseConfig LogEntryData
 baseRule = 
-    try (pLogEntryData LEJobSuspension)     -- needs be on top of LECraftCancel and LEJobCancel
-    <|> try (pLogEntryData LECraftCancel)   -- needs be beetwean of LEJobSuspension and LEJobCancel
-    <|> try (pLogEntryData LEJobCancel)     -- needs be on bottom of of LEJobSuspension and LECraftCancel
+    try (pLogEntryData LEJobSuspension)     -- needs to be on top of LECraftCancel and LEJobCancel
+    <|> try (pLogEntryData LECraftCancel)   -- needs to be beetwean of LEJobSuspension and LEJobCancel
+    <|> try (pLogEntryData LEJobCancel)     -- needs to be on bottom of of LEJobSuspension and LECraftCancel
     <|> try (pLogEntryData LEProductionCompleted)
     <|> try (pLogEntryData LEMasterpieceImproved)
     <|> try (pLogEntryData LEDeathFound)
@@ -655,10 +768,12 @@ baseRule =
     <|> try (pLogEntryData LEAnimalSlaughtered)
     <|> try (pLogEntryData LEDorfHasBecome)
     <|> try (pLogEntryData LEMandate)
+    <|> try (pLogEntryData LETrade)
     <|> try (pLogEntryData LEVisit)
     <|> try (pLogEntryData LESting)
     <|> try (pLogEntryData LEItem)
     <|> try (pLogEntryData LEWeather)
+    <|> try (pLogEntryData LEFishing)
     <|> try (pLogEntryData LESeason)
     <|> try (pLogEntryData LESystem)
     <|> pLogEntryData LEDefault

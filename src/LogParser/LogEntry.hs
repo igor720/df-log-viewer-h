@@ -35,10 +35,12 @@ data LogEntryTag =
         | LEAnimalSlaughtered 
         | LEDorfHasBecome
         | LEMandate
+        | LETrade
         | LEVisit
         | LESting
         | LEItem
         | LEWeather
+        | LEFishing
         | LESeason
         | LESystem
     deriving (Show, Eq, Enum, Ord, Read, Bounded)
