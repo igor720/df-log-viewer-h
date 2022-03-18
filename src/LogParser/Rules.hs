@@ -119,6 +119,18 @@ pLogEntryData t@LEMasterpieceImproved = do
     return $ newLogEntryData & tag .~ t
         & ac1 ?~ acA
         & mat ?~ matS
+pLogEntryData t@LEMasterpieceCreated = do
+    acA <- pActor ["has"]
+    w1 <- pString "has "
+    w2 <- try (pString "created")
+            <|> try (pString "cooked")
+            <|> try (pString "engraved")
+            <|> pString "constructed"
+    w3 <- pString " a masterpiece"
+    w4 <- pTillChars "!"
+    return $ newLogEntryData & tag .~ t
+        & ac1 ?~ acA
+        & strs .~ [w1<>w2<>w3<>w4<>texcl] 
 pLogEntryData t@LEDeathFound = do
     acA <- pActor ["has"]
     string "has been found dead"
@@ -146,6 +158,13 @@ pLogEntryData t@LEDFHackAutomation = do
         & mat ?~ numS
         & job ?~ jobS
         & strs .~ [wA] 
+pLogEntryData t@LEMiningStruck = do
+    w1 <- pString "You have struck"
+    space
+    m <- pTillChars "!"
+    return $ newLogEntryData & tag .~ t
+        & mat ?~ m
+        & strs .~ [w1] 
 pLogEntryData t@LEBattleMiss = do
     try ( do
         w1' <- option "" (pString "The")
@@ -205,8 +224,9 @@ pLogEntryData t@LEBattleEvent = do
                     <|> try (pString "falls over")
                     <|> try (pString "regains consciousness")        
                     <|> pString "is no longer stunned"
-                w2 <- pack . (:[]) <$> (char '!' <|> char '.')
-                return ([w1<>w2, T.empty], Just someoneA, Nothing)
+                w2 <- pTillChars ".!"
+                -- w2 <- pack . (:[]) <$> (char '!' <|> char '.')
+                return ([w1<>w2<>texcl, T.empty], Just someoneA, Nothing)
                 )
             <|> try ( do
                 someoneA <- pSomeone ["bounces"]
@@ -548,6 +568,17 @@ pLogEntryData t@LESomeoneBecome = do
             & strs .~ [w1<>w2]
         )
     <|> try ( do
+        try (string "A ") <|> string "An "
+        dA <- pActor ["has"]
+        w1 <- pString "has become a"
+        space
+        m <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ dA
+            & mat ?~ m
+            & strs .~ [w1]
+        )
+    <|> try ( do
         dA <- pActor ["has"]
         w1 <- pString "has been re-elected."
         return $ newLogEntryData & tag .~ t
@@ -627,9 +658,9 @@ pLogEntryData t@LETrade = do
         space
         w2Mb <- optionMaybe (
             try (pString "human") 
-            <|> try (pString "elves") 
-            <|> try (pString "dwarves")
-            <|> pString "goblins"
+            <|> try (pString "elven") 
+            <|> try (pString "dwarven")
+            <|> pString "goblin"
             )
         spaces
         w3 <- pString "caravan from "
@@ -904,6 +935,64 @@ pLogEntryData t@LESystem =
         return $ newLogEntryData & tag .~ t
             & strs .~ [wA'<>wA'']
         )
+pLogEntryData t@LEMasterpieceLost = do
+    w1 <- pString "A masterwork of "
+    w2 <- pSomething ["has"]
+    w3 <- pString "has been lost!"
+    return $ newLogEntryData & tag .~ t
+        & strs .~ [w1<>w2<>ts<>w3]
+pLogEntryData t@LEHazard = do
+    w1 <- pString "The "
+    a1 <- pActor ["is"]
+    w2 <- pString "is caught in a "
+    w3 <- pTillChars "!"
+    return $ newLogEntryData & tag .~ t
+        & ac1 ?~ a1
+        & strs .~ [w2<>w3]
+pLogEntryData t@LEMiningWarning = do
+    try ( do
+        w1 <- pString "Digging designation cancelled: "
+        w2 <- pAny
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1<>w2] 
+        )
+    <|> try ( do
+        w1 <- pString "Raw adamantine!  Praise the miners!"
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1] 
+        )
+    <|> try ( do
+        w1 <- pString "You have discovered an expansive cavern deep underground."
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1] 
+        )
+    <|> try ( do
+        w1 <- pString "You have discovered an eerie cavern."
+        w2 <- pAny
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1<>w2] 
+        )
+    <|> try ( do
+        w1 <- pString "Horrifying screams come from the darkness below!"
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1] 
+        )
+    <|> try ( do
+        w1 <- pString "You have discovered a "
+        w2 <- pAny
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1<>w2] 
+        )
+    <|> try ( do
+        w1 <- pString "A section of the cavern has collapsed!"
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1] 
+        )
+    <|> ( do
+        w1 <- pString "Something has collapsed on the surface!"
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1] 
+        )
 
 -- *****************************************************************************
 
@@ -915,9 +1004,11 @@ baseRule =
     <|> try (pLogEntryData LEJobCancel)     -- needs to be on bottom of of LEJobSuspension and LECraftCancel
     <|> try (pLogEntryData LEProductionCompleted)
     <|> try (pLogEntryData LEMasterpieceImproved)
+    <|> try (pLogEntryData LEMasterpieceCreated)
     <|> try (pLogEntryData LEDeathFound)
     <|> try (pLogEntryData LECrimeTheft)
     <|> try (pLogEntryData LEDFHackAutomation)
+    <|> try (pLogEntryData LEMiningStruck)
     <|> try (pLogEntryData LEBattleMiss)
     <|> try (pLogEntryData LEBattleEvent)
     <|> try (pLogEntryData LEBattleStrike)
@@ -942,6 +1033,9 @@ baseRule =
     <|> try (pLogEntryData LEMoodInsane)
     <|> try (pLogEntryData LESeason)
     <|> try (pLogEntryData LESystem)
+    <|> try (pLogEntryData LEMasterpieceLost)
+    <|> try (pLogEntryData LEHazard)
+    <|> try (pLogEntryData LEMiningWarning)
     <|> pLogEntryData LEDefault
 
 -- | Parse one log entry

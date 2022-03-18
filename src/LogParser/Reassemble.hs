@@ -95,12 +95,16 @@ reassemble reCfg led = ss where
             [ j, o1 " (", m, o1 ") " ])
         LEMasterpieceImproved -> ("masterpiece: improved", concat
             [ m, o1 "by", a1 ])
+        LEMasterpieceCreated -> ("masterpiece: created", concat
+            [ a1, w 0 ])
         LEDeathFound -> ("death: found", concat
             [ a1, w 0 ])
         LECrimeTheft -> ("crime: theft", concat
             [ m, w 0 ])
         LEDFHackAutomation -> ("dfhack: automation", concat
             [ o1 "Marked ", m, o1 "items", w 0, j ])
+        LEMiningStruck -> ("mining: struck", concat
+            [ w 0, m, o1 "!" ])
         LEBattleMiss -> ("battle: miss", concat
             [ w 0, a1, w 1, a2, w 2 ])
         LEBattleEvent -> ("battle: event", concat
@@ -140,6 +144,10 @@ reassemble reCfg led = ss where
             [ a1, w 0 ])
         LESeason -> ("season", w 0)
         LESystem -> ("system", w 0)
+        LEMasterpieceLost -> ("masterpiece: lost", w 0)
+        LEHazard -> ("hazard", concat
+            [ a1, w 0 ])
+        LEMiningWarning -> ("mining: warning", w 0)
 
 -- *****************************************************************************
 

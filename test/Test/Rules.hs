@@ -81,11 +81,19 @@ tpLogEntryData = TestList
     , let tag=LEMasterpieceImproved in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Stѓkud Idstorlut has improved a 1mussel shell earring1 masterfully!" ~?= 
             LogEntryData tag 
-                (Just (Creature "Stѓkud Idstorlut"))
+                (Just (Dorf {_name = "Stѓkud Idstorlut", _nickname = Nothing, _prof = ""}))
                 Nothing 
                 Nothing 
                 (Just "1mussel shell earring1")
                 []
+    , let tag=LEMasterpieceCreated in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Mason' RithlutatЎr has constructed a masterpiece!" ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "RithlutatЎr", _nickname = Just "Mason", _prof = ""}))
+                Nothing 
+                Nothing 
+                Nothing 
+                ["has constructed a masterpiece!"]
     , let tag=LEDeathFound in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Hunter' Zimed‰m, Hunter has been found dead, drowned." ~?= 
             LogEntryData tag 
@@ -110,6 +118,14 @@ tpLogEntryData = TestList
                 (Just "melt")
                 (Just "47")
                 ["to"]
+    , let tag=LEMiningStruck in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "You have struck citrine!" ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                (Just "citrine")
+                ["You have struck"]
     , let tag=LEBattleMiss in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The hammerdwarf strikes at the hammerdwarf but the shot is parried by the (bismuth bronze battle axe)!" ~?= 
             LogEntryData tag 
@@ -142,6 +158,15 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The","is knocked over!",""]
+    , let tag=LEBattleEvent in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The stray kitten is knocked over and tumbles backward!" ~?= 
+            LogEntryData tag 
+                (Just (Creature "stray kitten"))
+                (Just Nobody)
+                Nothing
+                Nothing
+                ["The","is knocked over and tumbles backward!",""]
+                
     , let tag=LEBattleStrike in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The macedwarf bashes the axedwarf in the left upper arm with her (+®copper maceЇ+), lightly tapping the target!" ~?= 
             LogEntryData tag 
@@ -217,7 +242,7 @@ tpLogEntryData = TestList
     , let tag=LESomeoneBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Leather' UzoldЉg has become a Leatherworker." ~?= 
             LogEntryData tag 
-                (Just (Creature "`Leather' UzoldЉg"))
+                (Just (Dorf {_name = "Uzold\1033g", _nickname = Just "Leather", _prof = ""}))
                 Nothing
                 Nothing
                 Nothing
@@ -238,6 +263,14 @@ tpLogEntryData = TestList
                 Nothing
                 (Just "Stray Water Buffalo Cow")
                 ["has grown to become a"]
+    , let tag=LESomeoneBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "An animal has become a Stray war Dog." ~?= 
+            LogEntryData tag 
+                (Just (Creature "animal"))
+                Nothing
+                Nothing
+                (Just "Stray war Dog")
+                ["has become a"]
     , let tag=LEMandate in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Cheese Necro' Libashnanir, mayor necromancer has mandated the construction of certain goods." ~?= 
             LogEntryData tag 
@@ -374,6 +407,14 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["*** STARTING NEW GAME ***"]
+    , let tag=LEMiningWarning in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Digging designation cancelled: damp stone located." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["Digging designation cancelled: damp stone located."]
 
     ] where
         cfg = LogParseConfig

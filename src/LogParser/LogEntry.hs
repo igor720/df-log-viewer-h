@@ -20,9 +20,11 @@ data LogEntryTag =
         | LEJobCancel
         | LEProductionCompleted
         | LEMasterpieceImproved
+        | LEMasterpieceCreated
         | LEDeathFound
         | LECrimeTheft
         | LEDFHackAutomation 
+        | LEMiningStruck 
         | LEBattleMiss
         | LEBattleEvent 
         | LEBattleStrike
@@ -47,6 +49,9 @@ data LogEntryTag =
         | LEMoodInsane
         | LESeason
         | LESystem
+        | LEMasterpieceLost
+        | LEHazard
+        | LEMiningWarning
     deriving (Show, Eq, Enum, Ord, Read, Bounded)
 
 $(deriveTextShow ''LogEntryTag)
