@@ -154,38 +154,3 @@ instance Exception ExLogParse where
     toException   = logExceptionToException
     fromException = logExceptionFromException
 
--- pDorf :: Parsec Text LogParseConfig Actor
--- pDorf = do
---     nicknameStartMb <- optionMaybe (char '`')
---     nickname <- mapM (\_ -> do
---             str <- many1 (noneOf ['\''])
---             _ <- char '\''
---             spaces 
---             return $ pack str
---         ) nicknameStartMb
---     (nameS, prof) <- try ( do
---         nameS' <- pMany1 (noneOf ",")
---         string ", "
---         prof' <- try pFullName <|> 
---             ( do 
---                 a <- pWord
---                 space
---                 bMb <- optionMaybe (
---                         try (pString "commander")
---                         <|> try (pString "helm")
---                         <|> try (pString "crypt")
---                         <|> try (pString "of")
---                         <|> pString "necromancer"
---                         )
---                 cMb <- if bMb==Just "of"
---                     then Just <$> (space >> pFullName)
---                     else return Nothing
---                 return $ a <> case (bMb, cMb) of
---                     (Nothing, _)        -> ""
---                     (Just b, Nothing)   -> " "<>b
---                     (Just b, Just c)    -> " "<>b<>" "<>c
---             )
---         return (nameS', prof')
---         )
---     spaces 
---     return $ Dorf nameS nickname prof
