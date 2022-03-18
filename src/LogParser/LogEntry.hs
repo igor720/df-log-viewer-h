@@ -33,7 +33,7 @@ data LogEntryTag =
         | LEAnimalGrown
         | LEAnimalBirth
         | LEAnimalSlaughtered 
-        | LEDorfHasBecome
+        | LESomeoneBecome
         | LEMandate
         | LETrade
         | LEVisit
@@ -41,6 +41,10 @@ data LogEntryTag =
         | LEItem
         | LEWeather
         | LEFishing
+        | LEAdoption
+        | LESkillLevel
+        | LEMoodNormal
+        | LEMoodInsane
         | LESeason
         | LESystem
     deriving (Show, Eq, Enum, Ord, Read, Bounded)

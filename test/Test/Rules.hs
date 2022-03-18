@@ -214,7 +214,7 @@ tpLogEntryData = TestList
                 Nothing
                 (Just "Stray Turkey Hen (Tame)")
                 []
-    , let tag=LEDorfHasBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+    , let tag=LESomeoneBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Leather' UzoldЉg has become a Leatherworker." ~?= 
             LogEntryData tag 
                 (Just (Creature "`Leather' UzoldЉg"))
@@ -222,7 +222,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["has become a Leatherworker"]
-    , let tag=LEDorfHasBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+    , let tag=LESomeoneBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Cheese Necro' Libashnanir, mayor necromancer has been re-elected." ~?= 
             LogEntryData tag 
                 (Just (Dorf {_name = "Libashnanir", _nickname = Just "Cheese Necro", _prof = "mayor necromancer"}))
@@ -230,6 +230,14 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["has been re-elected."]
+    , let tag=LESomeoneBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "An animal has grown to become a Stray Water Buffalo Cow." ~?= 
+            LogEntryData tag 
+                (Just (Creature "animal"))
+                Nothing
+                Nothing
+                (Just "Stray Water Buffalo Cow")
+                ["has grown to become a"]
     , let tag=LEMandate in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Cheese Necro' Libashnanir, mayor necromancer has mandated the construction of certain goods." ~?= 
             LogEntryData tag 
@@ -318,6 +326,38 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["Autumn has arrived on the calendar."]
+    , let tag=LEAdoption in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Reg Mist€mtathtat, Stray Kitten (Tame) has adopted `Carpenter' Ronstizustuth, Carpenter." ~?= 
+            LogEntryData tag 
+                (Just (Creature "Reg Mist€mtathtat, Stray Kitten (Tame)"))
+                (Just (Dorf {_name = "Ronstizustuth", _nickname = Just "Carpenter", _prof = "Carpenter"}))
+                Nothing
+                Nothing
+                ["has adopted"]
+    , let tag=LESkillLevel in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`New Warrior' Dodўkthabum, Axedwarf: I have improved my discipline.  That was satisfying." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Dodўkthabum", _nickname = Just "New Warrior", _prof = "Axedwarf"}))
+                Nothing
+                Nothing
+                Nothing
+                [": I have improved my discipline. That was very satisfying!"] 
+    , let tag=LEMoodNormal in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Mason' Gireth—shrir, Mason withdraws from society..." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Gireth—shrir", _nickname = Just "Mason", _prof = "Mason"}))
+                Nothing
+                Nothing
+                Nothing
+                ["withdraws from society...",""] 
+    , let tag=LEMoodInsane in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Miner' Ingishshetb€th, Miner has been possessed!" ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Ingishshetb€th", _nickname = Just "Miner", _prof = "Miner"}))
+                Nothing
+                Nothing
+                Nothing
+                ["has been possessed!"] 
     , let tag=LESystem in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Loaded region1, Xemomon (The Mythical Realms) at coordinates (113,93)" ~?= 
             LogEntryData tag 
@@ -341,4 +381,15 @@ tpLogEntryData = TestList
 --
 
 
-
+tpLogEntryData1 :: Test
+tpLogEntryData1 = TestList
+    [ let tag=LESkillLevel in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`New Warrior' Dodўkthabum, Axedwarf: I have improved my discipline.  That was satisfying." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Dodўkthabum", _nickname = Just "New Warrior", _prof = "Axedwarf"}))
+                Nothing
+                Nothing
+                Nothing
+                ["I have improved my discipline", "That was satisfying."]
+    ] where
+        cfg = LogParseConfig

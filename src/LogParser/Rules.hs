@@ -537,7 +537,7 @@ pLogEntryData t@LEAnimalSlaughtered = do
     string "has been slaughtered."
     return $ newLogEntryData & tag .~ t
         & mat ?~ m
-pLogEntryData t@LEDorfHasBecome = do
+pLogEntryData t@LESomeoneBecome = do
     try ( do
         optional (string "The ")
         dA <- pActor ["has"]
@@ -568,6 +568,30 @@ pLogEntryData t@LEDorfHasBecome = do
         return $ newLogEntryData & tag .~ t
             & ac1 ?~ dA
             & strs .~ [w1<>w2]
+        )
+    <|> try ( do
+        optional (try (string "A ") <|> string "An ")
+        dA <- pActor ["has"]
+        w1 <- pString "has grown to become a"
+        space
+        m <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ dA
+            & mat ?~ m
+            & strs .~ [w1]
+        )
+    <|> try ( do
+        optional (string "The ")
+        dA <- pActor []
+        w1 <- pString ", being the rightful heir, has inherited the position of "
+        w2 <- try (pString "king") <|> pString "queen"
+        w3 <- pString " of The"
+        space
+        m <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ dA
+            & mat ?~ m
+            & strs .~ [w1<>w2<>w3]
         )
     <|> try ( do
         w1 <- pString "Mayor position is now vacant."
@@ -713,6 +737,144 @@ pLogEntryData t@LEFishing = do
     w2 <- pTillChars "."
     return $ newLogEntryData & tag .~ t
         & strs .~ [w1<>w2<>tp]
+pLogEntryData t@LEAdoption = do
+    sA <- pSomeone ["has"]
+    w1 <- pString "has adopted"
+    space
+    dB <- pActor []
+    char '.'
+    return $ newLogEntryData & tag .~ t
+        & ac1 ?~ Creature sA
+        & ac2 ?~ dB
+        & strs .~ [w1]
+pLogEntryData t@LESkillLevel = do
+    try ( do 
+        dA <- pActor ["is"]
+        w1 <- try (pString "is now ") <|> pString "is no longer "
+        w2Mb <- optionMaybe (pString "very ")
+        w3 <- pString "rusty"
+        space
+        m <- pTillChars "."
+        char '.'
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ dA
+            & mat ?~ m
+            & strs .~ [w1<>fromMaybe "" w2Mb<>w3]
+        )
+    <|> try ( do
+        dA <- pActor ["has"]
+        w1 <- pString "has became "
+        w2 <- try (pString "Proficient") 
+            <|> try (pString "Accomplished")
+            <|> pString "Legendary"
+        space
+        m <- pTillChars "."
+        char '.'
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ dA
+            & mat ?~ m
+            & strs .~ [w1<>w2]
+        )
+    <|> ( do
+        dA <- pActor []
+        w1 <- pString ": "
+        w2 <- pTillChars "."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ dA
+            & strs .~ [w1<>w2<>". That was very satisfying!"]
+        )
+pLogEntryData t@LEMoodNormal = do
+    dA <- pActor ["cancels", "is", "withdraws", "begins", "has"]
+    try ( do 
+            w1 <- pTillChars ":"
+            w2 <- pString ": Taken by mood."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1<>w2, ""]
+            )
+        <|> try ( do 
+            w1 <- pString "is taken by a fey mood!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1, ""]
+            )
+        <|> try ( do 
+            w1 <- pString "withdraws from society..."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1, ""]
+            )
+        <|> try ( do 
+            w1 <- pString "begins to stalk and brood..."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1, ""]
+            )
+        <|> try ( do 
+            w1 <- pString "has begun a mysterious construction!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1, ""]
+            )
+        <|> try ( do 
+            w1 <- pString "has claimed a"
+            space
+            m <- pTillChars "."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & mat ?~ m
+                & strs .~ [w1, tp]
+            )
+        <|> ( do 
+            w1 <- pString "has created "
+            w2 <- pTillChars ","
+            w3 <- pString " a"
+            m <- pTillChars "!"
+            w4 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & mat ?~ m
+                & strs .~ [w1<>w2<>tc<>w3, "! "<>w4]
+            )
+pLogEntryData t@LEMoodInsane = do
+    dA <- pActor ["has", "looses", "cancels", "is"]
+    try ( do 
+            w1 <- pString "has been possessed!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1]
+            )
+        <|> try ( do 
+            w1 <- pString "looses a roaring laughter, fell and terrible!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1]
+            )
+        <|> try ( do 
+            w1 <- pTillChars ":"
+            w2 <- pString ": Went insane."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1<>w2]
+            )
+        <|> try ( do 
+            w1 <- pString "has gone berserk!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1]
+            )
+        <|> try ( do 
+            w1 <- pString "has gone stark raving mad!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1]
+            )
+        <|> try ( do 
+            w1 <- pString "is stricken by melancholy!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1]
+            )
 pLogEntryData t@LESeason = do
     wA <- try ( do
             wA' <- pMany1 (noneOf [' '])
@@ -766,7 +928,7 @@ baseRule =
     <|> try (pLogEntryData LEAnimalGrown)
     <|> try (pLogEntryData LEAnimalBirth)
     <|> try (pLogEntryData LEAnimalSlaughtered)
-    <|> try (pLogEntryData LEDorfHasBecome)
+    <|> try (pLogEntryData LESomeoneBecome)
     <|> try (pLogEntryData LEMandate)
     <|> try (pLogEntryData LETrade)
     <|> try (pLogEntryData LEVisit)
@@ -774,6 +936,10 @@ baseRule =
     <|> try (pLogEntryData LEItem)
     <|> try (pLogEntryData LEWeather)
     <|> try (pLogEntryData LEFishing)
+    <|> try (pLogEntryData LEAdoption)
+    <|> try (pLogEntryData LESkillLevel)
+    <|> try (pLogEntryData LEMoodNormal)
+    <|> try (pLogEntryData LEMoodInsane)
     <|> try (pLogEntryData LESeason)
     <|> try (pLogEntryData LESystem)
     <|> pLogEntryData LEDefault

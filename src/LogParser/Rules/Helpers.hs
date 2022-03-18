@@ -84,7 +84,7 @@ pSomething = pSomeone
 pNamePart :: Parsec Text LogParseConfig String
 pNamePart = do
     a <- upper
-    ss <- many1 (noneOf [' '])
+    ss <- many1 (noneOf " .!:,")
     spaces 
     return $ a:ss
 
