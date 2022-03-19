@@ -166,7 +166,6 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The","is knocked over and tumbles backward!",""]
-                
     , let tag=LEBattleStrike in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The macedwarf bashes the axedwarf in the left upper arm with her (+®copper maceЇ+), lightly tapping the target!" ~?= 
             LogEntryData tag 
@@ -199,6 +198,22 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["vomits."]
+    , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The osprey slams into an obstacle!" ~?= 
+            LogEntryData tag 
+                (Just (Creature "osprey"))
+                (Just Nobody)
+                Nothing
+                Nothing
+                ["The","slams into an obstacle!",""]
+    , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The osprey leaps at The hammerdwarf!" ~?= 
+            LogEntryData tag 
+                (Just (Creature "osprey"))
+                (Just (Creature "hammerdwarf"))
+                Nothing
+                Nothing
+                ["The","leaps at The","!"]
     , let tag=LEGore in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "An artery has been opened by the attack and a tendon has been torn!" ~?= 
             LogEntryData tag 
@@ -407,6 +422,22 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["*** STARTING NEW GAME ***"]
+    , let tag=LEGuild in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The Hall of Wheeling, a craftsdwarf guild, has been established." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["The Hall of Wheeling, a craftsdwarf guild, has been established."]
+    , let tag=LEGuild in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The guildhall agreement with The Hall of Wheeling has been satisfied." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["The guildhall agreement with The Hall of Wheeling has been satisfied."]
     , let tag=LEMiningWarning in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Digging designation cancelled: damp stone located." ~?= 
             LogEntryData tag 

@@ -78,8 +78,19 @@ pSomeone endWith = do
             )))
     return $ pack (if null s then s else init s)
 
+pSomeoneNoTrim :: [String] -> Parsec Text LogParseConfig Text
+pSomeoneNoTrim endWith = do
+    s <- manyTill anyChar
+            (try (lookAhead (choice 
+                (map (try . string) endWith)
+            )))
+    return $ pack s
+
 pSomething :: [String] -> Parsec Text LogParseConfig Text
 pSomething = pSomeone
+
+pSomethingNoTrim :: [String] -> Parsec Text LogParseConfig Text
+pSomethingNoTrim = pSomeoneNoTrim
 
 pNamePart :: Parsec Text LogParseConfig String
 pNamePart = do

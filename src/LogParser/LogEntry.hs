@@ -32,6 +32,7 @@ data LogEntryTag =
         | LEBattleHit
         | LEBattleEvade
         | LEBattleStatus
+        | LEBattleEvent2
         | LEAnimalGrown
         | LEAnimalBirth
         | LEAnimalSlaughtered 
@@ -49,6 +50,8 @@ data LogEntryTag =
         | LEMoodInsane
         | LESeason
         | LESystem
+        | LEGuild
+        | LEBattleBreath
         | LEMasterpieceLost
         | LEHazard
         | LEMiningWarning

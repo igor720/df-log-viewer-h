@@ -108,14 +108,16 @@ reassemble reCfg led = ss where
         LEBattleMiss -> ("battle: miss", concat
             [ w 0, a1, w 1, a2, w 2 ])
         LEBattleEvent -> ("battle: event", concat
-            [ w 0, a1, w 1, a2, w 3 ])
+            [ w 0, a1, w 1, a2, w 2 ])
         LEBattleStrike -> ("battle: strike", concat
             [ a1, w 0, a2 ])
         LEBattleHit -> ("battle: hit", w 0)
         LEBattleEvade -> ("battle: evade", concat
-            [ w 0, a1, w 1, a2, w 3 ])
+            [ w 0, a1, w 1, a2, w 2 ])
         LEBattleStatus -> ("battle: status", concat
             [ a1, w 0 ])
+        LEBattleEvent2 -> ("battle: event2", concat
+            [ w 0, a1, w 1, a2, w 2 ])
         LEGore -> ("gore", w 0)
         LEAnimalGrown -> ("animal: grown", m)
         LEAnimalBirth -> ("animal: birth", concat
@@ -144,6 +146,9 @@ reassemble reCfg led = ss where
             [ a1, w 0 ])
         LESeason -> ("season", w 0)
         LESystem -> ("system", w 0)
+        LEGuild -> ("guild", w 0)
+        LEBattleBreath -> ("battle: breath", concat
+            [ w 0, a1, w 1 ])
         LEMasterpieceLost -> ("masterpiece: lost", w 0)
         LEHazard -> ("hazard", concat
             [ a1, w 0 ])

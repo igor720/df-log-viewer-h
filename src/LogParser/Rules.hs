@@ -7,6 +7,14 @@ Stability   : experimental
 Portability : non-portable
 
 Parsing rules module
+
+################################################################################
+## Regular expressions from Petr Prokop (aka 'zwei') `soundsense' DF mod 
+## (http://df.zweistein.cz/soundsense/)
+## and PeridexisErrant's Starter Pack `Announcement Window' utility filters
+## (http://www.bay12forums.com/smf/index.php?topic=126076)
+## were partially used as starting points for parsing rules in this module
+################################################################################
 -}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -445,6 +453,88 @@ pLogEntryData t@LEBattleStatus = do
         return $ newLogEntryData & tag .~ t
             & strs .~ [T.concat [w1, w2]]
         )
+pLogEntryData t@LEBattleEvent2 = do
+    --w1 <- fromMaybe "" <$> optionMaybe (pString "The ")
+    w1 <- pString "The"
+    space
+    (a1, a2, w2, w3) <- try ( do
+            a1' <- pSomeone [ "is", "counterstrikes!", "slams", "pulls", "loses"
+                            , "latches", "skids", "attack" ]
+            w2' <- try (pString "is propelled away")
+                <|> try (pString "is knocked over")
+                <|> try (pString "counterstrikes")
+                <|> try (pString "slams into an obstacle")
+                <|> try (pString "slams into the")
+                <|> try (pString "pulls out and drops the")
+                <|> try (pString "loses hold of the")
+                <|> try (pString "latches on firmly")
+                <|> try (pString "skids along the ground through the")
+                <|> pString "attack is interrupted"
+            w2'' <- pAny
+            return (Creature a1', Nobody, w2'<>w2'', "")
+        )
+        <|> try ( do
+            a1' <- pSomeone [ "lets" ]
+            w2' <- pString "lets the "
+            w2'' <- pSomething ["drop"]
+            w2''' <- pString "drop away as "
+            w2'''' <- pAny
+            return (Creature a1', Nobody, w2'<>w2''<>ts<>w2'''<>w2'''', "")
+        )
+        <|> try ( do
+            a1' <- pSomeone [ "bends" ]
+            w2' <- pString "bends "
+            w2'' <- pSomething ["and"]
+            w2''' <- pString "bends "
+            w2'''' <- pSomething ["colapses!"]
+            w2''''' <- pString "colapses!"
+            return (Creature a1', Nobody, 
+                w2'<>w2''<>ts<>w2'''<>w2''''<>ts<>w2''''', "")
+        )
+        <|> try ( do
+            a1' <- pSomeone [ "cancels" ]
+            w2' <- pString "cancels "
+            w2'' <- pTillChars ":" 
+            w2''' <- try (pString " Too injured.") <|> pString " Webbed."
+            return (Creature a1', Nobody, w2'<>w2''<>tc<>w2''', "")
+        )
+        <|> try ( do
+            a1' <- pSomeone [ "manages", "grabs", "locks"
+                            , "adjusts", "releases", "breaks", "is", "places"
+                            , "struggles", "throws", "shakes", "takes" ]
+            w2' <- try (pString "manages to stop where The")
+                <|> try (pString "grabs The")
+                <|> try (pString "locks The")
+                <|> try (pString "adjusts the grip of The")
+                <|> try (pString "releases the grip of The")
+                <|> try (pString "breaks the grip of The")
+                <|> try (pString "is unable to break the grip of The")
+                <|> try (pString "is ripped away and remains in The")
+                <|> try (pString "places a chokehold on The")
+                <|> try (pString "strangles The")
+                <|> try (pString "struggles in vain against the grip of The")
+                <|> try (pString "throws The")
+                <|> try (pString "shakes The")
+                <|> pString "takes The"
+            space
+            a2' <- pSomeone [ "!", "uses", "by", "with", "on", "from"
+                            , "grip", "around", "down" ]
+            w3' <- pAny
+            return (Creature a1', Creature a2', w2', w3')
+        )
+        <|> ( do
+            a1' <- pSomeone [ "rushes", "leaps" ]
+            w2' <- try (pString "rushes by The")
+                <|> pString "leaps at The"
+            space
+            a2' <- pSomeoneNoTrim [ "!" ]
+            w3' <- pAny
+            return (Creature a1', Creature a2', w2', w3')
+        )
+    return $ newLogEntryData & tag .~ t
+        & ac1 ?~ a1
+        & ac2 ?~ a2
+        & strs .~ [w1, w2, w3]
 pLogEntryData t@LEGore = do
     try ( do
             w1 <- try (pString "A ") <|> pString "An "
@@ -923,11 +1013,11 @@ pLogEntryData t@LESeason = do
         & strs .~ [wA]
 pLogEntryData t@LESystem =
     try ( do
-            wA' <- try (pString "Loaded ") <|> pString "**"
-            wA'' <- pAny
-            let wA = wA'<>wA''
-            return $ newLogEntryData & tag .~ t
-                & strs .~ [wA]
+        wA' <- try (pString "Loaded ") <|> pString "**"
+        wA'' <- pAny
+        let wA = wA'<>wA''
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [wA]
         )
     <|> ( do
         wA' <- pChar 'x'
@@ -935,6 +1025,50 @@ pLogEntryData t@LESystem =
         return $ newLogEntryData & tag .~ t
             & strs .~ [wA'<>wA'']
         )
+pLogEntryData t@LEGuild =
+    try ( do
+        w1 <- pString "The "
+        w2 <- pSomething ["guild"]
+        w3 <- pString "guild, has been established."
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1<>w2<>ts<>w3]
+        )
+    <|> ( do
+        w1 <- pString "The guildhall agreement with "
+        w2 <- pAny
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1<>w2]
+        )
+pLogEntryData t@LEBattleBreath = do
+    --w1 <- fromMaybe "" <$> optionMaybe (pString "The ")
+    w1 <- pString "The"
+    space
+    try ( do
+            a1 <- pSomeone [ "breathes", "hurls", "is", "blockes", "shoots" ]
+            w2 <- try (pString "breathes a")
+                <|> try (pString "breathes fire")
+                <|> try (pString "hurls a ball")
+                <|> try (pString "is caught up in the web")
+                <|> try (pString "is partially free of the web")
+                <|> try (pString "is completely free of the web")
+                <|> try (pString "blocks the breath")
+                <|> try (pString "blocks the fire")
+                <|> pString "shoots out thick strands of webbing"
+            w3 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ Creature a1
+                & strs .~ [w1, w2<>w3]
+            )
+        <|> ( do
+            a1 <- pSomeone [ "is" ]
+            w2 <- pString "is caught in a "
+            w3 <- try (pString "cloud of ") <|> pString "burst of "
+            w4 <- pSomething [ "extract" ]
+            w5 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ Creature a1
+                & strs .~ [w1, w2<>w3<>w4<>ts<>w5]
+            )
 pLogEntryData t@LEMasterpieceLost = do
     w1 <- pString "A masterwork of "
     w2 <- pSomething ["has"]
@@ -994,6 +1128,7 @@ pLogEntryData t@LEMiningWarning = do
             & strs .~ [w1] 
         )
 
+
 -- *****************************************************************************
 
 -- | Base parsing rule; place move specific and more friquent rules to top
@@ -1015,6 +1150,7 @@ baseRule =
     <|> try (pLogEntryData LEBattleHit)
     <|> try (pLogEntryData LEBattleEvade)
     <|> try (pLogEntryData LEBattleStatus)
+    <|> try (pLogEntryData LEBattleEvent2)
     <|> try (pLogEntryData LEGore)
     <|> try (pLogEntryData LEAnimalGrown)
     <|> try (pLogEntryData LEAnimalBirth)
@@ -1033,8 +1169,10 @@ baseRule =
     <|> try (pLogEntryData LEMoodInsane)
     <|> try (pLogEntryData LESeason)
     <|> try (pLogEntryData LESystem)
+    <|> try (pLogEntryData LEGuild)
+    <|> try (pLogEntryData LEBattleBreath)  -- must be on top of LEHazard
     <|> try (pLogEntryData LEMasterpieceLost)
-    <|> try (pLogEntryData LEHazard)
+    <|> try (pLogEntryData LEHazard)        -- must be on bottom of LEBattleBreath
     <|> try (pLogEntryData LEMiningWarning)
     <|> pLogEntryData LEDefault
 
