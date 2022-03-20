@@ -86,11 +86,21 @@ pSomeoneNoTrim endWith = do
             )))
     return $ pack s
 
+pSomeoneWithEnd :: String -> Parsec Text LogParseConfig Text
+pSomeoneWithEnd end = do
+    s <- manyTill anyChar
+            (try (lookAhead (string end)))
+    s' <- string end
+    return $ pack (s<>s')
+
 pSomething :: [String] -> Parsec Text LogParseConfig Text
 pSomething = pSomeone
 
 pSomethingNoTrim :: [String] -> Parsec Text LogParseConfig Text
 pSomethingNoTrim = pSomeoneNoTrim
+
+pSomethingWithEnd :: String -> Parsec Text LogParseConfig Text
+pSomethingWithEnd = pSomeoneWithEnd
 
 pNamePart :: Parsec Text LogParseConfig String
 pNamePart = do
@@ -126,6 +136,7 @@ pDorf = do
                             try (pString "commander")
                             <|> try (pString "helm")
                             <|> try (pString "crypt")
+                            <|> try (pString "of the guard")
                             <|> try (pString "of")
                             <|> pString "necromancer"
                             )

@@ -69,7 +69,7 @@ tpLogEntryData = TestList
                 Nothing
                 (Just "Prepare Lavish Meal")
                 Nothing
-                ["Needs unrotten cookable solid item"]
+                ["cancels",":","Needs unrotten cookable solid item"]
     , let tag=LEProductionCompleted in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Shear Animal (1) has been completed." ~?= 
             LogEntryData tag 
@@ -77,6 +77,14 @@ tpLogEntryData = TestList
                 Nothing
                 (Just "Shear Animal")
                 (Just "1")
+                []
+    , let tag=LEProductionCompleted in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Make bronze bars (use bars) (15) has been completed." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                (Just "Make bronze bars (use bars)")
+                (Just "15")
                 []
     , let tag=LEMasterpieceImproved in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Stѓkud Idstorlut has improved a 1mussel shell earring1 masterfully!" ~?= 
@@ -214,6 +222,14 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The","leaps at The","!"]
+    , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The cat locks The blue dragon's wing with The cat's hand!" ~?= 
+            LogEntryData tag 
+                (Just (Creature "cat"))
+                (Just (Creature "blue dragon's"))
+                Nothing
+                Nothing
+                ["The","locks The","wing with The cat's hand!"]
     , let tag=LEGore in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "An artery has been opened by the attack and a tendon has been torn!" ~?= 
             LogEntryData tag 
@@ -366,14 +382,6 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["There is nothing to catch in the southwestern swamps."]
-    , let tag=LESeason in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "Autumn has arrived on the calendar." ~?= 
-            LogEntryData tag 
-                Nothing
-                Nothing
-                Nothing
-                Nothing
-                ["Autumn has arrived on the calendar."]
     , let tag=LEAdoption in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Reg Mist€mtathtat, Stray Kitten (Tame) has adopted `Carpenter' Ronstizustuth, Carpenter." ~?= 
             LogEntryData tag 
@@ -406,22 +414,6 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["has been possessed!"] 
-    , let tag=LESystem in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "Loaded region1, Xemomon (The Mythical Realms) at coordinates (113,93)" ~?= 
-            LogEntryData tag 
-                Nothing
-                Nothing
-                Nothing
-                Nothing
-                ["Loaded region1, Xemomon (The Mythical Realms) at coordinates (113,93)"]
-    , let tag=LESystem in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "*** STARTING NEW GAME ***" ~?= 
-            LogEntryData tag 
-                Nothing
-                Nothing
-                Nothing
-                Nothing
-                ["*** STARTING NEW GAME ***"]
     , let tag=LEGuild in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The Hall of Wheeling, a craftsdwarf guild, has been established." ~?= 
             LogEntryData tag 
@@ -446,6 +438,46 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["Digging designation cancelled: damp stone located."]
+    , let tag=LEMigrants in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Some migrants have arrived." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["Some migrants have arrived."]
+    , let tag=LESettlement in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Bekombomrek and the surrounding lands have been made a duchy." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["Bekombomrek and the surrounding lands have been made a duchy."]
+    , let tag=LESeason in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Autumn has arrived on the calendar." ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["Autumn has arrived on the calendar."]
+    , let tag=LESystem in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Loaded region1, Xemomon (The Mythical Realms) at coordinates (113,93)" ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["Loaded region1, Xemomon (The Mythical Realms) at coordinates (113,93)"]
+    , let tag=LESystem in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "*** STARTING NEW GAME ***" ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["*** STARTING NEW GAME ***"]
 
     ] where
         cfg = LogParseConfig

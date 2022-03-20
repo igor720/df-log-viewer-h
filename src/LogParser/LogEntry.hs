@@ -33,6 +33,7 @@ data LogEntryTag =
         | LEBattleEvade
         | LEBattleStatus
         | LEBattleEvent2
+        | LEBattleTrance
         | LEAnimalGrown
         | LEAnimalBirth
         | LEAnimalSlaughtered 
@@ -48,13 +49,15 @@ data LogEntryTag =
         | LESkillLevel
         | LEMoodNormal
         | LEMoodInsane
-        | LESeason
-        | LESystem
         | LEGuild
         | LEBattleBreath
         | LEMasterpieceLost
         | LEHazard
         | LEMiningWarning
+        | LEMigrants
+        | LESettlement
+        | LESeason
+        | LESystem
     deriving (Show, Eq, Enum, Ord, Read, Bounded)
 
 $(deriveTextShow ''LogEntryTag)

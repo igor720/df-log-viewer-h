@@ -103,23 +103,34 @@ pLogEntryData t@LECraftCancel = do
         & job ?~ j
         & mat ?~ m
 pLogEntryData t@LEJobCancel = do
-    acA <- pActor ["cancels"]
-    string "cancels "
-    j <- pMany1 (noneOf [':'])
-    string ": "
-    wA <- pTillChars "."
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ acA
-        & job ?~ j
-        & strs .~ [wA] 
+    try ( do
+            acA <- pActor ["cancels"]
+            string "cancels "
+            j <- pMany1 (noneOf [':'])
+            string ": "
+            wA <- pTillChars "."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & job ?~ j
+                & strs .~ ["cancels",":", wA] 
+        )
+    <|> ( do
+        w1 <- pString "Jobs removed from unpowered Magma "
+        w2 <- pAny
+        return $ newLogEntryData & tag .~ t
+                & strs .~ [w1<>w2, "", ""] 
+        )
 pLogEntryData t@LEProductionCompleted = do
-    jobS <- pTillChars "("
-    matS <- pMany1 digit
+    j <- pack <$> manyTill anyChar
+            (try (lookAhead (string " (" >> many1 digit >> char ')')))
+    space
+    char '('
+    m <- pMany1 digit
     char ')'
     string " has been completed."
     return $ newLogEntryData & tag .~ t
-        & job ?~ T.init jobS
-        & mat ?~ matS
+        & job ?~ j
+        & mat ?~ m
 pLogEntryData t@LEMasterpieceImproved = do
     acA <- pActor ["has"]
     string "has improved a "
@@ -499,25 +510,35 @@ pLogEntryData t@LEBattleEvent2 = do
             return (Creature a1', Nobody, w2'<>w2''<>tc<>w2''', "")
         )
         <|> try ( do
-            a1' <- pSomeone [ "manages", "grabs", "locks"
-                            , "adjusts", "releases", "breaks", "is", "places"
-                            , "struggles", "throws", "shakes", "takes" ]
-            w2' <- try (pString "manages to stop where The")
-                <|> try (pString "grabs The")
-                <|> try (pString "locks The")
-                <|> try (pString "adjusts the grip of The")
+            a1' <- pSomeone [ "locks", "releases", "is", "places", "strangles" ]
+            w2' <- try (pString "locks The")
                 <|> try (pString "releases the grip of The")
-                <|> try (pString "breaks the grip of The")
+                <|> try (pString "releases the joint lock of The")
                 <|> try (pString "is unable to break the grip of The")
                 <|> try (pString "is ripped away and remains in The")
                 <|> try (pString "places a chokehold on The")
-                <|> try (pString "strangles The")
+                <|> pString "strangles The"
+            space
+            a2' <- pSomeoneWithEnd "'s"
+            space
+            w3' <- pAny
+            return (Creature a1', Creature a2', w2', w3')
+        )
+        <|> try ( do
+            a1' <- pSomeone [ "manages", "grabs"
+                            , "adjusts", "releases", "breaks"
+                            , "struggles", "throws", "shakes", "takes" ]
+            w2' <- try (pString "manages to stop where The")
+                <|> try (pString "grabs The")
+                <|> try (pString "adjusts the grip of The")
+                <|> try (pString "releases the grip of The")
+                <|> try (pString "breaks the grip of The")
                 <|> try (pString "struggles in vain against the grip of The")
                 <|> try (pString "throws The")
                 <|> try (pString "shakes The")
                 <|> pString "takes The"
             space
-            a2' <- pSomeone [ "!", "uses", "by", "with", "on", "from"
+            a2' <- pSomeone [ "uses", "by", "with", "on", "from"
                             , "grip", "around", "down" ]
             w3' <- pAny
             return (Creature a1', Creature a2', w2', w3')
@@ -535,6 +556,15 @@ pLogEntryData t@LEBattleEvent2 = do
         & ac1 ?~ a1
         & ac2 ?~ a2
         & strs .~ [w1, w2, w3]
+pLogEntryData t@LEBattleTrance = do
+    w1 <- fromMaybe "" <$> optionMaybe (pString "The")
+    spaces
+    a1 <- pActor [ "has" ]
+    w2 <- try (pString "has entered a martial trance!") 
+        <|> pString "has left the martial trance."
+    return $ newLogEntryData & tag .~ t
+        & ac1 ?~ a1
+        & strs .~ [w1, w2]
 pLogEntryData t@LEGore = do
     try ( do
             w1 <- try (pString "A ") <|> pString "An "
@@ -782,11 +812,18 @@ pLogEntryData t@LETrade = do
             & strs .~ [w1<>w2<>w3<>tp]
         )
     <|> try ( do
-        w1 <- pSomething ["cancels"]
+        w1 <- pSomething [ "cancels" ]
         w2 <- pString "cancels Trade at Depot: "
         w3 <- pTillChars "."
         return $ newLogEntryData & tag .~ t
             & strs .~ [w1<>w2<>w3<>tp]
+        )
+    <|> ( do
+        a1 <- pActor [ "has" ]
+        w1 <- pString "has altered the prices of goods."
+        return $ newLogEntryData & tag .~ t
+            & ac1 ?~ a1
+            & strs .~ [w1]
         )
 pLogEntryData t@LEVisit = do
     try ( do
@@ -996,35 +1033,6 @@ pLogEntryData t@LEMoodInsane = do
                 & ac1 ?~ dA
                 & strs .~ [w1]
             )
-pLogEntryData t@LESeason = do
-    wA <- try ( do
-            wA' <- pMany1 (noneOf [' '])
-            wA'' <- pString " has arrived"
-            wA''' <- pAny
-            return $ wA'<>wA''<>wA'''
-            )
-        <|> try (pString "It is now summer.")
-        <|> try (pString "Autumn has come.")
-        <|> try (pString "Winter is upon you.")
-        <|> try (pString "The wet season has arrived!")
-        <|> try (pString "The dry season has come")
-        <|> pString "Nothing has arrived on the calendar."
-    return $ newLogEntryData & tag .~ t
-        & strs .~ [wA]
-pLogEntryData t@LESystem =
-    try ( do
-        wA' <- try (pString "Loaded ") <|> pString "**"
-        wA'' <- pAny
-        let wA = wA'<>wA''
-        return $ newLogEntryData & tag .~ t
-            & strs .~ [wA]
-        )
-    <|> ( do
-        wA' <- pChar 'x'
-        wA'' <- pMany1 digit
-        return $ newLogEntryData & tag .~ t
-            & strs .~ [wA'<>wA'']
-        )
 pLogEntryData t@LEGuild =
     try ( do
         w1 <- pString "The "
@@ -1127,6 +1135,54 @@ pLogEntryData t@LEMiningWarning = do
         return $ newLogEntryData & tag .~ t
             & strs .~ [w1] 
         )
+pLogEntryData t@LEMigrants = do
+    w1 <- try ( pString "The fortress attracted no migrants")
+        <|> try (pString "No one even considered making the")
+        <|> try (pString "A migrant has arrived.")
+        <|> try ( do 
+                w1' <- pString "Some migrants have "
+                w1'' <- try (pString "arrived")
+                    <|> pString "decided to brave this"
+                return $ w1'<>w1''
+                )
+    w2 <- pAny                
+    return $ newLogEntryData & tag .~ t
+        & strs .~ [w1<>w2]
+pLogEntryData t@LESettlement = do
+    w1 <- pSomething [ "and" ]
+    w2 <- pString "and the surrounding lands have been made a"
+    w3 <- pAny
+    return $ newLogEntryData & tag .~ t
+        & strs .~ [w1<>ts<>w2<>w3]
+pLogEntryData t@LESeason = do
+    wA <- try ( do
+            wA' <- pMany1 (noneOf [' '])
+            wA'' <- pString " has arrived"
+            wA''' <- pAny
+            return $ wA'<>wA''<>wA'''
+            )
+        <|> try (pString "It is now summer.")
+        <|> try (pString "Autumn has come.")
+        <|> try (pString "Winter is upon you.")
+        <|> try (pString "The wet season has arrived!")
+        <|> try (pString "The dry season has come")
+        <|> pString "Nothing has arrived on the calendar."
+    return $ newLogEntryData & tag .~ t
+        & strs .~ [wA]
+pLogEntryData t@LESystem =
+    try ( do
+        wA' <- try (pString "Loaded ") <|> pString "**"
+        wA'' <- pAny
+        let wA = wA'<>wA''
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [wA]
+        )
+    <|> ( do
+        wA' <- pChar 'x'
+        wA'' <- pMany1 digit
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [wA'<>wA'']
+        )
 
 
 -- *****************************************************************************
@@ -1151,6 +1207,7 @@ baseRule =
     <|> try (pLogEntryData LEBattleEvade)
     <|> try (pLogEntryData LEBattleStatus)
     <|> try (pLogEntryData LEBattleEvent2)
+    <|> try (pLogEntryData LEBattleTrance)
     <|> try (pLogEntryData LEGore)
     <|> try (pLogEntryData LEAnimalGrown)
     <|> try (pLogEntryData LEAnimalBirth)
@@ -1167,14 +1224,16 @@ baseRule =
     <|> try (pLogEntryData LESkillLevel)
     <|> try (pLogEntryData LEMoodNormal)
     <|> try (pLogEntryData LEMoodInsane)
-    <|> try (pLogEntryData LESeason)
-    <|> try (pLogEntryData LESystem)
     <|> try (pLogEntryData LEGuild)
     <|> try (pLogEntryData LEBattleBreath)  -- must be on top of LEHazard
     <|> try (pLogEntryData LEMasterpieceLost)
     <|> try (pLogEntryData LEHazard)        -- must be on bottom of LEBattleBreath
     <|> try (pLogEntryData LEMiningWarning)
-    <|> pLogEntryData LEDefault
+    <|> try (pLogEntryData LEMigrants)
+    <|> try (pLogEntryData LESettlement)
+    <|> try (pLogEntryData LESeason)
+    <|> try (pLogEntryData LESystem)
+    <|> pLogEntryData LEDefault             -- must be the last of all
 
 -- | Parse one log entry
 parseLogEntry :: LogParseConfig -> Text -> LogEntryData

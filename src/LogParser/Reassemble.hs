@@ -83,76 +83,52 @@ reassemble reCfg led = ss where
     o txt = map (LEC LECOther) $ T.words txt
     o1 :: Text -> [LEComponent]
     o1 txt = [LEC LECOther txt]
+    c = concat
     ss = case led^. tag of
         LEDefault -> ("default", w 0)
-        LEJobSuspension -> ("job: suspension", concat
-            [ w 0, j, w 1, m, w 2, a1, o1 "." ])
-        LECraftCancel -> ("craft: cancel", concat 
-            [ j, o1 ":", a1, o1 "needs", m ])
-        LEJobCancel -> ("job: cancel", concat
-            [ j, o1 ":", a1, w 0 ])
-        LEProductionCompleted -> ("production: completed", concat
-            [ j, o1 " (", m, o1 ") " ])
-        LEMasterpieceImproved -> ("masterpiece: improved", concat
-            [ m, o1 "by", a1 ])
-        LEMasterpieceCreated -> ("masterpiece: created", concat
-            [ a1, w 0 ])
-        LEDeathFound -> ("death: found", concat
-            [ a1, w 0 ])
-        LECrimeTheft -> ("crime: theft", concat
-            [ m, w 0 ])
-        LEDFHackAutomation -> ("dfhack: automation", concat
-            [ o1 "Marked ", m, o1 "items", w 0, j ])
-        LEMiningStruck -> ("mining: struck", concat
-            [ w 0, m, o1 "!" ])
-        LEBattleMiss -> ("battle: miss", concat
-            [ w 0, a1, w 1, a2, w 2 ])
-        LEBattleEvent -> ("battle: event", concat
-            [ w 0, a1, w 1, a2, w 2 ])
-        LEBattleStrike -> ("battle: strike", concat
-            [ a1, w 0, a2 ])
-        LEBattleHit -> ("battle: hit", w 0)
-        LEBattleEvade -> ("battle: evade", concat
-            [ w 0, a1, w 1, a2, w 2 ])
-        LEBattleStatus -> ("battle: status", concat
-            [ a1, w 0 ])
-        LEBattleEvent2 -> ("battle: event2", concat
-            [ w 0, a1, w 1, a2, w 2 ])
+        LEJobSuspension -> ("job: suspension",              c [ w 0, j, w 1, m, w 2, a1, o1 "." ])
+        LECraftCancel -> ("craft: cancel",                  c [ j, o1 ":", a1, o1 "needs", m ])
+        LEJobCancel -> ("job: cancel",                      c [ a1, w 0, j, w 1, w 2 ])
+        LEProductionCompleted -> ("production: completed",  c [ j, o1 " (", m, o1 ") " ])
+        LEMasterpieceImproved -> ("masterpiece: improved",  c [ m, o1 "by", a1 ])
+        LEMasterpieceCreated -> ("masterpiece: created",    c [ a1, w 0 ])
+        LEDeathFound -> ("death: found",                    c [ a1, w 0 ])
+        LECrimeTheft -> ("crime: theft",                    c [ m, w 0 ])
+        LEDFHackAutomation -> ("dfhack: automation",        c [ o1 "Marked ", m, o1 "items", w 0, j ])
+        LEMiningStruck -> ("mining: struck",                c [ w 0, m, o1 "!" ])
+        LEBattleMiss -> ("battle: miss",                    c [ w 0, a1, w 1, a2, w 2 ])
+        LEBattleEvent -> ("battle: event",                  c [ w 0, a1, w 1, a2, w 2 ])
+        LEBattleStrike -> ("battle: strike",                c [ a1, w 0, a2 ])
+        LEBattleHit -> ("battle: hit", w 0)                 
+        LEBattleEvade -> ("battle: evade",                  c [ w 0, a1, w 1, a2, w 2 ])
+        LEBattleStatus -> ("battle: status",                c [ a1, w 0 ])
+        LEBattleEvent2 -> ("battle: event2",                c [ w 0, a1, w 1, a2, w 2 ])
+        LEBattleTrance -> ("battle: trance",                c [ w 0, a1, w 1 ])
         LEGore -> ("gore", w 0)
         LEAnimalGrown -> ("animal: grown", m)
-        LEAnimalBirth -> ("animal: birth", concat
-            [ m, w 0 ])
+        LEAnimalBirth -> ("animal: birth",                  c [ m, w 0 ])
         LEAnimalSlaughtered -> ("animal: slaughtered", m)
-        LESomeoneBecome -> ("someone: become", concat
-            [ a1, w 0, w 1, m ])
-        LEMandate -> ("mandate", concat
-            [ a1, w 0 ])
-        LETrade -> ("trade", w 0)
-        LEVisit -> ("visit", concat
-            [ w 0, a1, w 1 ])
-        LESting -> ("sting", concat
-            [ a1, w 0 ])
-        LEItem -> ("item", concat
-            [ a1, w 0 ])
+        LESomeoneBecome -> ("someone: become",              c [ a1, w 0, w 1, m ])
+        LEMandate -> ("mandate",                            c [ a1, w 0 ])
+        LETrade -> ("trade",                                c [ a1, w 0 ])
+        LEVisit -> ("visit",                                c [ w 0, a1, w 1 ])
+        LESting -> ("sting",                                c [ a1, w 0 ])
+        LEItem -> ("item",                                  c [ a1, w 0 ])
         LEWeather -> ("weather", w 0)
         LEFishing -> ("fishing", w 0)
-        LEAdoption -> ("adotion", concat
-            [ a1, w 0, a2, o1 "." ])
-        LESkillLevel -> ("skill: level", concat
-            [ a1, w 0 ])
-        LEMoodNormal -> ("mood: normal", concat
-            [ a1, w 0, m, w 1 ])
-        LEMoodInsane -> ("mood: insane", concat
-            [ a1, w 0 ])
+        LEAdoption -> ("adotion",                           c [ a1, w 0, a2, o1 "." ])
+        LESkillLevel -> ("skill: level",                    c [ a1, w 0 ])
+        LEMoodNormal -> ("mood: normal",                    c [ a1, w 0, m, w 1 ])
+        LEMoodInsane -> ("mood: insane",                    c [ a1, w 0 ])
+        LEGuild -> ("guild", w 0)
+        LEBattleBreath -> ("battle: breath",                c [ w 0, a1, w 1 ])
+        LEMasterpieceLost -> ("masterpiece: lost", w 0)
+        LEHazard -> ("hazard",                              c [ a1, w 0 ])
+        LEMiningWarning -> ("mining: warning", w 0)
+        LEMigrants -> ("migrants", w 0)
+        LESettlement -> ("settlement", w 0)
         LESeason -> ("season", w 0)
         LESystem -> ("system", w 0)
-        LEGuild -> ("guild", w 0)
-        LEBattleBreath -> ("battle: breath", concat
-            [ w 0, a1, w 1 ])
-        LEMasterpieceLost -> ("masterpiece: lost", w 0)
-        LEHazard -> ("hazard", concat
-            [ a1, w 0 ])
-        LEMiningWarning -> ("mining: warning", w 0)
 
 -- *****************************************************************************
 
