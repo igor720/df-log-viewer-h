@@ -102,14 +102,6 @@ tpLogEntryData = TestList
                 Nothing 
                 Nothing 
                 ["has constructed a masterpiece!"]
-    , let tag=LEDeathFound in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "`Hunter' Zimed‰m, Hunter has been found dead, drowned." ~?= 
-            LogEntryData tag 
-                (Just (Dorf {_name = "Zimed‰m", _nickname = Just "Hunter", _prof = "Hunter"}))
-                Nothing
-                Nothing
-                Nothing
-                ["drowned"]
     , let tag=LECrimeTheft in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Zaledenseb Ilb�d Bukith is missing from its proper place!" ~?= 
             LogEntryData tag 
@@ -190,6 +182,14 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The force twists the left hip, tearing apart the muscle and bruising the bone and tearing apart the muscle and bruising the bone!"]
+    , let tag=LEBattleHit in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The force bends the head!" ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["The force bends the head!"]
     , let tag=LEBattleEvade in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The osprey jumps away from The flying ({bismuth bronze bolt})!" ~?= 
             LogEntryData tag 
@@ -206,6 +206,14 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["vomits."]
+    , let tag=LEBattleStatus in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Cog Kѓkdalmist€m, hunting Dog (Tame) is no longer enraged." ~?= 
+            LogEntryData tag 
+                (Just (Creature "Cog Kѓkdalmist€m, hunting Dog (Tame)"))
+                Nothing
+                Nothing
+                Nothing
+                ["is no longer enraged."]
     , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The osprey slams into an obstacle!" ~?= 
             LogEntryData tag 
@@ -215,21 +223,45 @@ tpLogEntryData = TestList
                 Nothing
                 ["The","slams into an obstacle!",""]
     , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "The osprey leaps at The hammerdwarf!" ~?= 
+            "The osprey leaps at the hammerdwarf!" ~?= 
             LogEntryData tag 
                 (Just (Creature "osprey"))
                 (Just (Creature "hammerdwarf"))
                 Nothing
                 Nothing
-                ["The","leaps at The","!"]
+                ["The","leaps at the","!"]
     , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "The cat locks The blue dragon's wing with The cat's hand!" ~?= 
+            "The cat locks the blue dragon's wing with the cat's hand!" ~?= 
             LogEntryData tag 
                 (Just (Creature "cat"))
                 (Just (Creature "blue dragon's"))
                 Nothing
                 Nothing
-                ["The","locks The","wing with The cat's hand!"]
+                ["The","locks the","wing with the cat's hand!"]
+    , let tag=LEEmotion in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Hunter' Zimed‰m, Hunter: This is a fight!  I laugh in the face of death!" ~?=
+            LogEntryData tag 
+                (Just (Dorf {_name = "Zimed‰m", _nickname = Just "Hunter", _prof = "Hunter"}))
+                Nothing
+                Nothing
+                Nothing
+                [": This is a fight! I laugh in the face of death!"]
+    , let tag=LEEmotion in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Crafter' GimЉrith, Bone Carver: Has the tide turned?  I am not scared!" ~?=
+            LogEntryData tag 
+                (Just (Dorf {_name = "GimЉrith", _nickname = Just "Crafter", _prof = "Bone Carver"}))
+                Nothing
+                Nothing
+                Nothing
+                [": Has the tide turned? I am not scared!"]
+    , let tag=LEEmotion in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Manager' Retholdomas, manager: I cannot just stand by.  This might require an answer." ~?=
+            LogEntryData tag 
+                (Just (Dorf {_name = "Retholdomas", _nickname = Just "Manager", _prof = "manager"}))
+                Nothing
+                Nothing
+                Nothing
+                [": I cannot just stand by. This might require an answer."]
     , let tag=LEGore in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "An artery has been opened by the attack and a tendon has been torn!" ~?= 
             LogEntryData tag 
@@ -302,6 +334,14 @@ tpLogEntryData = TestList
                 Nothing
                 (Just "Stray war Dog")
                 ["has become a"]
+    , let tag=LESomeoneBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Cheese Necro' Libashnanir, Dwarf Cheese Maker necromancer has been elected mayor." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Libashnanir", _nickname = Just "Cheese Necro", _prof = "Dwarf Cheese Maker necromancer"}))
+                Nothing
+                Nothing
+                Nothing
+                ["has been elected mayor."]
     , let tag=LEMandate in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Cheese Necro' Libashnanir, mayor necromancer has mandated the construction of certain goods." ~?= 
             LogEntryData tag 
@@ -329,11 +369,11 @@ tpLogEntryData = TestList
     , let tag=LEVisit in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Imepe Lecececa, Elf Animal Caretaker fallen butcher is visiting." ~?= 
             LogEntryData tag 
-                (Just (Dorf {_name = "Imepe Lecececa", _nickname = Nothing, _prof = "Elf Animal Caretaker"}))
+                (Just (Dorf {_name = "Imepe Lecececa", _nickname = Nothing, _prof = "Elf Animal Caretaker fallen butcher"}))
                 Nothing
                 Nothing
                 Nothing
-                ["","fallen butcher is visiting."]
+                ["","is visiting."]
     , let tag=LEVisit in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Ormol Budojeha, Human Beast Hunter is visiting." ~?= 
             LogEntryData tag 
@@ -454,6 +494,32 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["Bekombomrek and the surrounding lands have been made a duchy."]
+    , let tag=LESettlement in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            ("The hillocks of Abbeyportents has been founded nearly a day's travel to the south and looks "
+                <>"to your thriving economy for its future prosperity.") ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["The hillocks of Abbeyportents has been founded nearly a day's travel to the south and looks "
+                    <>"to your thriving economy for its future prosperity."]
+    , let tag=LEDeath in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Hauler' Irtirinod, Peasant has bled to death." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Irtirinod", _nickname = Just "Hauler", _prof = "Peasant"}))
+                Nothing
+                Nothing
+                Nothing
+                ["has bled to death."]
+    , let tag=LEDeathFound in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Hunter' Zimed‰m, Hunter has been found dead, drowned." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Zimed‰m", _nickname = Just "Hunter", _prof = "Hunter"}))
+                Nothing
+                Nothing
+                Nothing
+                ["drowned"]
     , let tag=LESeason in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Autumn has arrived on the calendar." ~?= 
             LogEntryData tag 
@@ -487,13 +553,13 @@ tpLogEntryData = TestList
 
 tpLogEntryData1 :: Test
 tpLogEntryData1 = TestList
-    [ let tag=LESkillLevel in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "`New Warrior' Dodўkthabum, Axedwarf: I have improved my discipline.  That was satisfying." ~?= 
+    [ let tag=LEEmotion in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "`Manager' Retholdomas, manager: I cannot just stand by.  This might require an answer." ~?=
             LogEntryData tag 
-                (Just (Dorf {_name = "Dodўkthabum", _nickname = Just "New Warrior", _prof = "Axedwarf"}))
+                (Just (Dorf {_name = "Retholdomas", _nickname = Just "Manager", _prof = "manager"}))
                 Nothing
                 Nothing
                 Nothing
-                ["I have improved my discipline", "That was satisfying."]
+                [": I cannot just stand by. This might require an answer."]
     ] where
         cfg = LogParseConfig

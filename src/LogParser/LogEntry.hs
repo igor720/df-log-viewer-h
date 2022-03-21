@@ -21,7 +21,6 @@ data LogEntryTag =
         | LEProductionCompleted
         | LEMasterpieceImproved
         | LEMasterpieceCreated
-        | LEDeathFound
         | LECrimeTheft
         | LEDFHackAutomation 
         | LEMiningStruck 
@@ -34,6 +33,7 @@ data LogEntryTag =
         | LEBattleStatus
         | LEBattleEvent2
         | LEBattleTrance
+        | LEEmotion
         | LEAnimalGrown
         | LEAnimalBirth
         | LEAnimalSlaughtered 
@@ -56,6 +56,8 @@ data LogEntryTag =
         | LEMiningWarning
         | LEMigrants
         | LESettlement
+        | LEDeath
+        | LEDeathFound
         | LESeason
         | LESystem
     deriving (Show, Eq, Enum, Ord, Read, Bounded)

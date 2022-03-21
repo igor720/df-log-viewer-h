@@ -150,16 +150,6 @@ pLogEntryData t@LEMasterpieceCreated = do
     return $ newLogEntryData & tag .~ t
         & ac1 ?~ acA
         & strs .~ [w1<>w2<>w3<>w4<>texcl] 
-pLogEntryData t@LEDeathFound = do
-    acA <- pActor ["has"]
-    string "has been found dead"
-    wA <- try 
-        (lookAhead (char '.') >> return "")
-        <|> (char ',' >> space >> pMany1 (noneOf ['.']))
-    char '.'
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ acA
-        & strs .~ [wA]
 pLogEntryData t@LECrimeTheft = do
     matS <- pFullName
     wA <- pString "is missing from its proper place!"
@@ -343,11 +333,23 @@ pLogEntryData t@LEBattleHit = do
             w3' <- pAny
             return [w1', ts, w2', w3']
             )
-        <|> ( do
+        <|> try ( do
             w1' <- pString "flying "
             w2' <- pSomething ["strikes"]
             w3' <- pAny
             return [w1', w2', w3']
+            )
+        <|> try ( do
+            w1' <- pSomething ["twists"]
+            w2' <- pString "twists the "
+            w3' <- pTillChars "!"
+            return [w1'<>ts<>w2'<>w3'<>texcl]
+            )
+        <|> ( do
+            w1' <- pSomething ["bends"]
+            w2' <- pString "bends the "
+            w3' <- pTillChars "!"
+            return [w1'<>ts<>w2'<>w3'<>texcl]
             )
     return $ newLogEntryData & tag .~ t
         & strs .~ [T.concat (w1'':w2s'')]
@@ -393,7 +395,7 @@ pLogEntryData t@LEBattleStatus = do
     try ( do
         (dA'', w1s'') <- try ( do
                 option "" (pString "The ")
-                dA <- pActor [ "skids", "has", "is", "gives", "passes", "looks"
+                dA <- pSomeone [ "skids", "has", "is", "gives", "passes", "looks"
                             , "vomits", "retches", "regains" ]
                 w2 <- try (pString "skids along the ground!")
                     <|> try (pString "has been stunned")
@@ -423,18 +425,18 @@ pLogEntryData t@LEBattleStatus = do
                 )
             <|> try ( do
                 option "" (pString "The ")
-                dA <- pActor ["cancels"]
+                dA <- pSomeone ["cancels"]
                 w2 <- pString "cancels"
                 w3 <- pTillChars ":"
                 w4 <- try (pString " Paralyzed.") 
                     <|> pString " Resting injury."
                 return (dA, [w2, w3, w4])
                 )
-            <|> try ( do
+            <|> ( do
                 w1' <- pack . (:[]) <$> oneOf "tT"
                 w2' <- pString "he "
                 (dA', w3s') <- try ( do
-                        dA <- pActor ["vomits", "retches", "looks", "trouble"]
+                        dA <- pSomeone ["vomits", "retches", "looks", "trouble"]
                         w2 <- try (pString "vomits")
                             <|> try (pString "retches")
                             <|> try (pString "looks sick")
@@ -444,7 +446,7 @@ pLogEntryData t@LEBattleStatus = do
                         return (dA, [w2, w3])
                         )
                     <|> try ( do
-                        dA <- pActor ["skips", "rolls", "unrolls"]
+                        dA <- pSomeone ["skips", "rolls", "unrolls"]
                         w2 <- try (pString "skips across the water!")
                             <|> try (pString "rolls into a ball.")
                             <|> pString "unrolls."
@@ -453,8 +455,8 @@ pLogEntryData t@LEBattleStatus = do
                 return (dA', w1':w2':w3s')
                 )
         return $ newLogEntryData & tag .~ t
+            & ac1 ?~ Creature dA''
             & strs .~ [T.concat w1s'']
-            & ac1 ?~ dA''
         )
     <|> ( do
         w1 <- pString "The vomit "
@@ -473,6 +475,7 @@ pLogEntryData t@LEBattleEvent2 = do
                             , "latches", "skids", "attack" ]
             w2' <- try (pString "is propelled away")
                 <|> try (pString "is knocked over")
+                <|> try (pString "is ripped to")
                 <|> try (pString "counterstrikes")
                 <|> try (pString "slams into an obstacle")
                 <|> try (pString "slams into the")
@@ -511,46 +514,49 @@ pLogEntryData t@LEBattleEvent2 = do
         )
         <|> try ( do
             a1' <- pSomeone [ "locks", "releases", "is", "places", "strangles" ]
-            w2' <- try (pString "locks The")
-                <|> try (pString "releases the grip of The")
-                <|> try (pString "releases the joint lock of The")
-                <|> try (pString "is unable to break the grip of The")
-                <|> try (pString "is ripped away and remains in The")
-                <|> try (pString "places a chokehold on The")
-                <|> pString "strangles The"
+            w2' <- try (pString "locks ")
+                <|> try (pString "releases the grip of ")
+                <|> try (pString "releases the joint lock of ")
+                <|> try (pString "is unable to break the grip of ")
+                <|> try (pString "is ripped away and remains in ")
+                <|> try (pString "places a chokehold on ")
+                <|> pString "strangles "
+            w2'' <- try (pString "the") <|> pString "The"
             space
             a2' <- pSomeoneWithEnd "'s"
             space
             w3' <- pAny
-            return (Creature a1', Creature a2', w2', w3')
+            return (Creature a1', Creature a2', w2'<>w2'', w3')
         )
         <|> try ( do
             a1' <- pSomeone [ "manages", "grabs"
                             , "adjusts", "releases", "breaks"
                             , "struggles", "throws", "shakes", "takes" ]
-            w2' <- try (pString "manages to stop where The")
-                <|> try (pString "grabs The")
-                <|> try (pString "adjusts the grip of The")
-                <|> try (pString "releases the grip of The")
-                <|> try (pString "breaks the grip of The")
-                <|> try (pString "struggles in vain against the grip of The")
-                <|> try (pString "throws The")
-                <|> try (pString "shakes The")
-                <|> pString "takes The"
+            w2' <- try (pString "manages to stop where ")
+                <|> try (pString "grabs ")
+                <|> try (pString "adjusts the grip of ")
+                <|> try (pString "releases the grip of ")
+                <|> try (pString "breaks the grip of ")
+                <|> try (pString "struggles in vain against the grip of ")
+                <|> try (pString "throws ")
+                <|> try (pString "shakes ")
+                <|> pString "takes "
+            w2'' <- try (pString "the") <|> pString "The"
             space
             a2' <- pSomeone [ "uses", "by", "with", "on", "from"
                             , "grip", "around", "down" ]
             w3' <- pAny
-            return (Creature a1', Creature a2', w2', w3')
+            return (Creature a1', Creature a2', w2'<>w2'', w3')
         )
         <|> ( do
             a1' <- pSomeone [ "rushes", "leaps" ]
-            w2' <- try (pString "rushes by The")
-                <|> pString "leaps at The"
+            w2' <- try (pString "rushes by ")
+                <|> pString "leaps at "
+            w2'' <- try (pString "the") <|> pString "The"
             space
             a2' <- pSomeoneNoTrim [ "!" ]
             w3' <- pAny
-            return (Creature a1', Creature a2', w2', w3')
+            return (Creature a1', Creature a2', w2'<>w2'', w3')
         )
     return $ newLogEntryData & tag .~ t
         & ac1 ?~ a1
@@ -565,6 +571,32 @@ pLogEntryData t@LEBattleTrance = do
     return $ newLogEntryData & tag .~ t
         & ac1 ?~ a1
         & strs .~ [w1, w2]
+pLogEntryData t@LEEmotion = do
+    a1 <- pActor []
+    try ( do
+            w1 <- pString ": This is a fight!"
+            spaces
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ a1
+                & strs .~ [w1<>ts<>w2]
+            )
+        <|> try ( do
+            w1 <- pString ": Has the tide turned?"
+            spaces
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ a1
+                & strs .~ [w1<>ts<>w2]
+            )
+        <|> ( do
+            w1 <- pString ": I cannot just stand by."
+            spaces
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ a1
+                & strs .~ [w1<>ts<>w2]
+            )
 pLogEntryData t@LEGore = do
     try ( do
             w1 <- try (pString "A ") <|> pString "An "
@@ -828,11 +860,10 @@ pLogEntryData t@LETrade = do
 pLogEntryData t@LEVisit = do
     try ( do
         acA <- pActor ["is"]
-        w1 <- pSomething ["is"]
-        w2 <- pString "is visiting"
+        w1 <- pString "is visiting."
         return $ newLogEntryData & tag .~ t
             & ac1 ?~ acA
-            & strs .~ ["",if T.null w1 then w2<>tp else w1<>ts<>w2<>tp] 
+            & strs .~ ["", w1] 
         )
     <|> try ( do
         w1 <- pString "The"
@@ -1149,11 +1180,79 @@ pLogEntryData t@LEMigrants = do
     return $ newLogEntryData & tag .~ t
         & strs .~ [w1<>w2]
 pLogEntryData t@LESettlement = do
-    w1 <- pSomething [ "and" ]
-    w2 <- pString "and the surrounding lands have been made a"
-    w3 <- pAny
+    try ( do
+            w1 <- pSomething [ "and" ]
+            w2 <- pString "and the surrounding lands have been made a"
+            w3 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w1<>ts<>w2<>w3]
+            )
+        <|> ( do
+            w1 <- pString "The hillocks of "
+            w2 <- pSomething [ "has" ]
+            w3 <- pString "has been founded "
+            w4 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w1<>w2<>ts<>w3<>w4]
+            )
+pLogEntryData t@LEDeath = do
+    a1 <- pActor ["has", "slams"]
+    w1 <- try ( do
+            w2' <- pString "has been "
+            w3' <- try (pString "struck down")
+                <|> try (pString "crushed by a drawbridge")
+                <|> try (pString "encased in ice")
+                <|> try (pString "encased in cooling lava")
+                <|> try (pString "shot and killed")
+                <|> try (pString "impaled on spikes")
+                <|> try (pString "killed by a flying object")
+                <|> try (pString "killed by a trap")
+                <|> try (pString "murdered by ")
+                <|> pString "scared to death by the "
+            w4' <- pAny
+            return $ w2'<>w3'<>w4'
+            )
+        <|> try ( do
+            w2' <- pString "has died "
+            w3' <- try (pString "of thirst")
+                <|> try (pString "from thirst")
+                <|> try (pString "after colliding with an obstacle")
+                <|> pString "of old age"
+            w4' <- pAny
+            return $ w2'<>w3'<>w4'
+            )
+        <|> try ( do
+            w2' <- pString "has "
+            w3' <- try (pString "succumbed to infection.")
+                <|> try (pString "bled to death.")
+                <|> try (pString "starved to death.")
+                <|> try (pString "suffocated.")
+                <|> try (pString "drowned.")
+                <|> pString "collapsed."
+            return $ w2'<>w3'
+            )
+        <|> pString "slams into an obstacle and blows apart!"
     return $ newLogEntryData & tag .~ t
-        & strs .~ [w1<>ts<>w2<>w3]
+        & ac1 ?~ a1
+        & strs .~ [w1]
+pLogEntryData t@LEDeathFound = do
+    acA <- pActor ["has"]
+    try ( do
+            string "has been found dead"
+            w1 <- try 
+                (lookAhead (char '.') >> return "")
+                <|> (char ',' >> space >> pMany1 (noneOf ['.']))
+            char '.'
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & strs .~ [w1]
+            )
+        <|> ( do
+            w1 <- pString "has been found, starved to death."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & strs .~ [w1]
+            )
 pLogEntryData t@LESeason = do
     wA <- try ( do
             wA' <- pMany1 (noneOf [' '])
@@ -1208,6 +1307,7 @@ baseRule =
     <|> try (pLogEntryData LEBattleStatus)
     <|> try (pLogEntryData LEBattleEvent2)
     <|> try (pLogEntryData LEBattleTrance)
+    <|> try (pLogEntryData LEEmotion)
     <|> try (pLogEntryData LEGore)
     <|> try (pLogEntryData LEAnimalGrown)
     <|> try (pLogEntryData LEAnimalBirth)
@@ -1231,6 +1331,7 @@ baseRule =
     <|> try (pLogEntryData LEMiningWarning)
     <|> try (pLogEntryData LEMigrants)
     <|> try (pLogEntryData LESettlement)
+    <|> try (pLogEntryData LEDeath)
     <|> try (pLogEntryData LESeason)
     <|> try (pLogEntryData LESystem)
     <|> pLogEntryData LEDefault             -- must be the last of all

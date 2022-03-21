@@ -18,6 +18,7 @@ import Control.Lens ( Identity )
 import Data.Text ( pack, unpack, Text )
 import qualified Data.List as L
 import Text.Parsec
+import Data.Maybe
 
 import LogException
 import LogParser.LogEntry
@@ -74,9 +75,10 @@ pSomeone :: [String] -> Parsec Text LogParseConfig Text
 pSomeone endWith = do
     s <- manyTill anyChar
             (try (lookAhead (choice 
-                (map (try . string) endWith)
+                (map (try . string . (' ':)) endWith)
             )))
-    return $ pack (if null s then s else init s)
+    spaces
+    return $ pack s
 
 pSomeoneNoTrim :: [String] -> Parsec Text LogParseConfig Text
 pSomeoneNoTrim endWith = do
@@ -127,27 +129,48 @@ pDorf = do
         ) nicknameStartMb
     (nameS, prof) <- try ( do
             nameS' <- pMany1 (noneOf ",:.!")
+            --parserTrace "label1"
             string ", "
-            prof' <- try pFullName <|> 
-                ( do 
-                    a <- pWord
-                    space
-                    bMb <- optionMaybe (
-                            try (pString "commander")
-                            <|> try (pString "helm")
-                            <|> try (pString "crypt")
-                            <|> try (pString "of the guard")
-                            <|> try (pString "of")
-                            <|> pString "necromancer"
+            prof' <- try ( do
+                    a <- pFullName 
+                    b <- option "" ( do
+                            b' <- try (pString "necromancer")
+                                <|> try (pString "pale hunter")
+                                <|> try (pString "sacred pulp")
+                                <|> pString "fallen butcher"
+                            space
+                            return $ ts<>b'
                             )
-                    cMb <- if bMb==Just "of"
-                        then Just <$> (space >> pFullName)
-                        else return Nothing
-                    return $ a <> case (bMb, cMb) of
-                        (Nothing, _)        -> ""
-                        (Just b, Nothing)   -> " "<>b
-                        (Just b, Just c)    -> " "<>b<>" "<>c
-                )
+                    return $ a<>b
+                    )
+                <|> ( do 
+                    a <- pWord
+                    try ( do
+                            space
+                            bMb <- optionMaybe (
+                                    try (pString "commander")
+                                    <|> try (pString "helm")
+                                    <|> try (pString "crypt")
+                                    <|> try (pString "pulp")
+                                    <|> try (pString "of the guard")
+                                    <|> try (pString "of")
+                                    <|> try (pString "medical dwarf")
+                                    <|> try (pString "ash")
+                                    <|> pString "necromancer"
+                                    )
+                            cMb <- if bMb==Just "of"
+                                then Just <$> (space >> pFullName)
+                                else return Nothing
+                            return $ a <> case (bMb, cMb) of
+                                (Nothing, _)        -> ""
+                                (Just b, Nothing)   -> " "<>b
+                                (Just b, Just c)    -> " "<>b<>" "<>c
+                            )
+                        <|> ( do
+                            lookAhead (oneOf ",:.!")
+                            return a
+                            )
+                    )
             return (nameS', prof')
             ) 
         <|> ( do 
