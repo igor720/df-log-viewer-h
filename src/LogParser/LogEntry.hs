@@ -49,6 +49,8 @@ data LogEntryTag =
         | LESkillLevel
         | LEMoodNormal
         | LEMoodInsane
+        | LEMoodTantrum
+        | LEMoodDepression
         | LEGuild
         | LEBattleBreath
         | LEMasterpieceLost
@@ -58,6 +60,9 @@ data LogEntryTag =
         | LESettlement
         | LEDeath
         | LEDeathFound
+        | LEIntruders
+        | LEWerebeast
+        | LETitan
         | LESeason
         | LESystem
     deriving (Show, Eq, Enum, Ord, Read, Bounded)

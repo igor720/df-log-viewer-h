@@ -22,6 +22,7 @@ import Data.Maybe
 
 import LogException
 import LogParser.LogEntry
+import Control.Monad (when)
 
 
 data LogParseConfig = LogParseConfig    -- empty for now
@@ -128,16 +129,12 @@ pDorf = do
             spaces 
             return $ pack str
         ) nicknameStartMb
-    -- parserTrace "label0"
     (nameS, prof) <- try ( do
             nameS' <- pFullName -- pMany1 (noneOf ",:.!")
             string ", "
             prof' <- try ( do
-                    -- parserTrace "label1"
                     a <- pFullName
-                    -- parserTrace "label2"
                     notFollowedBy (string "(Tame)")
-                    -- parserTrace "label2a"
                     b <- option "" ( do
                             b' <- try (pString "necromancer")
                                 <|> try (pString "pale hunter")
@@ -149,14 +146,14 @@ pDorf = do
                             space
                             return $ ts<>b'
                             )
-                    -- parserTrace "label3"
                     return $ a<>b
                     )
                 <|> ( do 
-                    -- parserTrace "label1a"
                     a <- pWord
                     try ( do
                             space
+                            when (a=="war") $
+                                notFollowedBy (pFullName >> string "(Tame)")
                             bMb <- optionMaybe (
                                     try (pString "commander")
                                     <|> try (pString "helm")
@@ -184,10 +181,8 @@ pDorf = do
             return (nameS', prof')
             ) 
         <|> ( do 
-            -- parserTrace "label4"
             nameS' <- pFullName
             notFollowedBy (try (string ", ") <|> string "(Tame)")
-            -- parserTrace "label4a"
             return (nameS', "")
         )
     spaces 

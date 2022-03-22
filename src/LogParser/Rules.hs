@@ -108,6 +108,7 @@ pLogEntryData t@LEJobCancel = do
             string "cancels "
             j <- pMany1 (noneOf [':'])
             string ": "
+            notFollowedBy (try (string "Throwing"))
             wA <- pTillChars "."
             return $ newLogEntryData & tag .~ t
                 & ac1 ?~ acA
@@ -592,6 +593,38 @@ pLogEntryData t@LEEmotion = do
                 & ac1 ?~ a1
                 & strs .~ [w1<>ts<>w2]
             )
+        <|> try ( do
+            w1 <- pString ": Can it all end so quickly?"
+            spaces
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ a1
+                & strs .~ [w1<>ts<>w2]
+            )
+        <|> try ( do
+            w1 <- pString ": I must withdraw!"
+            spaces
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ a1
+                & strs .~ [w1<>ts<>w2]
+            )
+        <|> try ( do
+            w1 <- pString ": Help!"
+            spaces
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ a1
+                & strs .~ [w1<>ts<>w2]
+            )
+        <|> try ( do
+            w1 <- pString ": The battle rages..."
+            spaces
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ a1
+                & strs .~ [w1<>ts<>w2]
+            )
         <|> ( do
             w1 <- pString ": I cannot just stand by."
             spaces
@@ -665,7 +698,7 @@ pLogEntryData t@LEGore = do
                 & strs .~ [w1]
             )
     <|> try ( do
-            w1 <- pString "Many nerves have been severed "
+            w1 <- pString "Many nerves have been severed"
             w2 <- pAny
             return $ newLogEntryData & tag .~ t
                 & strs .~ [w1<>w2]
@@ -768,16 +801,12 @@ pLogEntryData t@LESomeoneBecome = do
             )
         <|> try ( do
             optional (try (string "The "))
-            dA <- pActor []
-            w1 <- pString ", being the rightful heir, has inherited the position of "
-            w2 <- try (pString "king") <|> pString "queen"
-            w3 <- pString " of The"
-            space
-            m <- pTillChars "."
+            dA <- pTillChars ","
+            w1 <- pString " being the rightful heir, has inherited the position of "
+            w2 <- pAny
             return $ newLogEntryData & tag .~ t
-                & ac1 ?~ dA
-                & mat ?~ m
-                & strs .~ [w1<>w2<>w3]
+                & ac1 ?~ Creature dA
+                & strs .~ [tc<>w1<>w2]
             )
         <|> try ( do
             w1 <- pString "Mayor position is now vacant."
@@ -1061,8 +1090,49 @@ pLogEntryData t@LEMoodInsane = do
                 & ac1 ?~ dA
                 & strs .~ [w1]
             )
-        <|> try ( do 
+        <|> ( do 
             w1 <- pString "is stricken by melancholy!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1]
+            )
+pLogEntryData t@LEMoodTantrum = do
+    try ( do 
+            dA <- pActor [ "is" ]
+            w1 <- pString "is throwing a tantrum"
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1<>w2, ""]
+            )
+        <|> try ( do 
+            dA <- pActor [ "has"]
+            w1 <- pString "has calmed down."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1, ""]
+            )
+        <|> ( do 
+            dA <- pActor [ "cancels"]
+            w1 <- pString "cancels"
+            space
+            j <- pTillChars ":"
+            w2 <- pString " Throwing tantrum."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & job ?~ j
+                & strs .~ [w1, tcol<>w2]
+            )
+pLogEntryData t@LEMoodDepression = do
+    dA <- pActor [ "is", "has" ]
+    try ( do 
+            w1 <- pString "is stumbling around obliviously!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1]
+            )
+        <|> ( do 
+            w1 <- pString "has slipped into depression..."
             return $ newLogEntryData & tag .~ t
                 & ac1 ?~ dA
                 & strs .~ [w1]
@@ -1261,6 +1331,105 @@ pLogEntryData t@LEDeathFound = do
                 & ac1 ?~ acA
                 & strs .~ [w1]
             )
+pLogEntryData t@LEIntruders = do
+    try ( do 
+            w1 <- try (pString "The dead walk.  Hide while you still can!")
+                <|> try (pString "A vile force of darkness has arrived!")
+                <|> try (pString "An ambush!  Curse them!")
+                <|> try (pString "An ambush!  Drive them out!")
+                <|> try (pString "A kidnapper has made off with")
+                <|> try (pString "Thief!  Protect the hoard from skulking filth!")
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w1<>w2]
+            )
+        <|> try ( do
+            w1 <- pString "Snatcher!"
+            space
+            w2 <- option "" (try (pSomething [ "Protect" ]))
+            w3 <- pString "Protect the children!"
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w1<>ts<>w2<>ts<>w3]
+            )
+        <|> try ( do
+            w1 <- try (pString "A") <|> pString "An"
+            space
+            w2 <- pTillChars "!"
+            w3 <- pString "  Drive it away!"
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w1<>ts<>w2<>texcl<>w3]
+            )
+        <|> try ( do
+            acA <- pActor [ "batters" ]
+            w1 <- pString "batters"
+            space
+            m <- pTillChars "!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & mat ?~ m
+                & strs .~ ["battered by"]
+            )
+        <|> try ( do    -- TODO: test this
+            acA <- pActor [ "has" ]
+            w1 <- pString "has stolen"
+            space
+            m <- pTillChars "!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & mat ?~ m
+                & strs .~ ["has stolen by"]
+            )
+        <|> ( do
+            m <- pSomething [ "destroyed", "toppled" ]  -- TODO: may be another tag?
+            w1 <- try (pString "destroyed by") <|> pString "toppled by"
+            space
+            acA <- pActor []
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & mat ?~ m
+                & strs .~ [w1]
+            )
+pLogEntryData t@LEWerebeast = do
+    acA <- pActor ["has"]
+    w1 <- pString "has transformed into a"
+    w2 <- pAny
+    return $ newLogEntryData & tag .~ t
+        & ac1 ?~ acA
+        & strs .~ [w1<>w2]
+pLogEntryData t@LETitan = do
+    try ( do 
+            w1 <- pString "The Forgotten Beast"
+            acA <- pSomeone ["has"]
+            w2 <- pString "has come!"
+            w3 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ Creature acA
+                & strs .~ [w1, w2<>w3]
+            )
+        <|> try ( do
+            w1 <- pString "The"
+            space
+            w2 <- pSomething ["Titan"]
+            w3 <- pString "Titan"
+            space
+            acA <- pSomeone ["has"]
+            w4 <- pString "has come!"
+            w5 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ Creature acA
+                & strs .~ [w1<>ts<>w2<>ts<>w3, w4<>w5]
+            )
+        <|> ( do
+            w1 <- pString "The"
+            space
+            acA <- pSomeone ["has"]
+            w2 <- pString "has come!  "
+            w3 <- try (pString "A") <|> pString "An"
+            w4 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ Creature acA
+                & strs .~ [w1, w2<>w3<>w4]
+            )
 pLogEntryData t@LESeason = do
     wA <- try ( do
             wA' <- pMany1 (noneOf [' '])
@@ -1303,7 +1472,6 @@ baseRule =
     <|> try (pLogEntryData LEProductionCompleted)
     <|> try (pLogEntryData LEMasterpieceImproved)
     <|> try (pLogEntryData LEMasterpieceCreated)
-    <|> try (pLogEntryData LEDeathFound)
     <|> try (pLogEntryData LECrimeTheft)
     <|> try (pLogEntryData LEDFHackAutomation)
     <|> try (pLogEntryData LEMiningStruck)
@@ -1332,6 +1500,8 @@ baseRule =
     <|> try (pLogEntryData LESkillLevel)
     <|> try (pLogEntryData LEMoodNormal)
     <|> try (pLogEntryData LEMoodInsane)
+    <|> try (pLogEntryData LEMoodTantrum)
+    <|> try (pLogEntryData LEMoodDepression)
     <|> try (pLogEntryData LEGuild)
     <|> try (pLogEntryData LEBattleBreath)  -- must be on top of LEHazard
     <|> try (pLogEntryData LEMasterpieceLost)
@@ -1340,6 +1510,10 @@ baseRule =
     <|> try (pLogEntryData LEMigrants)
     <|> try (pLogEntryData LESettlement)
     <|> try (pLogEntryData LEDeath)
+    <|> try (pLogEntryData LEDeathFound)
+    <|> try (pLogEntryData LEIntruders)
+    <|> try (pLogEntryData LEWerebeast)
+    <|> try (pLogEntryData LETitan)
     <|> try (pLogEntryData LESeason)
     <|> try (pLogEntryData LESystem)
     <|> pLogEntryData LEDefault             -- must be the last of all

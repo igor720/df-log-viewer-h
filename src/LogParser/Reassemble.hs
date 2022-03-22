@@ -120,6 +120,8 @@ reassemble reCfg led = ss where
         LESkillLevel -> ("skill: level",                    c [ a1, w 0 ])
         LEMoodNormal -> ("mood: normal",                    c [ a1, w 0, m, w 1 ])
         LEMoodInsane -> ("mood: insane",                    c [ a1, w 0 ])
+        LEMoodTantrum -> ("mood: tantrum",                  c [ a1, w 0, j, w 1 ])
+        LEMoodDepression -> ("mood: depression",            c [ a1, w 0 ])
         LEGuild -> ("guild", w 0)
         LEBattleBreath -> ("battle: breath",                c [ w 0, a1, w 1 ])
         LEMasterpieceLost -> ("masterpiece: lost", w 0)
@@ -129,6 +131,9 @@ reassemble reCfg led = ss where
         LESettlement -> ("settlement", w 0)
         LEDeath -> ("death",                                c [ a1, w 0 ])
         LEDeathFound -> ("death: found",                    c [ a1, w 0 ])
+        LEIntruders -> ("intruders",                        c [ m, w 0, a1 ])
+        LEWerebeast -> ("werebeast",                        c [ a1, w 0 ])
+        LETitan -> ("titan",                                c [ w 0, a1, w 1 ])
         LESeason -> ("season", w 0)
         LESystem -> ("system", w 0)
 
