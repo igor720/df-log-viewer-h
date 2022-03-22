@@ -133,11 +133,15 @@ pLogEntryData t@LEProductionCompleted = do
         & mat ?~ m
 pLogEntryData t@LEMasterpieceImproved = do
     acA <- pActor ["has"]
-    string "has improved a "
-    matS <- pSomething ["masterfully!"]
+    w1 <- pString "has improved"
+    w2 <- option "" (try (pString " a"))
+    spaces
+    m <- pSomething ["masterfully"]
+    w3 <- pString "masterfully!"
     return $ newLogEntryData & tag .~ t
         & ac1 ?~ acA
-        & mat ?~ matS
+        & mat ?~ m
+        & strs .~ [w1<>w2, w3] 
 pLogEntryData t@LEMasterpieceCreated = do
     acA <- pActor ["has"]
     w1 <- pString "has "
@@ -176,7 +180,7 @@ pLogEntryData t@LEMiningStruck = do
         & strs .~ [w1] 
 pLogEntryData t@LEBattleMiss = do
     try ( do
-        w1' <- option "" (pString "The")
+        w1' <- option "" (try (pString "The"))
         spaces
         (w2s', a1', a2') <- try ( do
                 a1 <- pSomeone ["attacks", "strikes"]
@@ -250,7 +254,7 @@ pLogEntryData t@LEBattleEvent = do
             <|> ( do
                 someoneA <- pSomeone ["looks"]
                 w1 <- pString "looks surprised by the ferocity of"
-                w2 <- option "" (pString "The ")
+                w2 <- option "" (try (pString "The "))
                 someoneB <- pSomeone ["onslaught"]
                 w3 <- pString "onslaught!"
                 return ([w1<>ts<>w2, w3], Just someoneA, Just someoneB)
@@ -355,7 +359,7 @@ pLogEntryData t@LEBattleHit = do
         & strs .~ [T.concat (w1'':w2s'')]
 pLogEntryData t@LEBattleEvade = do
     try ( do
-        w1' <- option "" (pString "The")
+        w1' <- option "" (try (pString "The"))
         spaces
         (w1s', a1', a2') <- try ( do
                 a <- pActor ["jumps","scrambles","rolls","falls","bats"]
@@ -394,7 +398,7 @@ pLogEntryData t@LEBattleEvade = do
 pLogEntryData t@LEBattleStatus = do
     try ( do
         (dA'', w1s'') <- try ( do
-                option "" (pString "The ")
+                optional (try (string "The "))
                 dA <- pSomeone [ "skids", "has", "is", "gives", "passes", "looks"
                             , "vomits", "retches", "regains" ]
                 w2 <- try (pString "skids along the ground!")
@@ -424,7 +428,7 @@ pLogEntryData t@LEBattleStatus = do
                 return (dA, [w2, w3])
                 )
             <|> try ( do
-                option "" (pString "The ")
+                optional (try (string "The "))
                 dA <- pSomeone ["cancels"]
                 w2 <- pString "cancels"
                 w3 <- pTillChars ":"
@@ -467,7 +471,6 @@ pLogEntryData t@LEBattleStatus = do
             & strs .~ [T.concat [w1, w2]]
         )
 pLogEntryData t@LEBattleEvent2 = do
-    --w1 <- fromMaybe "" <$> optionMaybe (pString "The ")
     w1 <- pString "The"
     space
     (a1, a2, w2, w3) <- try ( do
@@ -563,7 +566,7 @@ pLogEntryData t@LEBattleEvent2 = do
         & ac2 ?~ a2
         & strs .~ [w1, w2, w3]
 pLogEntryData t@LEBattleTrance = do
-    w1 <- fromMaybe "" <$> optionMaybe (pString "The")
+    w1 <- option "" (try (pString "The"))
     spaces
     a1 <- pActor [ "has" ]
     w2 <- try (pString "has entered a martial trance!") 
@@ -704,95 +707,95 @@ pLogEntryData t@LEAnimalBirth =
             & strs .~ [w1]
         )
 pLogEntryData t@LEAnimalSlaughtered = do
-    optional (string "The ")
+    optional (try (string "The "))
     m <- pSomething ["has"]
     string "has been slaughtered."
     return $ newLogEntryData & tag .~ t
         & mat ?~ m
 pLogEntryData t@LESomeoneBecome = do
     try ( do
-        optional (string "The ")
-        dA <- pActor ["has"]
-        w1 <- pString "has become a "
-        w2 <- pTillChars "."
-        return $ newLogEntryData & tag .~ t
-            & ac1 ?~ dA
-            & strs .~ [w1<>w2]
-        )
-    <|> try ( do
-        try (string "A ") <|> string "An "
-        dA <- pActor ["has"]
-        w1 <- pString "has become a"
-        space
-        m <- pTillChars "."
-        return $ newLogEntryData & tag .~ t
-            & ac1 ?~ dA
-            & mat ?~ m
-            & strs .~ [w1]
-        )
-    <|> try ( do
-        dA <- pActor ["has"]
-        w1 <- pString "has been re-elected."
-        return $ newLogEntryData & tag .~ t
-            & ac1 ?~ dA
-            & strs .~ [w1]
-        )
-    <|> try ( do
-        dA <- pActor ["has"]
-        w1 <- pString "has been elected mayor."
-        return $ newLogEntryData & tag .~ t
-            & ac1 ?~ dA
-            & strs .~ [w1]
-        )
-    <|> try ( do
-        dA <- pActor ["became"]
-        w1 <- pString "became "
-        w2 <- try (pString "mayor.") <|> pString "expedition leader."
-        return $ newLogEntryData & tag .~ t
-            & ac1 ?~ dA
-            & strs .~ [w1<>w2]
-        )
-    <|> try ( do
-        optional (try (string "A ") <|> string "An ")
-        dA <- pActor ["has"]
-        w1 <- pString "has grown to become a"
-        space
-        m <- pTillChars "."
-        return $ newLogEntryData & tag .~ t
-            & ac1 ?~ dA
-            & mat ?~ m
-            & strs .~ [w1]
-        )
-    <|> try ( do
-        optional (string "The ")
-        dA <- pActor []
-        w1 <- pString ", being the rightful heir, has inherited the position of "
-        w2 <- try (pString "king") <|> pString "queen"
-        w3 <- pString " of The"
-        space
-        m <- pTillChars "."
-        return $ newLogEntryData & tag .~ t
-            & ac1 ?~ dA
-            & mat ?~ m
-            & strs .~ [w1<>w2<>w3]
-        )
-    <|> try ( do
-        w1 <- pString "Mayor position is now vacant."
-        return $ newLogEntryData & tag .~ t
-            & strs .~ [w1]
-        )
-    <|> try ( do
-        w1 <- pString "Expedition leader was replaced by mayor."
-        return $ newLogEntryData & tag .~ t
-            & strs .~ [w1]
-        )
-    <|> ( do
-        w1 <- pString "Expedition leader position is now vacant."
-        return $ newLogEntryData & tag .~ t
-            & strs .~ [w1]
-        )
+            optional (try (string "The "))
+            dA <- pActor ["has"]
+            w1 <- pString "has become a "
+            w2 <- pTillChars "."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1<>w2<>tp]
+            )
+        <|> try ( do
+            try (string "A ") <|> string "An "
+            dA <- pActor ["has"]
+            w1 <- pString "has become a"
+            space
+            m <- pTillChars "."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & mat ?~ m
+                & strs .~ [w1]
+            )
+        <|> try ( do
+            dA <- pActor ["has"]
+            w1 <- pString "has been re-elected."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1]
+            )
+        <|> try ( do
+            dA <- pActor ["has"]
+            w1 <- pString "has been elected mayor."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1]
+            )
+        <|> try ( do
+            dA <- pActor ["became"]
+            w1 <- pString "became "
+            w2 <- try (pString "mayor.") <|> pString "expedition leader."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1<>w2]
+            )
+        <|> try ( do
+            optional (try (string "A ") <|> try (string "An "))
+            dA <- pActor ["has"]
+            w1 <- pString "has grown to become a"
+            space
+            m <- pTillChars "."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & mat ?~ m
+                & strs .~ [w1]
+            )
+        <|> try ( do
+            optional (try (string "The "))
+            dA <- pActor []
+            w1 <- pString ", being the rightful heir, has inherited the position of "
+            w2 <- try (pString "king") <|> pString "queen"
+            w3 <- pString " of The"
+            space
+            m <- pTillChars "."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & mat ?~ m
+                & strs .~ [w1<>w2<>w3]
+            )
+        <|> try ( do
+            w1 <- pString "Mayor position is now vacant."
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w1]
+            )
+        <|> try ( do
+            w1 <- pString "Expedition leader was replaced by mayor."
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w1]
+            )
+        <|> ( do
+            w1 <- pString "Expedition leader position is now vacant."
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w1]
+            )
 pLogEntryData t@LEMandate = do
-    optional (string "The ")
+    optional (try (string "The "))
     dA <- pActor ["has"]
     w1 <- pString "has"
     space
@@ -887,7 +890,7 @@ pLogEntryData t@LEVisit = do
             & strs .~ [w1, w2<>w3<>ts<>w4] 
         )
 pLogEntryData t@LESting = do
-    optional (string "The ")
+    optional (try (string "The "))
     acA <- pActor ["has", "have"]
     w1 <- try (pString "has") <|> pString "have"
     space
@@ -897,7 +900,7 @@ pLogEntryData t@LESting = do
         & ac1 ?~ acA
         & strs .~ [w1<>ts<>w2<>w3<>texcl] 
 pLogEntryData t@LEItem = do
-    optional (string "The ")
+    optional (try (string "The "))
     acA <- pActor ["has"]
     w1 <- pString "has grown attached to a "
     w2 <- pTillChars "!"
@@ -1072,14 +1075,21 @@ pLogEntryData t@LEGuild =
         return $ newLogEntryData & tag .~ t
             & strs .~ [w1<>w2<>ts<>w3]
         )
-    <|> ( do
+    <|> try ( do
         w1 <- pString "The guildhall agreement with "
         w2 <- pAny
         return $ newLogEntryData & tag .~ t
             & strs .~ [w1<>w2]
         )
+    <|> ( do
+        w1 <- pString "The priesthood of "
+        w2 <- pSomething [ "is" ]
+        w3 <- pString "is ready to be recognized "
+        w4 <- pAny
+        return $ newLogEntryData & tag .~ t
+            & strs .~ [w1<>w2<>ts<>w3<>w4]
+        )
 pLogEntryData t@LEBattleBreath = do
-    --w1 <- fromMaybe "" <$> optionMaybe (pString "The ")
     w1 <- pString "The"
     space
     try ( do
@@ -1236,16 +1246,14 @@ pLogEntryData t@LEDeath = do
         & ac1 ?~ a1
         & strs .~ [w1]
 pLogEntryData t@LEDeathFound = do
+    optional (try (string "The "))
     acA <- pActor ["has"]
     try ( do
-            string "has been found dead"
-            w1 <- try 
-                (lookAhead (char '.') >> return "")
-                <|> (char ',' >> space >> pMany1 (noneOf ['.']))
-            char '.'
+            w1 <- pString "has been found dead"
+            w2 <- pAny
             return $ newLogEntryData & tag .~ t
                 & ac1 ?~ acA
-                & strs .~ [w1]
+                & strs .~ [w1<>w2]
             )
         <|> ( do
             w1 <- pString "has been found, starved to death."

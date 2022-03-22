@@ -90,7 +90,7 @@ reassemble reCfg led = ss where
         LECraftCancel -> ("craft: cancel",                  c [ j, o1 ":", a1, o1 "needs", m ])
         LEJobCancel -> ("job: cancel",                      c [ a1, w 0, j, w 1, w 2 ])
         LEProductionCompleted -> ("production: completed",  c [ j, o1 " (", m, o1 ") " ])
-        LEMasterpieceImproved -> ("masterpiece: improved",  c [ m, o1 "by", a1 ])
+        LEMasterpieceImproved -> ("masterpiece: improved",  c [ a1, w 0, m, w 1 ])
         LEMasterpieceCreated -> ("masterpiece: created",    c [ a1, w 0 ])
         LECrimeTheft -> ("crime: theft",                    c [ m, w 0 ])
         LEDFHackAutomation -> ("dfhack: automation",        c [ o1 "Marked ", m, o1 "items", w 0, j ])

@@ -93,7 +93,15 @@ tpLogEntryData = TestList
                 Nothing 
                 Nothing 
                 (Just "1mussel shell earring1")
-                []
+                ["has improved a", "masterfully!"]
+    , let tag=LEMasterpieceImproved in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Momuz Al†thlemis has improved First Civilization, Then The World! masterfully!" ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Momuz Al†thlemis", _nickname = Nothing, _prof = ""}))
+                Nothing 
+                Nothing 
+                (Just "First Civilization, Then The World!")
+                ["has improved","masterfully!"]
     , let tag=LEMasterpieceCreated in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Mason' RithlutatЎr has constructed a masterpiece!" ~?= 
             LogEntryData tag 
@@ -309,7 +317,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 Nothing
-                ["has become a Leatherworker"]
+                ["has become a Leatherworker."]
     , let tag=LESomeoneBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Cheese Necro' Libashnanir, mayor necromancer has been re-elected." ~?= 
             LogEntryData tag 
@@ -342,6 +350,14 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["has been elected mayor."]
+    , let tag=LESomeoneBecome in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Tulon Kolsalul has become a Hunter." ~?= 
+            LogEntryData tag 
+                (Just (Dorf {_name = "Tulon Kolsalul", _nickname = Nothing, _prof = ""}))
+                Nothing
+                Nothing
+                Nothing
+                ["has become a Hunter."]
     , let tag=LEMandate in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "`Cheese Necro' Libashnanir, mayor necromancer has mandated the construction of certain goods." ~?= 
             LogEntryData tag 
@@ -463,6 +479,16 @@ tpLogEntryData = TestList
                 Nothing
                 ["The Hall of Wheeling, a craftsdwarf guild, has been established."]
     , let tag=LEGuild in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            ("The priesthood of The Order of Graves is ready to be recognized (from the temple's location menu.)  "
+                <>"This will satisfy the agreement.") ~?= 
+            LogEntryData tag 
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                ["The priesthood of The Order of Graves is ready to be recognized (from the temple's location menu.)  "
+                    <>"This will satisfy the agreement."]
+    , let tag=LEGuild in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "The guildhall agreement with The Hall of Wheeling has been satisfied." ~?= 
             LogEntryData tag 
                 Nothing
@@ -519,7 +545,23 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 Nothing
-                ["drowned"]
+                ["has been found dead, drowned."]
+    , let tag=LEDeathFound in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Kikrost Melbilzeg, Cavy Sow (Tame) has been found dead." ~?= 
+            LogEntryData tag 
+                (Just (Creature "Kikrost Melbilzeg, Cavy Sow (Tame)"))
+                Nothing
+                Nothing
+                Nothing
+                ["has been found dead."]
+    , let tag=LEDeathFound in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "The Stray Turkey Gobbler (Tame) has been found dead." ~?= 
+            LogEntryData tag 
+                (Just (Creature "Stray Turkey Gobbler (Tame)"))
+                Nothing
+                Nothing
+                Nothing
+                ["has been found dead."]
     , let tag=LESeason in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "Autumn has arrived on the calendar." ~?= 
             LogEntryData tag 
@@ -553,13 +595,13 @@ tpLogEntryData = TestList
 
 tpLogEntryData1 :: Test
 tpLogEntryData1 = TestList
-    [ let tag=LEEmotion in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "`Manager' Retholdomas, manager: I cannot just stand by.  This might require an answer." ~?=
+    [ let tag=LEVisit in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+            "Xetan 1gth1b, Human Beast Hunter is visiting." ~?= 
             LogEntryData tag 
-                (Just (Dorf {_name = "Retholdomas", _nickname = Just "Manager", _prof = "manager"}))
+                (Just (Dorf {_name = "Xetan 1gth1b", _nickname = Nothing, _prof = "Human Beast Hunter"}))
                 Nothing
                 Nothing
                 Nothing
-                [": I cannot just stand by. This might require an answer."]
+                ["","is visiting"]
     ] where
         cfg = LogParseConfig
