@@ -33,6 +33,7 @@ library
       LogParser.Rules.Helpers
       LogParser.Rules
       LogParser.Reassemble
+      Symbols
   other-modules:
       LogParser.Profession
   hs-source-dirs:
@@ -69,6 +70,7 @@ executable dflv
       LogParser.Rules.Helpers
       LogParser.Rules
       LogParser.Reassemble
+      Symbols
       GUI.Model.ColorsDialog
       GUI.Model.LogWindowsDialog
       GUI.Model.App

@@ -39,6 +39,7 @@ import LogParser.LogEntry
 import LogParser.Rules.Helpers
 import LogParser.Rules
 import LogParser.Reassemble
+import Symbols
 import AppException
 import Config
 import LogFile
@@ -394,6 +395,7 @@ secondsSince t0 t = fromIntegral i
 logProducer :: MainConfig -> FilePath -> (AppEvent -> IO ()) -> IO ()
 logProducer mainConfig logFilePath sendMsg = ( do
         let lpCfg = LogParseConfig 
+            sm = symMapping
         f <- openFile logFilePath ReadMode
         hSetEncoding f latin1
         prevLines <- unfoldM ( do
@@ -402,7 +404,9 @@ logProducer mainConfig logFilePath sendMsg = ( do
                    else TIO.hGetLine f <&> Just
             )
         let n = _acPreviousLogEntries mainConfig
-            latestLines = mergeLogBlocks $ latestLogCut n prevLines :: [Text]
+            latestLines = map (textTranslate sm) $ 
+                mergeLogBlocks $ 
+                latestLogCut n prevLines :: [Text]
             leds = map (parseLogEntry lpCfg) latestLines
             --leds = map (getParseResult . parse pRule) latestLines
             les = reverse $ zipWith (`LogEntry` Nothing) [1..] leds
@@ -420,8 +424,8 @@ logProducer mainConfig logFilePath sendMsg = ( do
                     utcTime <- getCurrentTime
                     sendMsg $ AppAddRecord $ LogEntry leId 
                         --(Just utcTime) (getParseResult $ parse pRule line)
-                        (Just utcTime) (parseLogEntry lpCfg line)
-                        
+                        (Just utcTime) 
+                        (parseLogEntry lpCfg (textTranslate sm line))
                     return (leId+1)
             ) (lastId+1)
     ) `catches` 
