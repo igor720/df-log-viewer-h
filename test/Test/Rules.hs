@@ -430,8 +430,8 @@ tpLogEntryData = TestList
                 (Just (Dorf {_name = "‹ngizshoveth", _nickname = Just "Sniper", _prof = "Marksdwarf"}))
                 Nothing
                 Nothing
-                Nothing
-                ["has grown attached to a iron crossbow!"]
+                (Just "iron crossbow")
+                ["has grown attached to a"]
     , let tag=LEWeather in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
             "A cloud of fire clay has drifted nearby!" ~?= 
             LogEntryData tag 

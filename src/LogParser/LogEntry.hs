@@ -37,6 +37,9 @@ data LogEntryTag =
         | LEAnimalGrown
         | LEAnimalBirth
         | LEAnimalSlaughtered 
+        | LEAnimalTraining
+        | LEAnimalMisc
+        | LESocial
         | LESomeoneBecome
         | LEMandate
         | LETrade
@@ -60,7 +63,9 @@ data LogEntryTag =
         | LESettlement
         | LEDeath
         | LEDeathFound
+        | LENecromancy
         | LEIntruders
+        | LEGhost
         | LEWerebeast
         | LETitan
         | LESeason

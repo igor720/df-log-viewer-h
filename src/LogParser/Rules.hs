@@ -469,7 +469,7 @@ pLogEntryData t@LEBattleStatus = do
             <|> try (pString "burns away in the lava.")
             <|> pString "splatters into the shallow puddle of water."
         return $ newLogEntryData & tag .~ t
-            & strs .~ [T.concat [w1, w2]]
+            & strs .~ [w1<>w2]
         )
 pLogEntryData t@LEBattleEvent2 = do
     w1 <- pString "The"
@@ -745,6 +745,74 @@ pLogEntryData t@LEAnimalSlaughtered = do
     string "has been slaughtered."
     return $ newLogEntryData & tag .~ t
         & mat ?~ m
+pLogEntryData t@LEAnimalTraining = do
+    w0 <- option "" (try (pString "The"))
+    spaces
+    try ( do
+            acA <- pSomeone [ "has" ]
+            w1 <- try (pString "has reverted to a wild state!")
+                <|> try (pString "has forgotten her training!")
+                <|> pString "has forgotten his training!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ Creature acA
+                & strs .~ [w0, w1]
+            )
+        <|> ( do
+            w1 <- pSomething [ "of" ]
+            w2 <- pString "of The"
+            space
+            w3 <- pSomething [ "now", "have", "are" ]
+            w4 <- try (pString "now know a few facts about")
+                <|> try (pString "have attained a general familiarity with")
+                <|> pString "are now quite knowledgeable"
+            w5 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w0<>ts<>w1<>ts<>w2<>ts<>w3<>ts<>w4<>w5, ""]
+            )
+pLogEntryData t@LEAnimalMisc = do
+    w0 <- option "" (try (pString "The"))
+    spaces
+    try ( do
+            acA <- pSomeone [ "has" ]
+            w1 <- try (pString "has gnawed its way out of confinement!")
+                <|> pString "has guzzled some"
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ Creature acA
+                & strs .~ [w0, w1<>w2]
+            )
+pLogEntryData t@LESocial = do
+    try ( do
+            w0 <- option "" (try (pString "The"))
+            spaces
+            acA <- pActor [ "has" ]
+            w1 <- try (pString "has organized a party at")
+                <|> pString "has given birth to"
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & strs .~ [w0, w1<>w2]
+            )
+        <|> try ( do
+            w0 <- pString "The"
+            space
+            acA <- pActor [ "and" ]
+            w1 <- pString "and the"
+            acB <- pActor [ "have" ]
+            w2 <- pString "have married.  Congratulations!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & ac2 ?~ acB
+                & strs .~ [w0, w1, w2]
+            )
+        <|> ( do
+            w1 <- pString "They have "
+            w2 <- try (pString "organized a wedding reception at")
+                <|> pString "decided to forego any formal celebrations"
+            w3 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w1<>w2<>w3, "", ""]
+            )
 pLogEntryData t@LESomeoneBecome = do
     try ( do
             optional (try (string "The "))
@@ -769,6 +837,13 @@ pLogEntryData t@LESomeoneBecome = do
         <|> try ( do
             dA <- pActor ["has"]
             w1 <- pString "has been re-elected."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1]
+            )
+        <|> try ( do
+            dA <- pActor ["is"]
+            w1 <- pString "is more experienced."
             return $ newLogEntryData & tag .~ t
                 & ac1 ?~ dA
                 & strs .~ [w1]
@@ -825,17 +900,28 @@ pLogEntryData t@LESomeoneBecome = do
             )
 pLogEntryData t@LEMandate = do
     optional (try (string "The "))
-    dA <- pActor ["has"]
-    w1 <- pString "has"
-    space
-    w2 <- try (pString "mandated the construction of certain goods.")
-        <|> try (pString "imposed a ban on certain exports.")
-        <|> try (pString "ended a mandate.")
-        <|> try (pString "a new demand.")
-        <|> pString "forgotten a demand."
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ dA
-        & strs .~ [w1<>ts<>w2]
+    try ( do
+            dA <- pActor ["has"]
+            w1 <- pString "has"
+            space
+            w2 <- try (pString "mandated the construction of certain goods.")
+                <|> try (pString "imposed a ban on certain exports.")
+                <|> try (pString "ended a mandate.")
+                <|> try (pString "a new demand.")
+                <|> pString "forgotten a demand."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ dA
+                & strs .~ [w1<>ts<>w2]
+        )
+    <|> ( do
+            dA <- pSomeoneWithEnd "'s"
+            space
+            w1 <- try (pString "mandate has ended.")
+                <|> pString "mandates have ended."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ Creature dA
+                & strs .~ [w1]
+        )
 pLogEntryData t@LETrade = do
     try ( do
         w1 <- pString "A"
@@ -931,11 +1017,26 @@ pLogEntryData t@LESting = do
 pLogEntryData t@LEItem = do
     optional (try (string "The "))
     acA <- pActor ["has"]
-    w1 <- pString "has grown attached to a "
-    w2 <- pTillChars "!"
-    return $ newLogEntryData & tag .~ t
-        & ac1 ?~ acA
-        & strs .~ [w1<>w2<>texcl] 
+    try ( do
+            w1 <- pString "has grown attached to a"
+            space
+            m <- pTillChars "!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & mat ?~ m
+                & strs .~ [w1] 
+            )
+        <|> ( do
+            w1 <- pString "has bestowed "
+            w2 <- pSomething [ "upon" ]
+            w1 <- pString "upon a"
+            space
+            m <- pTillChars "!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & mat ?~ m
+                & strs .~ [w1] 
+            )
 pLogEntryData t@LEWeather = do
     wA <- try (pString "It has started raining.") 
         <|> try ( do
@@ -1267,6 +1368,17 @@ pLogEntryData t@LESettlement = do
             return $ newLogEntryData & tag .~ t
                 & strs .~ [w1<>ts<>w2<>w3]
             )
+        <|> try ( do
+            w1 <- pString "Siege was broken."
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w1]
+            )
+        <|> try ( do
+            w1 <- pSomething [ "was" ]
+            w2 <- pString "was built."
+            return $ newLogEntryData & tag .~ t
+                & strs .~ [w1<>ts<>w2]
+            )
         <|> ( do
             w1 <- pString "The hillocks of "
             w2 <- pSomething [ "has" ]
@@ -1325,10 +1437,37 @@ pLogEntryData t@LEDeathFound = do
                 & ac1 ?~ acA
                 & strs .~ [w1<>w2]
             )
+        <|> try ( do
+            w1 <- pString "has been missing for a week."
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & strs .~ [w1]
+            )
         <|> ( do
             w1 <- pString "has been found, starved to death."
             return $ newLogEntryData & tag .~ t
                 & ac1 ?~ acA
+                & strs .~ [w1]
+            )
+pLogEntryData t@LENecromancy = do
+    optional (try (string "The "))
+    try ( do
+            acA <- pActor ["gestures"]
+            w1 <- pString "gestures!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & strs .~ [w1]
+            )
+        <|> try ( do
+            acA <- pActor ["shudders"]
+            w1 <- pString "shudders and begins to move!"
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & strs .~ [w1]
+            )
+        <|> ( do
+            w1 <- pString "You gesture!"
+            return $ newLogEntryData & tag .~ t
                 & strs .~ [w1]
             )
 pLogEntryData t@LEIntruders = do
@@ -1388,6 +1527,32 @@ pLogEntryData t@LEIntruders = do
                 & ac1 ?~ acA
                 & mat ?~ m
                 & strs .~ [w1]
+            )
+pLogEntryData t@LEGhost = do
+    --optional (try (string "The "))
+    try ( do
+            acA <- pActor [ "has", "can", "is" ]
+            w1 <- try (pString "has risen and is haunting the fortress")
+                <|> try (pString "can be heard howling throughout the fortress")
+                <|> try (pString "has been put to rest")
+                <|> try (pString "has grown to become a Ghost")
+                <|> pString "is following"
+            w2 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ acA
+                & strs .~ ["", "", w1<>w2]
+            )
+        <|> ( do
+            w1 <- pString "a"
+            space
+            m <- pSomething [ "has" ]
+            w2 <- pString "has been misplaced.  No doubt "
+            acA <- pSomeoneNoTrim [ "," ]
+            w3 <- pAny
+            return $ newLogEntryData & tag .~ t
+                & ac1 ?~ Creature acA
+                & mat ?~ m
+                & strs .~ [w1, w2, w3]
             )
 pLogEntryData t@LEWerebeast = do
     acA <- pActor ["has"]
@@ -1460,7 +1625,6 @@ pLogEntryData t@LESystem =
             & strs .~ [wA'<>wA'']
         )
 
-
 -- *****************************************************************************
 
 -- | Base parsing rule; place move specific and more friquent rules to top
@@ -1488,6 +1652,9 @@ baseRule =
     <|> try (pLogEntryData LEAnimalGrown)
     <|> try (pLogEntryData LEAnimalBirth)
     <|> try (pLogEntryData LEAnimalSlaughtered)
+    <|> try (pLogEntryData LEAnimalTraining)
+    <|> try (pLogEntryData LEAnimalMisc)
+    <|> try (pLogEntryData LESocial)
     <|> try (pLogEntryData LESomeoneBecome)
     <|> try (pLogEntryData LEMandate)
     <|> try (pLogEntryData LETrade)
@@ -1511,7 +1678,9 @@ baseRule =
     <|> try (pLogEntryData LESettlement)
     <|> try (pLogEntryData LEDeath)
     <|> try (pLogEntryData LEDeathFound)
+    <|> try (pLogEntryData LENecromancy)
     <|> try (pLogEntryData LEIntruders)
+    <|> try (pLogEntryData LEGhost)
     <|> try (pLogEntryData LEWerebeast)
     <|> try (pLogEntryData LETitan)
     <|> try (pLogEntryData LESeason)
