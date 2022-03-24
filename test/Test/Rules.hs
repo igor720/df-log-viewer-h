@@ -425,9 +425,9 @@ tpLogEntryData = TestList
                 Nothing
                 ["has been stung by a honey bee!"]
     , let tag=LEItem in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "`Sniper' ‹ngizshoveth, Marksdwarf has grown attached to a iron crossbow!" ~?= 
+            "`Sniper' Bngizshoveth, Marksdwarf has grown attached to a iron crossbow!" ~?= 
             LogEntryData tag 
-                (Just (Dorf {_name = "‹ngizshoveth", _nickname = Just "Sniper", _prof = "Marksdwarf"}))
+                (Just (Dorf {_name = "Bngizshoveth", _nickname = Just "Sniper", _prof = "Marksdwarf"}))
                 Nothing
                 Nothing
                 (Just "iron crossbow")
@@ -648,18 +648,16 @@ tpLogEntryData = TestList
     ] where
         cfg = LogParseConfig
 
---
+-- tpLogEntryData1 :: Test
+-- tpLogEntryData1 = TestList
+--     [ let tag=LEItem in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
+--             "`Sniper' ‹ngizshoveth, Marksdwarf has grown attached to a iron crossbow!" ~?= 
+--             LogEntryData tag 
+--                 (Just (Dorf {_name = "‹ngizshoveth", _nickname = Just "Sniper", _prof = "Marksdwarf"}))
+--                 Nothing
+--                 Nothing
+--                 (Just "iron crossbow")
+--                 ["has grown attached to a"]
+--     ] where
+--         cfg = LogParseConfig
 
-
-tpLogEntryData1 :: Test
-tpLogEntryData1 = TestList
-    [ let tag=LEDeathFound in show tag ~: parseLogEntrySingle cfg (pLogEntryData tag) 
-            "Iden Delerokun, war Dog (Tame) has been found dead." ~?= 
-            LogEntryData tag 
-                (Just (Creature "Iden Delerokun, war Dog (Tame)"))
-                Nothing
-                Nothing
-                Nothing
-                ["has been found dead."]
-    ] where
-        cfg = LogParseConfig

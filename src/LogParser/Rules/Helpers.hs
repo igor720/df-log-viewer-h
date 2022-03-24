@@ -23,6 +23,7 @@ import Data.Maybe
 import LogException
 import LogParser.LogEntry
 import Control.Monad (when)
+import Data.Char (ord)
 
 
 data LogParseConfig = LogParseConfig    -- empty for now
@@ -64,7 +65,6 @@ pString s = pack <$> string s
 
 pWord :: (Stream Text Identity t) => ParsecT Text u Identity Text
 pWord = pack <$> many1 lower
---pWord = pack <$> many1 (noneOf [' '])
 
 pTillChars :: String -> Parsec Text LogParseConfig Text
 pTillChars chars = do
@@ -107,10 +107,9 @@ pSomethingWithEnd = pSomeoneWithEnd
 
 pNamePart :: Parsec Text LogParseConfig String
 pNamePart = do
-    a <- anyChar --upper
     ss <- many1 (noneOf " .!:,")
     spaces 
-    return $ a:ss
+    return ss
 
 pFullName :: Parsec Text LogParseConfig Text
 pFullName  = do
@@ -130,7 +129,7 @@ pDorf = do
             return $ pack str
         ) nicknameStartMb
     (nameS, prof) <- try ( do
-            nameS' <- pFullName -- pMany1 (noneOf ",:.!")
+            nameS' <- pFullName
             string ", "
             prof' <- try ( do
                     a <- pFullName
@@ -152,7 +151,7 @@ pDorf = do
                     a <- pWord
                     try ( do
                             space
-                            when (a=="war") $
+                            when (a=="war"||a=="hunting") $
                                 notFollowedBy (pFullName >> string "(Tame)")
                             bMb <- optionMaybe (
                                     try (pString "commander")
