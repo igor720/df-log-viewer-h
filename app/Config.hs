@@ -79,6 +79,7 @@ data MainConfig = MainConfig
     , _acShowProfession         :: Bool
     , _acShowName               :: ShowNameType
     , _acColoredTag             :: Bool
+    , _acFadeAnimationDuration  :: Int
     } deriving (Show, Eq)
 
 makeLenses 'MainConfig
@@ -120,11 +121,12 @@ instance FromYAML MainConfig where
         <*> m .: "showProfession"
         <*> m .: "showName"
         <*> m .: "coloredTag"
+        <*> m .: "fadeAnimationDuration"
 
 instance ToYAML MainConfig where
     toYAML (MainConfig mws rf ef ts tc tcs es sw tfw ws cst bc
                 jdu jdfg jdbg mdu mdfg mdbg ddu ddfg ddbg 
-                ple lfp snP sn ct) = mapping 
+                ple lfp snP sn ct fad) = mapping 
         [ "mainWindowDefaultSize"   .= mws
         , "regularFont"             .= rf
         , "emphasizeFont"           .= ef
@@ -151,6 +153,7 @@ instance ToYAML MainConfig where
         , "showProfession"          .= snP
         , "showName"                .= sn
         , "coloredTag"              .= ct
+        , "fadeAnimationDuration"   .= fad
         ]
 
 writeMainConfig :: FilePath -> MainConfig -> IO ()
@@ -171,7 +174,7 @@ readMainConfig path = do
 checkMainConfig :: MainConfig -> Either String MainConfig
 checkMainConfig cfg@(MainConfig (w,h) _ _ ts _ (tsh0,tsh1) es sw tfw ws cst _
                         _ _ _ _ _ _ _ _ _ 
-                        ple _ snP sn _)
+                        ple _ snP sn _ fad)
     | w<400 || h<300    = Left "Too small default window size"
     | ts<7 || ts>36     = Left "Too big font"
     | any (<0) [tsh0, tsh1] = 
@@ -184,6 +187,7 @@ checkMainConfig cfg@(MainConfig (w,h) _ _ ts _ (tsh0,tsh1) es sw tfw ws cst _
                           Left $ "Length of 'colorSampleText' must be "
                               <> "in interval [1, 16]"
     | ple<0             = Left "previousLogEntries must be non-negative integer"
+    | fad<0             = Left "'fadeAnimationDuration' must be non-negative"
     | otherwise         = Right cfg
 
 

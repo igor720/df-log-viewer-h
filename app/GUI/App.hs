@@ -131,6 +131,7 @@ logEntryRow wenv model le = row where
     -- configuration parameters
     cfg = model^.mainConfig
     reCfg = ReConfig (cfg^. acShowProfession) (cfg^. acShowName)
+    fad = cfg^. acFadeAnimationDuration
     ws = model^.mainConfig.acLogWindows
     cols = if ws<=2 then 1 else 2 :: Int
     rowHoverBgColor = wenv^. L.theme. L.userColorMap. at "hoverBgColor". non def
@@ -176,22 +177,24 @@ logEntryRow wenv model le = row where
         otherStyle = [textColor txtColor]
 
     -- constructing log entry visual row
-    rowContent = box_ [alignTop, alignLeft] $ hstack [
-        box_ [alignRight, alignTop] (
-            label_ timeTxt [ellipsis] `styleBasic` timeStyle
-            ) `styleBasic` timeBoxStyle,
-        box_ [mergeRequired isMergeRequired] $ hstack [
-            spacer_ [width spacerW],
-            box_ [alignTop] (label desc `styleBasic` descStyle),
-            spacer_ [width spacerW],
-            txtBlock
-            ]
-        ] `nodeKey` showt (le^. leId) where
+    rowContent = box_ [alignTop, alignLeft] $ animFadeIn_ animCfg
+        (hstack [
+            box_ [alignRight, alignTop] (
+                label_ timeTxt [ellipsis] `styleBasic` timeStyle
+                ) `styleBasic` timeBoxStyle,
+            box_ [mergeRequired isMergeRequired] $ hstack [
+                spacer_ [width spacerW],
+                box_ [alignTop] (label desc `styleBasic` descStyle),
+                spacer_ [width spacerW],
+                txtBlock
+                ]
+            ]) `nodeKey` showt (le^. leId) where
         timeStyle = [ textColor timeColor ]
         timeBoxStyle = [ width timeW ]
         descStyle = [ textFont "Bold"
                     , textColor (if cfg^. acColoredTag then txtColor else white) 
                     ]
+        animCfg = [duration fad, autoStart]
     row = box_ [expandContent] (
             rowContent `styleBasic` basicStyle `styleHover` hoverStyle
             ) `styleBasic` boxStyle where
@@ -212,7 +215,7 @@ logScreen wenv model = widgetTree where
                 (\le->(getWindow le==w) || (w==ws && getWindow le>ws))
         ))) `nodeKey` key
         `styleBasic` [ bgColor black, border 1 lightGray
-                     , minHeight 100, minWidth 200 ]
+                     , minHeight 100, minWidth 200, paddingB 12 ]
     logWindowsStructure
         | ws==1 = logWindow "Log1" 1
         | ws==2 = vsplit_ vsCfg (logWindow "Log1" 1, logWindow "Log2" 2)
@@ -380,7 +383,7 @@ handleEvent wenv node model evt = case evt of
         Model $ model
             & curTime           .~ model^.curTime
             & logEntries        .~ les,
-       SetFocusOnKey (WidgetKey (showt leId))
+        SetFocusOnKey (WidgetKey (showt leId))
         ]
     where
         winSize' = wenv^. L.windowSize
@@ -523,3 +526,20 @@ endReformatting =
     return AppReformattingDone
 
 
+--   widgetTree = vstack [
+--       animFadeIn timeLabel `nodeKey` "fadeTimeLabel"
+--     ]
+
+-- handleEvent
+--   :: WidgetEnv AppModel AppEvent
+--   -> WidgetNode AppModel AppEvent
+--   -> AppModel
+--   -> AppEvent
+--   -> [AppEventResponse AppModel AppEvent]
+-- handleEvent wenv node model evt = case evt of
+--   AppInit -> [Producer timeOfDayProducer]
+--   AppSetTime time -> fadeInMsg time ++ [Model $ model & currentTime .~ time]
+--   where
+--     fadeInMsg time
+--       | truncate (todSec time) `mod` 10 /= 0 = []
+--       | otherwise = [Message "fadeTimeLabel" AnimationStart]

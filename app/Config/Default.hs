@@ -49,6 +49,7 @@ defaultAppConfig = MainConfig
     , _acShowProfession         = True
     , _acShowName               = SNFullName
     , _acColoredTag             = True
+    , _acFadeAnimationDuration  = 600
     }
 
 

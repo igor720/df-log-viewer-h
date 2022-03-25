@@ -52,6 +52,8 @@ showProfession: False
 showName: "NameOnly"
 ## If False all tags (descriptions) have one (white) color
 coloredTag: True
+## Log entry fade animation duration (in ms)
+fadeAnimationDuration: 600
 
 ## Explicit path for gamelog. Used if no command line arg path; 
 ## if none then app will try to find gamelog on its own.
