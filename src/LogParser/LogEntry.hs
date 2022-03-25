@@ -15,61 +15,61 @@ data ShowNameType = SNFullName | SNNameOnly | SNNicknameOnly
 
 data LogEntryTag = 
         LEDefault 
-        | LEJobSuspension
-        | LECraftCancel 
-        | LEJobCancel
-        | LEProductionCompleted
-        | LEMasterpieceImproved
-        | LEMasterpieceCreated
-        | LECrimeTheft
-        | LEDFHackAutomation 
-        | LEMiningStruck 
-        | LEBattleMiss
-        | LEBattleEvent 
-        | LEBattleStrike
-        | LEGore
-        | LEBattleHit
-        | LEBattleEvade
-        | LEBattleStatus
-        | LEBattleEvent2
-        | LEBattleTrance
-        | LEEmotion
-        | LEAnimalGrown
+        | LEAdoption
         | LEAnimalBirth
+        | LEAnimalGrown
+        | LEAnimalMisc
         | LEAnimalSlaughtered 
         | LEAnimalTraining
-        | LEAnimalMisc
-        | LESocial
-        | LESomeoneBecome
-        | LEMandate
-        | LETrade
-        | LEVisit
-        | LESting
-        | LEItem
-        | LEWeather
-        | LEFishing
-        | LEAdoption
-        | LESkillLevel
-        | LEMoodNormal
-        | LEMoodInsane
-        | LEMoodTantrum
-        | LEMoodDepression
-        | LEGuild
         | LEBattleBreath
-        | LEMasterpieceLost
-        | LEHazard
-        | LEMiningWarning
-        | LEMigrants
-        | LESettlement
+        | LEBattleEvade
+        | LEBattleEvent 
+        | LEBattleEvent2
+        | LEBattleHit
+        | LEBattleMiss
+        | LEBattleStatus
+        | LEBattleStrike
+        | LEBattleTrance
+        | LECraftCancel 
+        | LECrimeTheft
         | LEDeath
         | LEDeathFound
-        | LENecromancy
+        | LEDFHackAutomation 
+        | LEEmotion
+        | LEFishing
         | LEIntruders
+        | LEItem
+        | LEJobCancel
+        | LEJobSuspension
         | LEGhost
-        | LEWerebeast
-        | LETitan
+        | LEGore
+        | LEGuild
+        | LEHazard
+        | LEMandate
+        | LEMasterpieceCreated
+        | LEMasterpieceImproved
+        | LEMasterpieceLost
+        | LEMiningStruck 
+        | LEMiningWarning
+        | LEMigrants
+        | LEMoodDepression
+        | LEMoodInsane
+        | LEMoodNormal
+        | LEMoodTantrum
+        | LENecromancy
+        | LEProductionCompleted
         | LESeason
+        | LESettlement
+        | LESkillLevel
+        | LESocial
+        | LESomeoneBecome
+        | LESting
         | LESystem
+        | LETitan
+        | LETrade
+        | LEVisit
+        | LEWeather
+        | LEWerebeast
     deriving (Show, Eq, Enum, Ord, Read, Bounded)
 
 $(deriveTextShow ''LogEntryTag)
@@ -102,9 +102,6 @@ makeLenses ''LogEntryData
 newLogEntryData :: LogEntryData
 newLogEntryData = LogEntryData LEDefault Nothing Nothing Nothing Nothing []
 
--- {-# INLINE missedDorf #-}
--- missedDorf :: Dorf
--- missedDorf = Dorf "<missed>" Nothing "<dorf>"
 
 
 
