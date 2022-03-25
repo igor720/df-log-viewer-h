@@ -1,0 +1,67 @@
+This package do not require system level instalation.
+Just run dflv[.exe] program with specified configuration (see below).
+
+If you want option to run the application with different configurations,
+then use --dir="working directory" command line switch 
+for directories containing various configurations.
+
+By default the application use configuration files 
+in the program's directory.
+
+1. Configuration.
+
+This consists of following files:
+- dflv.yaml: main application config
+- colors: color scheme
+- windows: specification of log entries distribution on application windows
+- winsize: file with last saved application's window sizes
+- assets folder: contains fonts
+
+'colors' and 'windows' files must contain valid Haskell expression for
+Data.Map.Map structure. So if any of them is corrupted
+you can use string 'fromList []' for default configuration.
+
+If 'winsize' file is corrupted, just delete it. It will be recreated from main
+configuration parameters in 'dflv.yaml'
+
+'dflv.yaml' file is not modifiable by the application itself. 
+Nevertheless, if it is corrupted you can copy it from distribution or backup.
+
+2. Specifying Dwarf Fortress game log location.
+
+There are 4 different methods to do this.
+
+- Specifying the path to a gamelog.txt in command line.
+- Specifying the path to a gamelog.txt in dflv.yaml.
+- Placing distribition directory (with executable and config files) 
+    in 'utilities' directory of PeridexisErrant's Starter Pack.
+- Placing distribition directory (with executable and config files) 
+    in directory which is parent to 'Dwarf Fortress 0.xx.xx' directory.
+
+More early methods have priority to more later ones.
+
+The third and forth methods assume that there is only one directory which 
+is starts with 'Dwarf Fortress' string and contains Dwarf Fortress game files.
+
+3. dflv.yaml - Main configuration
+
+Mostly you can understand options by reading comments in this file. 
+Here are some additional explanations.
+
+- You can specify other fonts for use. Place them in 'assets' folder and
+change 'regularFont' and 'emphasizeFont' options respectively. By default, 
+the application use Roboto fonts family 
+(https://fonts.google.com/specimen/Roboto),
+which don't have symbols for some Unicode code points (U+2xxx).
+
+- If you specify 'logWindows' option to value less then 4, then log entries
+designated to unavalable windows will appear in the last avalable window.
+
+- *Decor* options are add ups to each other, so you can specify any number 
+of them (max 3) for any log component type (dorf or creature, material, job).
+
+- 'logFilePath' option workes only if there is no command line specification
+for gamelog path. Also it prevents DF game look up mechanism from working.
+
+
+
