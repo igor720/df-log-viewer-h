@@ -526,20 +526,3 @@ endReformatting =
     return AppReformattingDone
 
 
---   widgetTree = vstack [
---       animFadeIn timeLabel `nodeKey` "fadeTimeLabel"
---     ]
-
--- handleEvent
---   :: WidgetEnv AppModel AppEvent
---   -> WidgetNode AppModel AppEvent
---   -> AppModel
---   -> AppEvent
---   -> [AppEventResponse AppModel AppEvent]
--- handleEvent wenv node model evt = case evt of
---   AppInit -> [Producer timeOfDayProducer]
---   AppSetTime time -> fadeInMsg time ++ [Model $ model & currentTime .~ time]
---   where
---     fadeInMsg time
---       | truncate (todSec time) `mod` 10 /= 0 = []
---       | otherwise = [Message "fadeTimeLabel" AnimationStart]
