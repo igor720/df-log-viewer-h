@@ -54,7 +54,7 @@ import GUI.LogWindowsDialog
 {-# INLINE spaceComp #-}
 
 reforModeTxt :: Text
-reforModeTxt = "Log reformatting.. Please wait."
+reforModeTxt = "Log formatting.. Please wait."
 
 spaceComp :: LEComponent
 spaceComp = LEC LECOther " "
@@ -298,7 +298,7 @@ buildUI wenv model = widgetTree where
 handleEvent :: WidgetEnv AppModel AppEvent -> WidgetNode AppModel AppEvent
   -> AppModel -> AppEvent -> [EventResponse AppModel AppEvent AppModel ()]
 handleEvent wenv node model evt = case evt of
-    AppErrorShow msg                    -> [
+    AppErrorShow msg                -> [
         Model $ model
             & errorMsg          ?~ msg
         ]
@@ -307,18 +307,24 @@ handleEvent wenv node model evt = case evt of
             & errorMsg          .~ Nothing
         ]
     AppInit                         -> [
+        Model $ model 
+            & reforMode         .~ inforceReforMode,
         Producer (logProducer (model^.mainConfig) (model^.logFilePath))
         ]
     AppResize _                     -> [
         Model $ model
-            & logMergeMode      .~ LMFull
-            & reforMode         .~ 0 : (model^.reforMode),
+            & reforMode         .~ inforceReforMode,
         Task $ writeAppWindowSize path winSize
+        ]
+    AppWindowSizeSaved              -> [
+        Model $ model 
+            & logMergeMode      .~ LMFull,
+        Task endReformatting
         ]
     AppReformattingDone             -> [
         Model $ model 
             & logMergeMode      .~ (if isReforMode then LMFull else LMLast)
-            & reforMode         .~ relaxReforMode (model^.reforMode)
+            & reforMode         .~ relaxReforMode
         ]
     AppShowColorConfig              -> [
         Model $ model 
@@ -328,14 +334,18 @@ handleEvent wenv node model evt = case evt of
     AppCloseColorConfigScreen True  -> [
         Model $ model 
             & dialogMode        .~ DMNone
-            & logMergeMode      .~ LMFull
-            & reforMode         .~ 0 : (model^.reforMode)
-            & logColorDistrib   .~ model^.cModel.cDistrib,
+            & reforMode         .~ inforceReforMode,
         Task $ saveColorConfig path (model^.cModel.cDistrib)
         ]
     AppCloseColorConfigScreen False -> [
         Model $ model 
             & dialogMode        .~ DMNone
+        ]
+    AppColorConfigSaved             -> [
+        Model $ model 
+            & logMergeMode      .~ LMFull
+            & logColorDistrib   .~ model^.cModel.cDistrib,
+        Task endReformatting
         ]
     AppShowWindowConfig             -> [
         Model $ model 
@@ -347,14 +357,18 @@ handleEvent wenv node model evt = case evt of
     AppCloseWindowConfigScreen True -> [
         Model $ model 
             & dialogMode        .~ DMNone
-            & logMergeMode      .~ LMFull
-            & reforMode         .~ 0 : (model^.reforMode)
-            & logWindowDistrib  .~ newLogWindowDistrib,
+            & reforMode         .~ inforceReforMode,
         Task $ saveWindowConfig path newLogWindowDistrib
         ]
     AppCloseWindowConfigScreen False -> [
         Model $ model 
             & dialogMode        .~ DMNone
+        ]
+    AppWindowConfigSaved -> [
+        Model $ model 
+            & logMergeMode      .~ LMFull
+            & logWindowDistrib  .~ newLogWindowDistrib,
+        Task endReformatting
         ]
     AppAddRecord le                 -> [
         Model $ model
@@ -378,9 +392,11 @@ handleEvent wenv node model evt = case evt of
                 ) (model^.logWindowDistrib) [0..length lsts-1]
         newLogWindowDistrib = 
             calcLogWindowDistrib $ model^.lwModel.lwLists
-        relaxReforMode [] = []
-        relaxReforMode [x] = []
-        relaxReforMode (x:xs) = xs
+        inforceReforMode = 0:(model^.reforMode)
+        relaxReforMode = case model^.reforMode of
+            []      -> []
+            [x]     -> []
+            (x:xs)  -> xs
         isReforMode = length (model^.reforMode)>1
         path = model^.exePath
 
@@ -408,12 +424,12 @@ logProducer mainConfig logFilePath sendMsg = ( do
                 mergeLogBlocks $ 
                 latestLogCut n prevLines :: [Text]
             leds = map (parseLogEntry lpCfg) latestLines
-            --leds = map (getParseResult . parse pRule) latestLines
             les = reverse $ zipWith (`LogEntry` Nothing) [1..] leds
             lastId = if null les then 0
                      else let LogEntry lastId' _ _  = head les
                           in lastId'
         sendMsg $ AppAddBulkRecords les lastId
+        sendMsg AppReformattingDone
         iterateM_ (\leId -> do
             eof <- hIsEOF f
             lineMb <- if eof then return Nothing
@@ -423,7 +439,6 @@ logProducer mainConfig logFilePath sendMsg = ( do
                 Just line   -> do
                     utcTime <- getCurrentTime
                     sendMsg $ AppAddRecord $ LogEntry leId 
-                        --(Just utcTime) (getParseResult $ parse pRule line)
                         (Just utcTime) 
                         (parseLogEntry lpCfg (textTranslate sm line))
                     return (leId+1)
@@ -445,7 +460,7 @@ saveColorConfig :: FilePath -> LogColorDistrib -> IO AppEvent
 saveColorConfig path logColorDistrib = do
     writeFile (path </> colorConfigFile) (show logColorDistrib)
         `catch` \(e::SomeException) -> throw ExSaveColorConfig
-    return AppReformattingDone
+    return AppColorConfigSaved
 
 readColorConfig :: FilePath -> IO LogColorDistrib
 readColorConfig path = do
@@ -460,7 +475,7 @@ saveWindowConfig :: FilePath -> LogWindowDistrib -> IO AppEvent
 saveWindowConfig path logWindowDistrib = do
     writeFile (path </> windowConfigFile) (show logWindowDistrib)
         `catch` \(e::SomeException) -> throw ExSaveColorConfig
-    return AppReformattingDone
+    return AppWindowConfigSaved
 
 readWindowConfig :: FilePath -> IO LogWindowDistrib
 readWindowConfig path = do
@@ -482,7 +497,7 @@ writeAppWindowSize :: FilePath -> AppWindowSize -> IO AppEvent
 writeAppWindowSize path aws = do
     writeFile (path </> appWindowSizeFile) (show aws)
         `catch` \(e::SomeException) -> throw ExSaveAppWindowSize
-    return AppReformattingDone
+    return AppWindowSizeSaved
 
 readAppWindowSize :: FilePath -> MainConfig -> IO AppWindowSize
 readAppWindowSize path cfg =
@@ -490,6 +505,10 @@ readAppWindowSize path cfg =
         read <$> readFile (path </> appWindowSizeFile)
         ) (\(e::SomeException) -> return (cfg^.acMainWindowDefaultSize))    -- throw ExReadAppWindowSize
         
+-- *****************************************************************************
 
+endReformatting :: IO AppEvent
+endReformatting =
+    return AppReformattingDone
 
 

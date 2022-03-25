@@ -67,11 +67,14 @@ data AppEvent
     | AppErrorClose
     | AppInit
     | AppResize Rect
+    | AppWindowSizeSaved
     | AppReformattingDone
     | AppShowColorConfig
     | AppCloseColorConfigScreen IsDialogApply
+    | AppColorConfigSaved
     | AppShowWindowConfig
     | AppCloseWindowConfigScreen IsDialogApply
+    | AppWindowConfigSaved
     | AppAddRecord LogEntry
     | AppAddBulkRecords [LogEntry] LEId
     deriving (Show)
