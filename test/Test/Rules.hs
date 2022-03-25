@@ -11,6 +11,8 @@ import LogParser.Rules.Helpers
 import LogParser.Rules
 import LogParser.LogEntry
 
+import qualified Data.List as List
+
 
 tpLogEntryData :: Test
 tpLogEntryData = TestList
@@ -644,7 +646,6 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["*** STARTING NEW GAME ***"]
-
     ] where
         cfg = LogParseConfig
 

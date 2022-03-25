@@ -456,9 +456,20 @@ colorConfigFile = "colors"
 windowConfigFile :: FilePath
 windowConfigFile = "windows"
 
+-- | Add line breaks to list of tuples string 
+prettyList :: String -> String
+prettyList str0 = 
+    concat $ List.unfoldr (\(str', b) -> 
+        if b then Nothing
+        else case List.elemIndex ')' str' of 
+                Just i -> let (tuple, rest) = List.splitAt (i+1) str'
+                          in Just (tuple, ('\n':rest, b))
+                Nothing -> Just (str', ("", True))
+        ) (str0, False)
+
 saveColorConfig :: FilePath -> LogColorDistrib -> IO AppEvent
 saveColorConfig path logColorDistrib = do
-    writeFile (path </> colorConfigFile) (show logColorDistrib)
+    writeFile (path </> colorConfigFile) (prettyList $ show logColorDistrib)
         `catch` \(e::SomeException) -> throw ExSaveColorConfig
     return AppColorConfigSaved
 
@@ -473,7 +484,7 @@ readColorConfig path = do
         
 saveWindowConfig :: FilePath -> LogWindowDistrib -> IO AppEvent
 saveWindowConfig path logWindowDistrib = do
-    writeFile (path </> windowConfigFile) (show logWindowDistrib)
+    writeFile (path </> windowConfigFile) (prettyList $ show logWindowDistrib)
         `catch` \(e::SomeException) -> throw ExSaveColorConfig
     return AppWindowConfigSaved
 
