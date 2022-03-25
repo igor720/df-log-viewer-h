@@ -22,7 +22,6 @@ import qualified Data.Text as T
 import Data.Text ( Text )
 import Data.YAML
 import TextShow
---import TextShow.TH ( deriveTextShow )
 import Numeric ( showHex )
 import Monomer ( rgbHex, Color )
 import qualified Monomer.Lens as L
@@ -191,6 +190,3 @@ checkMainConfig cfg@(MainConfig (w,h) _ _ ts _ (tsh0,tsh1) es sw tfw ws cst _
     | otherwise         = Right cfg
 
 
-
-
--- $(deriveTextShow ''ShowNameType)
