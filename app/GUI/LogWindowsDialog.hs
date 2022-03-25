@@ -49,7 +49,7 @@ buildLogWindowsDialogComp wenv model = widgetTree where
     dragItem val = draggable_ val
         [draggableStyle [ bgColor textDragColor, radius 5 ]]
         (itemA val) `styleBasic` [ cursorHand ]
-    dragList items = vstack (dragItem <$> items)
+    dragList items = vscroll $ vstack (dragItem <$> items)
     dropContainer target iList = dropTarget_ target
         [dropTargetStyle [ bgColor listingHoverColor, radius 10 ]]
         (dragList (model^.lwLists.ix iList)) `styleBasic`

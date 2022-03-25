@@ -24,6 +24,10 @@ import GUI.Model.LogWindowsDialog
 import GUI.Model.ColorsDialog
 
 
+-- | Limit for log entries (don't work for initial bulk load)
+hardLogsLimit :: Integer
+hardLogsLimit = 1000
+
 -- | Log Entry Id
 type LEId = Int
 
