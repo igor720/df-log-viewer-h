@@ -12,6 +12,7 @@ Reassamble log text from components
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use ++" #-}
 
@@ -23,6 +24,8 @@ import Data.Maybe ( fromMaybe )
 import qualified Data.Text as T
 import Data.Text ( Text )
 import Data.Typeable ( cast )
+import Control.DeepSeq (NFData, force)
+import GHC.Generics (Generic)
 
 import LogParser.LogEntry
 
@@ -30,9 +33,9 @@ import LogParser.LogEntry
 type LogEntryDescription = Text
 
 data LEComponentId = LECJob | LECMat | LECDorf | LECOther
-        deriving (Show, Eq)
-data LEComponent = LEC LEComponentId Text
-        deriving (Show, Eq)
+        deriving (Show, Eq, Generic, NFData)
+data LEComponent = LEC !LEComponentId !Text 
+        deriving (Show, Eq, Generic, NFData)
 type ReLogEntry = [LEComponent]
 
 data ReConfig = ReConfig
@@ -41,7 +44,7 @@ data ReConfig = ReConfig
     } deriving Show
 
 reassemble :: ReConfig -> LogEntryData -> (LogEntryDescription, ReLogEntry)
-reassemble reCfg led = ss where
+reassemble reCfg led = force ss where
     np n p 
         | T.null n  = p 
         | T.null p  = n 

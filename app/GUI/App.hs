@@ -35,6 +35,8 @@ import Monomer
 import qualified Monomer.Lens as L
 import Monomer.Core.Lens (HasUnderline(underline))
 
+import Control.DeepSeq
+
 import LogParser.LogEntry
 import LogParser.Rules.Helpers
 import LogParser.Rules
@@ -131,7 +133,6 @@ logEntryRow wenv model le = row where
     -- configuration parameters
     cfg = model^.mainConfig
     reCfg = ReConfig (cfg^. acShowProfession) (cfg^. acShowName)
-    fad = cfg^. acFadeAnimationDuration
     ws = model^.mainConfig.acLogWindows
     cols = if ws<=2 then 1 else 2 :: Int
     rowHoverBgColor = wenv^. L.theme. L.userColorMap. at "hoverBgColor". non def
@@ -194,7 +195,7 @@ logEntryRow wenv model le = row where
         descStyle = [ textFont "Bold"
                     , textColor (if cfg^. acColoredTag then txtColor else white) 
                     ]
-        animCfg = [duration fad, autoStart]
+        animCfg = [duration (cfg^. acFadeAnimationDuration), autoStart]
     row = box_ [expandContent] (
             rowContent `styleBasic` basicStyle `styleHover` hoverStyle
             ) `styleBasic` boxStyle where
@@ -423,11 +424,11 @@ logProducer mainConfig logFilePath sendMsg = ( do
                    else TIO.hGetLine f <&> Just
             )
         let n = _acPreviousLogEntries mainConfig
-            latestLines = map (textTranslate sm) $ 
+            latestLines = force $ map (textTranslate sm) $ 
                 mergeLogBlocks $ 
                 latestLogCut n prevLines :: [Text]
-            leds = map (parseLogEntry lpCfg) latestLines
-            les = reverse $ zipWith (`LogEntry` Nothing) [1..] leds
+            leds = force $ map (parseLogEntry lpCfg) latestLines
+            les = force $ reverse $ zipWith (`LogEntry` Nothing) [1..] leds
             lastId = if null les then 0
                      else let LogEntry lastId' _ _  = head les
                           in lastId'
@@ -441,7 +442,7 @@ logProducer mainConfig logFilePath sendMsg = ( do
                 Nothing     -> threadDelay readTimeout >> return leId
                 Just line   -> do
                     utcTime <- getCurrentTime
-                    sendMsg $ AppAddRecord $ LogEntry leId 
+                    sendMsg $ AppAddRecord $ force $ LogEntry leId 
                         (Just utcTime) 
                         (parseLogEntry lpCfg (textTranslate sm line))
                     return (leId+1)

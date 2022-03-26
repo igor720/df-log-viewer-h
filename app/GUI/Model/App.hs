@@ -9,6 +9,7 @@ Portability : non-portable
 App model definition
 -}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 
 module GUI.Model.App where
 
@@ -17,6 +18,8 @@ import Data.Text ( Text )
 import qualified Data.Map as M
 import Data.Time ( UTCTime )
 import Monomer ( Rect )
+import Control.DeepSeq (NFData)
+import GHC.Generics (Generic)
 
 import LogParser.LogEntry
 import Config
@@ -24,9 +27,9 @@ import GUI.Model.LogWindowsDialog
 import GUI.Model.ColorsDialog
 
 
--- | Limit for log entries (don't work for initial bulk load)
-hardLogsLimit :: Integer
-hardLogsLimit = 1000
+-- -- | Limit for log entries (don't work for initial bulk load)
+-- hardLogsLimit :: Integer
+-- hardLogsLimit = 1000
 
 -- | Log Entry Id
 type LEId = Int
@@ -44,10 +47,10 @@ data LogMergeMode = LMNo | LMFull | LMLast
 
 -- | Log entry type with Id and optional time
 data LogEntry = LogEntry
-    { _leId             :: LEId
+    { _leId             :: !LEId
     , _leTime           :: Maybe UTCTime
-    , _leData           :: LogEntryData
-    } deriving (Show, Eq)
+    , _leData           :: !LogEntryData
+    } deriving (Show, Eq, Generic, NFData)
 
 data AppModel = AppModel
     { _mainConfig       :: MainConfig

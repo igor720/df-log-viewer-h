@@ -200,7 +200,7 @@ pActor endWith = do
 newtype ExLogParse = ExLogParse ParseError
 
 instance Show ExLogParse where
-    show (ExLogParse err) = "parsing fail: "++show err
+   show (ExLogParse err) = "parsing fail: "++show err
 
 instance Exception ExLogParse where
     toException   = logExceptionToException
