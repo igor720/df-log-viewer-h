@@ -136,7 +136,7 @@ tpLogEntryData = TestList
                 Nothing
                 (Just "citrine")
                 ["You have struck"]
-    , let tag=LEBattleMiss in show tag ~: parseLogEntrySingle cfg (f0 tag) 
+    , let tag=LEBattleMiss in show tag ~: parseLogEntrySingle cfg (f2 tag) 
             "The hammerdwarf strikes at the hammerdwarf but the shot is parried by the (bismuth bronze battle axe)!" ~?= 
             LogEntryData tag 
                 (Just (Creature "hammerdwarf"))
@@ -144,7 +144,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The","strikes at the","but the shot is parried by the (bismuth bronze battle axe)!"]
-    , let tag=LEBattleMiss in show tag ~: parseLogEntrySingle cfg (f0 tag) 
+    , let tag=LEBattleMiss in show tag ~: parseLogEntrySingle cfg (f2 tag) 
             "The axedwarf misses the hammerdwarf!" ~?= 
             LogEntryData tag 
                 (Just (Creature "axedwarf"))
@@ -152,7 +152,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The","misses the","!"]
-    , let tag=LEBattleEvent in show tag ~: parseLogEntrySingle cfg (f0 tag) 
+    , let tag=LEBattleEvent in show tag ~: parseLogEntrySingle cfg (f2 tag) 
             "The stray war dog charges at the weasel!" ~?= 
             LogEntryData tag 
                 (Just (Creature "stray war dog"))
@@ -160,7 +160,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The","charges at","!"]
-    , let tag=LEBattleEvent in show tag ~: parseLogEntrySingle cfg (f0 tag) 
+    , let tag=LEBattleEvent in show tag ~: parseLogEntrySingle cfg (f2 tag) 
             "The hammerdwarf is knocked over!" ~?= 
             LogEntryData tag 
                 (Just (Creature "hammerdwarf"))
@@ -168,7 +168,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The","is knocked over!",""]
-    , let tag=LEBattleEvent in show tag ~: parseLogEntrySingle cfg (f0 tag) 
+    , let tag=LEBattleEvent in show tag ~: parseLogEntrySingle cfg (f2 tag) 
             "The stray kitten is knocked over and tumbles backward!" ~?= 
             LogEntryData tag 
                 (Just (Creature "stray kitten"))
@@ -176,8 +176,9 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The","is knocked over and tumbles backward!",""]
-    , let tag=LEBattleStrike in show tag ~: parseLogEntrySingle cfg (f0 tag) 
-            "The macedwarf bashes the axedwarf in the left upper arm with her (+®copper maceЇ+), lightly tapping the target!" ~?= 
+    , let tag=LEBattleStrike in show tag ~: parseLogEntrySingle cfg (f2 tag) 
+            ("The macedwarf bashes the axedwarf in the left upper arm with her "
+                <>"(+®copper maceЇ+), lightly tapping the target!") ~?= 
             LogEntryData tag 
                 (Just (Creature "macedwarf"))
                 (Just (Creature "axedwarf"))
@@ -208,7 +209,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The","jumps away from The flying ({bismuth bronze bolt})!",""]
-    , let tag=LEBattleStatus in show tag ~: parseLogEntrySingle cfg (f0 tag) 
+    , let tag=LEBattleStatus in show tag ~: parseLogEntrySingle cfg (f2 tag) 
             "The dingo vomits." ~?= 
             LogEntryData tag 
                 (Just (Creature "dingo"))
@@ -216,7 +217,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["vomits."]
-    , let tag=LEBattleStatus in show tag ~: parseLogEntrySingle cfg (f0 tag) 
+    , let tag=LEBattleStatus in show tag ~: parseLogEntrySingle cfg (f2 tag) 
             "Cog Kѓkdalmist€m, hunting Dog (Tame) is no longer enraged." ~?= 
             LogEntryData tag 
                 (Just (Creature "Cog Kѓkdalmist€m, hunting Dog (Tame)"))
@@ -224,7 +225,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["is no longer enraged."]
-    , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (f0 tag) 
+    , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (f2 tag) 
             "The osprey slams into an obstacle!" ~?= 
             LogEntryData tag 
                 (Just (Creature "osprey"))
@@ -232,7 +233,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The","slams into an obstacle!",""]
-    , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (f0 tag) 
+    , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (f2 tag) 
             "The osprey leaps at the hammerdwarf!" ~?= 
             LogEntryData tag 
                 (Just (Creature "osprey"))
@@ -240,7 +241,7 @@ tpLogEntryData = TestList
                 Nothing
                 Nothing
                 ["The","leaps at the","!"]
-    , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (f0 tag) 
+    , let tag=LEBattleEvent2 in show tag ~: parseLogEntrySingle cfg (f2 tag) 
             "The cat locks the blue dragon's wing with the cat's hand!" ~?= 
             LogEntryData tag 
                 (Just (Creature "cat"))
@@ -651,6 +652,9 @@ tpLogEntryData = TestList
         f0 tag = pLogEntryData OtherLogEntry tag
         f1 tag = do
             les <- getActorFirst
+            pLogEntryData les tag  
+        f2 tag = do
+            les <- getCreatureFirst
             pLogEntryData les tag  
 
 -- tpLogEntryData1 :: Test
