@@ -12,6 +12,7 @@ Reassamble log text from components
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use ++" #-}
@@ -24,9 +25,8 @@ import Data.Maybe ( fromMaybe )
 import qualified Data.Text as T
 import Data.Text ( Text )
 import Data.Typeable ( cast )
-import Control.DeepSeq (NFData, force)
-import GHC.Generics (Generic)
-
+import Control.DeepSeq ( NFData, force )
+import GHC.Generics ( Generic )
 import LogParser.LogEntry
 
 
@@ -36,15 +36,22 @@ data LEComponentId = LECJob | LECMat | LECDorf | LECOther
         deriving (Show, Eq, Generic, NFData)
 data LEComponent = LEC !LEComponentId !Text 
         deriving (Show, Eq, Generic, NFData)
-type ReLogEntry = [LEComponent]
+
+data ReLogEntry = ReLogEntry
+        { _rleTag       :: !LogEntryTag 
+        , _rleDesc      :: !LogEntryDescription 
+        , _rleComps     :: [LEComponent]
+        } deriving (Show, Eq, Generic, NFData)
+
+makeLenses ''ReLogEntry
 
 data ReConfig = ReConfig
     { reShowProfession  :: Bool
     , reShowNameType    :: ShowNameType
     } deriving Show
 
-reassemble :: ReConfig -> LogEntryData -> (LogEntryDescription, ReLogEntry)
-reassemble reCfg led = force ss where
+reassemble :: ReConfig -> LogEntryData -> ReLogEntry
+reassemble reCfg led = ss where
     np n p 
         | T.null n  = p 
         | T.null p  = n 
@@ -86,64 +93,64 @@ reassemble reCfg led = force ss where
     o txt = map (LEC LECOther) $ T.words txt
     o1 :: Text -> [LEComponent]
     o1 txt = [LEC LECOther txt]
-    c = concat
+    c desc comps = ReLogEntry (led^. tag) desc (concat comps)
     ss = case led^. tag of
-        LEDefault -> ("default", w 0)
-        LEJobSuspension -> ("job: suspension",              c [ w 0, j, w 1, m, w 2, a1, o1 "." ])
-        LECraftCancel -> ("craft: cancel",                  c [ j, o1 ":", a1, o1 "needs", m ])
-        LEJobCancel -> ("job: cancel",                      c [ a1, w 0, j, w 1, w 2 ])
-        LEProductionCompleted -> ("production: completed",  c [ j, o1 " (", m, o1 ") " ])
-        LEMasterpieceImproved -> ("masterpiece: improved",  c [ a1, w 0, m, w 1 ])
-        LEMasterpieceCreated -> ("masterpiece: created",    c [ a1, w 0 ])
-        LECrimeTheft -> ("crime: theft",                    c [ m, w 0 ])
-        LEDFHackAutomation -> ("dfhack: automation",        c [ o1 "Marked ", m, o1 "items", w 0, j ])
-        LEMiningStruck -> ("mining: struck",                c [ w 0, m, o1 "!" ])
-        LEBattleMiss -> ("battle: miss",                    c [ w 0, a1, w 1, a2, w 2 ])
-        LEBattleEvent -> ("battle: event",                  c [ w 0, a1, w 1, a2, w 2 ])
-        LEBattleStrike -> ("battle: strike",                c [ a1, w 0, a2 ])
-        LEBattleHit -> ("battle: hit", w 0)                 
-        LEBattleEvade -> ("battle: evade",                  c [ w 0, a1, w 1, a2, w 2 ])
-        LEBattleStatus -> ("battle: status",                c [ a1, w 0 ])
-        LEBattleEvent2 -> ("battle: event2",                c [ w 0, a1, w 1, a2, w 2 ])
-        LEBattleTrance -> ("battle: trance",                c [ w 0, a1, w 1 ])
-        LEEmotion -> ("emotion",                            c [ a1, w 0 ])
-        LEGore -> ("gore", w 0)
-        LEAnimalGrown -> ("animal: grown", m)
-        LEAnimalBirth -> ("animal: birth",                  c [ m, w 0 ])
-        LEAnimalSlaughtered -> ("animal: slaughtered", m)
-        LEAnimalTraining -> ("animal: training",            c [ w 0, a1, w 1 ])
-        LEAnimalMisc -> ("animal: misc",                    c [ w 0, a1, w 1 ])
-        LESocial -> ("social",                              c [ w 0, a1, w 1, a2, w 2 ])
-        LESomeoneBecome -> ("someone: become",              c [ a1, w 0, w 1, m ])
-        LEMandate -> ("mandate",                            c [ a1, w 0 ])
-        LETrade -> ("trade",                                c [ a1, w 0 ])
-        LEVisit -> ("visit",                                c [ w 0, a1, w 1 ])
-        LESting -> ("sting",                                c [ a1, w 0 ])
-        LEItem -> ("item",                                  c [ a1, w 0, m ])
-        LEWeather -> ("weather", w 0)
-        LEFishing -> ("fishing", w 0)
-        LEAdoption -> ("adotion",                           c [ a1, w 0, a2, o1 "." ])
-        LESkillLevel -> ("skill: level",                    c [ a1, w 0 ])
-        LEMoodNormal -> ("mood: normal",                    c [ a1, w 0, m, w 1 ])
-        LEMoodInsane -> ("mood: insane",                    c [ a1, w 0 ])
-        LEMoodTantrum -> ("mood: tantrum",                  c [ a1, w 0, j, w 1 ])
-        LEMoodDepression -> ("mood: depression",            c [ a1, w 0 ])
-        LEGuild -> ("guild", w 0)
-        LEBattleBreath -> ("battle: breath",                c [ w 0, a1, w 1 ])
-        LEMasterpieceLost -> ("masterpiece: lost", w 0)
-        LEHazard -> ("hazard",                              c [ a1, w 0 ])
-        LEMiningWarning -> ("mining: warning", w 0)
-        LEMigrants -> ("migrants", w 0)
-        LESettlement -> ("settlement", w 0)
-        LEDeath -> ("death",                                c [ a1, w 0 ])
-        LEDeathFound -> ("death: found",                    c [ a1, w 0 ])
-        LENecromancy -> ("necromancy",                      c [ a1, w 0 ])
-        LEIntruders -> ("intruders",                        c [ m, w 0, a1 ])
-        LEGhost -> ("ghost",                                c [ w 0, m, w 1, a1, w 2 ])
-        LEWerebeast -> ("werebeast",                        c [ a1, w 0 ])
-        LETitan -> ("titan",                                c [ w 0, a1, w 1 ])
-        LESeason -> ("season", w 0)
-        LESystem -> ("system", w 0)
+        LEDefault ->            c "default"                 [w 0]
+        LEJobSuspension ->      c "job: suspension"         [ w 0, j, w 1, m, w 2, a1, o1 "." ]
+        LECraftCancel ->        c "craft: cancel"           [ j, o1 ":", a1, o1 "needs", m ]
+        LEJobCancel ->          c "job: cancel"             [ a1, w 0, j, w 1, w 2 ]
+        LEProductionCompleted -> c "production: completed"  [ j, o1 " (", m, o1 ") " ]
+        LEMasterpieceImproved -> c "masterpiece: improved"  [ a1, w 0, m, w 1 ]
+        LEMasterpieceCreated -> c "masterpiece: created"    [ a1, w 0 ]
+        LECrimeTheft ->         c "crime: theft"            [ m, w 0 ]
+        LEDFHackAutomation ->   c "dfhack: automation"      [ o1 "Marked ", m, o1 "items", w 0, j ]
+        LEMiningStruck ->       c "mining: struck"          [ w 0, m, o1 "!" ]
+        LEBattleMiss ->         c "battle: miss"            [ w 0, a1, w 1, a2, w 2 ]
+        LEBattleEvent ->        c "battle: event"           [ w 0, a1, w 1, a2, w 2 ]
+        LEBattleStrike ->       c "battle: strike"          [ a1, w 0, a2 ]
+        LEBattleHit ->          c "battle: hit"             [w 0]                 
+        LEBattleEvade ->        c "battle: evade"           [ w 0, a1, w 1, a2, w 2 ]
+        LEBattleStatus ->       c "battle: status"          [ a1, w 0 ]
+        LEBattleEvent2 ->       c "battle: event2"          [ w 0, a1, w 1, a2, w 2 ]
+        LEBattleTrance ->       c "battle: trance"          [ w 0, a1, w 1 ]
+        LEEmotion ->            c "emotion"                 [ a1, w 0 ]
+        LEGore ->               c "gore"                    [w 0]
+        LEAnimalGrown ->        c "animal: grown"           [m]
+        LEAnimalBirth ->        c "animal: birth"           [ m, w 0 ]
+        LEAnimalSlaughtered ->  c "animal: slaughtered"     [m]
+        LEAnimalTraining ->     c "animal: training"        [ w 0, a1, w 1 ]
+        LEAnimalMisc ->         c "animal: misc"            [ w 0, a1, w 1 ]
+        LESocial ->             c "social"                  [ w 0, a1, w 1, a2, w 2 ]
+        LESomeoneBecome ->      c "someone: become"         [ a1, w 0, w 1, m ]
+        LEMandate ->            c "mandate"                 [ a1, w 0 ]
+        LETrade ->              c "trade"                   [ a1, w 0 ]
+        LEVisit ->              c "visit"                   [ w 0, a1, w 1 ]
+        LESting ->              c "sting"                   [ a1, w 0 ]
+        LEItem ->               c "item"                    [ a1, w 0, m ]
+        LEWeather ->            c "weather"                 [w 0]
+        LEFishing ->            c "fishing"                 [w 0]
+        LEAdoption ->           c "adotion"                 [ a1, w 0, a2, o1 "." ]
+        LESkillLevel ->         c "skill: level"            [ a1, w 0 ]
+        LEMoodNormal ->         c "mood: normal"            [ a1, w 0, m, w 1 ]
+        LEMoodInsane ->         c "mood: insane"            [ a1, w 0 ]
+        LEMoodTantrum ->        c "mood: tantrum"           [ a1, w 0, j, w 1 ]
+        LEMoodDepression ->     c "mood: depression"        [ a1, w 0 ]
+        LEGuild ->              c "guild"                   [w 0]
+        LEBattleBreath ->       c "battle: breath"          [ w 0, a1, w 1 ]
+        LEMasterpieceLost ->    c "masterpiece: lost"       [w 0]
+        LEHazard ->             c "hazard"                  [ a1, w 0 ]
+        LEMiningWarning ->      c "mining: warning"         [w 0]
+        LEMigrants ->           c "migrants"                [w 0]
+        LESettlement ->         c "settlement"              [w 0]
+        LEDeath ->              c "death"                   [ a1, w 0 ]
+        LEDeathFound ->         c "death: found"            [ a1, w 0 ]
+        LENecromancy ->         c "necromancy"              [ a1, w 0 ]
+        LEIntruders ->          c "intruders"               [ m, w 0, a1 ]
+        LEGhost ->              c "ghost"                   [ w 0, m, w 1, a1, w 2 ]
+        LEWerebeast ->          c "werebeast"               [ a1, w 0 ]
+        LETitan ->              c "titan"                   [ w 0, a1, w 1 ]
+        LESeason ->             c "season"                  [w 0]
+        LESystem ->             c "system"                  [w 0]
 
 -- *****************************************************************************
 

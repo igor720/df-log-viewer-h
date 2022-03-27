@@ -108,7 +108,8 @@ getLogEntryTimeValues model le = vals where
 -- Returns log entry text components, distributed among each line of text
 getLogEntryTextComponents :: (Text -> Width) -> Width -> Width 
     -> ReLogEntry -> [[LEComponent]]
-getLogEntryTextComponents getTextWidth introW logWindowW reas = txtComps where
+getLogEntryTextComponents getTextWidth introW logWindowW (ReLogEntry _ _ reas)
+        = txtComps where
     spaceW = getTextWidth " "
     txtComps' = List.foldl' (\cws comp -> case cws of
         [] -> [([comp], introW+w)] where
@@ -145,16 +146,16 @@ logEntryRow wenv model le = row where
 
     -- getting log entry components
     (timeTxt, timeColor, isMergeRequired) = getLogEntryTimeValues model le
-    (desc, reas) = reassemble reCfg (le^. leData)
+    rle@(ReLogEntry leTag desc reas) = le^. leReLogEntry
     descW = getTextSize wenv 
         (textFont "Bold"<>textSize (model^. mainConfig.acTextSize)) desc^. L.w
     introW = descW + timeW + spacerW
-    txtComps = getLogEntryTextComponents getTextWidth introW logWindowW reas
+    txtComps = getLogEntryTextComponents getTextWidth introW logWindowW rle
 
     -- defining special text styles and constructing log entry text block
     txtColor = fromMaybe
         defaultColor
-        (M.lookup (le^. leData.tag) (model^. logColorDistrib))
+        (M.lookup leTag (model^. logColorDistrib))
     txtBlock = vstack ( map (
         hstack . map ( \(LEC lecId txt) -> case lecId of
                 LECJob -> label txt `styleBasic` jobStyle
@@ -208,7 +209,7 @@ logScreen wenv model = widgetTree where
     ws = model^.mainConfig.acLogWindows
     getWindow le = fromMaybe
         defaultLogWindow
-        (M.lookup (le^.leData.tag) (model^.logWindowDistrib))
+        (M.lookup (le^. leReLogEntry.rleTag) (model^.logWindowDistrib))
     isMergeReqired _ newModel = newModel^.logMergeMode/=LMNo
     logWindow key w = vscroll_ [scrollFollowFocus, barWidth 10] 
         (vstack (logEntryRow wenv model <$> reverse ( 
@@ -413,9 +414,10 @@ secondsSince t0 t = fromIntegral i
 
 -- Log fetcher (from gamelog)
 logProducer :: MainConfig -> FilePath -> (AppEvent -> IO ()) -> IO ()
-logProducer mainConfig logFilePath sendMsg = ( do
+logProducer cfg logFilePath sendMsg = ( do
         let lpCfg = LogParseConfig 
             sm = symMapping
+            reCfg = ReConfig (cfg^. acShowProfession) (cfg^. acShowName)
         f <- openFile logFilePath ReadMode
         hSetEncoding f latin1
         prevLines <- unfoldM ( do
@@ -423,11 +425,12 @@ logProducer mainConfig logFilePath sendMsg = ( do
             if eof then return Nothing
                    else TIO.hGetLine f <&> Just
             )
-        let n = _acPreviousLogEntries mainConfig
+        let n = _acPreviousLogEntries cfg
             latestLines = force $ map (textTranslate sm) $ 
                 mergeLogBlocks $ 
                 latestLogCut n prevLines :: [Text]
-            leds = force $ map (parseLogEntry lpCfg) latestLines
+            leds = force $ 
+                map (reassemble reCfg . parseLogEntry lpCfg) latestLines
             les = force $ reverse $ zipWith (`LogEntry` Nothing) [1..] leds
             lastId = if null les then 0
                      else let LogEntry lastId' _ _  = head les
@@ -444,7 +447,8 @@ logProducer mainConfig logFilePath sendMsg = ( do
                     utcTime <- getCurrentTime
                     sendMsg $ AppAddRecord $ force $ LogEntry leId 
                         (Just utcTime) 
-                        (parseLogEntry lpCfg (textTranslate sm line))
+                        (reassemble reCfg $ 
+                            parseLogEntry lpCfg (textTranslate sm line))
                     return (leId+1)
             ) (lastId+1)
     ) `catches` 

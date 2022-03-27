@@ -18,10 +18,11 @@ import Data.Text ( Text )
 import qualified Data.Map as M
 import Data.Time ( UTCTime )
 import Monomer ( Rect )
-import Control.DeepSeq (NFData)
-import GHC.Generics (Generic)
+import Control.DeepSeq ( NFData )
+import GHC.Generics ( Generic )
 
-import LogParser.LogEntry
+--import LogParser.LogEntry
+import LogParser.Reassemble
 import Config
 import GUI.Model.LogWindowsDialog
 import GUI.Model.ColorsDialog
@@ -49,7 +50,7 @@ data LogMergeMode = LMNo | LMFull | LMLast
 data LogEntry = LogEntry
     { _leId             :: !LEId
     , _leTime           :: Maybe UTCTime
-    , _leData           :: !LogEntryData
+    , _leReLogEntry     :: !ReLogEntry
     } deriving (Show, Eq, Generic, NFData)
 
 data AppModel = AppModel
