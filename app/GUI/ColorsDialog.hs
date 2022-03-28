@@ -48,8 +48,10 @@ buildColorsDialogComp colorSampleText wenv model = widgetTree where
                 [ bgColor logWindowBgColor ]]
             , spacer_ [width 8]
             ]
-    (cLst0, cLst1) = splitAt (M.size (model^.cDistrib) `div` 2) $ 
+    cDistribSize = M.size (model^.cDistrib)
+    (cLst0, cLst12) = splitAt (cDistribSize `div` 3) $ 
         M.toList (model^.cDistrib)
+    (cLst1, cLst2) = splitAt (cDistribSize `div` 3) cLst12
     widgetTree = box (
         hstack
             [ vscroll (vstack (
@@ -58,6 +60,10 @@ buildColorsDialogComp colorSampleText wenv model = widgetTree where
             , spacer
             , vscroll (vstack (
                 over mapped colorRow cLst1
+                ) ) `styleBasic` vsStyle
+            , spacer
+            , vscroll (vstack (
+                over mapped colorRow cLst2
                 ) ) `styleBasic` vsStyle
             ] `styleBasic` hsStyle
         ) `styleBasic` boxStyle
