@@ -30,41 +30,49 @@ mainConfigFile = "dflv.yaml"
 
 commandLineHelp :: String 
 commandLineHelp = "command line: "
-                ++"dfvh(.exe) [--dir=\"working directory\"] [logfilepath]"
+                ++"dfvh(.exe) [--work-dir=\"working directory\"] "
+                ++"[--gemelog=\"logfilepath\"]"
+
+data PathOpt = WorkingDir FilePath | GameLogPath FilePath | InvalidOpt
+        deriving Show
 
 -- | Parses working dir from a command line argument
-parsePath :: FilePath -> Maybe FilePath
-parsePath s = 
-    if List.take 6 s=="--dir=" 
-        then Just $ List.drop 6 s
-        else Nothing
+parsePath :: FilePath -> PathOpt
+parsePath s
+    | List.take 11 s=="--work-dir=" = WorkingDir $ List.drop 11 s
+    | List.take 10 s=="--gamelog="  = GameLogPath $ List.drop 10 s
+    | otherwise                     = InvalidOpt
 
 -- | Parses working dir and gamelog path from a command line (both are optional)
 parsArgs :: [String] -> Maybe (Maybe FilePath, Maybe FilePath)
 parsArgs args = case args of
-    []  -> Just (Nothing, Nothing)
+    []  -> Nothing
     [s] -> case parsePath s of
-            Nothing -> Just (Nothing, Just s)
-            p       -> Just (p, Nothing)
+            WorkingDir p    -> Just (Just p, Nothing)
+            GameLogPath p   -> Just (Nothing, Just p)
+            InvalidOpt     -> Nothing
     s0:s1:_ -> case (parsePath s0, parsePath s1) of
-            (Nothing, Nothing)  -> Just (Nothing, Just s0)
-            (p, Nothing)        -> Just (p, Nothing)
-            (Nothing, p)        -> Just (Nothing, p)
-            _                   -> Nothing
+            (WorkingDir p, InvalidOpt)      -> Just (Just p, Nothing)
+            (InvalidOpt, WorkingDir p)      -> Just (Just p, Nothing)
+            (GameLogPath p, InvalidOpt)     -> Just (Nothing, Just p)
+            (InvalidOpt, GameLogPath p)     -> Just (Nothing, Just p)
+            (WorkingDir p1, GameLogPath p2) -> Just (Just p1, Just p2)
+            (GameLogPath p2, WorkingDir p1) -> Just (Just p2, Just p1)
+            _                               -> Nothing
 
 main :: IO ()
 main = do
     argsParsed <- parsArgs <$> getArgs
-    (pathArg, logFile) <- case argsParsed of
+    (pathArgMb, logFileMb) <- case argsParsed of
         Just as -> return as
         Nothing -> putStrLn commandLineHelp >> exitSuccess
     pathExe <- takeDirectory <$> getExecutablePath
-    let path = fromMaybe pathExe pathArg
+    let path = fromMaybe pathExe pathArgMb
     check <- checkMainConfig <$> readMainConfig (path </> mainConfigFile)
     cfg <- case check of
         Left msg    -> throw $ ExConfigCheck msg
         Right cfg'  -> return cfg'
-    logFileName <- getLogFileName path logFile (unpack <$> _acLogFilePath cfg)
+    logFileName <- getLogFileName path logFileMb (unpack <$> _acLogFilePath cfg)
     aws <- readAppWindowSize path cfg
     gui path cfg aws logFileName
 
