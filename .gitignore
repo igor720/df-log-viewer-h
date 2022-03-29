@@ -5,3 +5,4 @@ stack.yaml
 stack.yaml.lock
 Makefile
 *.exe
+*.zip
