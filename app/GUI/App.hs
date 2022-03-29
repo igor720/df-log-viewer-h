@@ -206,6 +206,7 @@ logScreen wenv model = widgetTree where
     getWindow le = fromMaybe
         defaultLogWindow
         (M.lookup (le^. leReLogEntry.rleTag) (model^.logWindowDistrib))
+    -- TODO: consider merging only changed log windows
     isMergeReqired _ newModel = newModel^.logMergeMode/=LMNo
     logWindow key w = vscroll_ [scrollFollowFocus, barWidth 10] 
         (vstack (logEntryRow wenv model <$> reverse ( 
@@ -216,16 +217,28 @@ logScreen wenv model = widgetTree where
                      , minHeight 100, minWidth 200, paddingB 12 ]
     logWindowsStructure
         | ws==1 = logWindow "Log1" 1
-        | ws==2 = vsplit_ vsCfg (logWindow "Log1" 1, logWindow "Log2" 2)
+        | ws==2 = vsplit_ vsCfg
+                ( logWindow "Log1" 1
+                , logWindow "Log2" 2
+                )
         | ws==3 = hstack
-                [ vsplit_ vsCfg (logWindow "Log1" 1, logWindow "Log2" 2)
+                [ vsplit_ vsCfg
+                    (logWindow "Log1" 1
+                    , logWindow "Log2" 2
+                    )
                 , spacer_ [width 4]
                 , logWindow "Log3" 3
                 ]
         | ws==4 = hstack
-                [ vsplit_ vsCfg (logWindow "Log1" 1, logWindow "Log2" 2)
+                [ vsplit_ vsCfg
+                    ( logWindow "Log1" 1
+                    , logWindow "Log2" 2
+                    )
                 , spacer_ [width 4]
-                , vsplit_ vsCfg (logWindow "Log3" 3, logWindow "Log4" 4)
+                , vsplit_ vsCfg 
+                    ( logWindow "Log3" 3
+                    , logWindow "Log4" 4
+                    )
                 ]
         | otherwise = throw $ ExLogWindowsNumber ws
         where 
@@ -373,9 +386,11 @@ handleEvent wenv node model evt = case evt of
         ]
     AppAddRecord le                 -> [
         Model $ model
+            & logMergeMode      .~ 
+                (if isLogEntryVisible le then LMLast else LMNo)
             & curTime           .~ fromMaybe (model^.curTime) (le^.leTime)
             & logEntries        .~ addToLogEntriesDepository 
-                (cfg^. acMaximumLogEntries) le (model^.logEntries), -- (le : (model^.logEntries)),
+                (cfg^. acMaximumLogEntries) le (model^.logEntries),
         Task $ afterAddRecord (showt (le^.leId))
         ]
     AppSetFocus wKey -> [
@@ -406,6 +421,8 @@ handleEvent wenv node model evt = case evt of
         isReforMode = length (model^.reforMode)>1
         path = model^. exePath
         cfg = model^. mainConfig
+        isLogEntryVisible le =
+            (model^.logWindowDistrib) M.! (le^. leReLogEntry.rleTag) > 0
 
 -- *****************************************************************************
 

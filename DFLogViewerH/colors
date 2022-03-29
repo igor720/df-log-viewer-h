@@ -29,7 +29,7 @@ fromList [(LEDefault,Color {_colorR = 218, _colorG = 61, _colorB = 8, _colorA = 
 ,(LEGore,Color {_colorR = 255, _colorG = 117, _colorB = 66, _colorA = 1.0})
 ,(LEGuild,Color {_colorR = 76, _colorG = 76, _colorB = 255, _colorA = 1.0})
 ,(LEHazard,Color {_colorR = 255, _colorG = 62, _colorB = 62, _colorA = 1.0})
-,(LEMandate,Color {_colorR = 48, _colorG = 255, _colorB = 48, _colorA = 1.0})
+,(LEMandate,Color {_colorR = 208, _colorG = 208, _colorB = 48, _colorA = 1.0})
 ,(LEMasterpieceCreated,Color {_colorR = 108, _colorG = 108, _colorB = 236, _colorA = 1.0})
 ,(LEMasterpieceImproved,Color {_colorR = 108, _colorG = 108, _colorB = 236, _colorA = 1.0})
 ,(LEMasterpieceLost,Color {_colorR = 255, _colorG = 62, _colorB = 62, _colorA = 1.0})

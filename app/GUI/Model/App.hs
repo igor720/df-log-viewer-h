@@ -41,6 +41,7 @@ data DialogMode = DMNone | DMColors | DMWindows
     deriving (Eq, Show)
 
 -- | Log merge mode (LMNo is currently of no use)
+-- TODO: currently LMLast is the same as LMFull
 data LogMergeMode = LMNo | LMFull | LMLast
     deriving (Eq, Show)
 
