@@ -1,10 +1,10 @@
 name:                df-log-viewer-h
-version:             0.1.0.0
+version:             0.1.0.1
 github:              "igor720/df-log-viewer-h"
 license:             BSD3
 author:              "Igor Chudaev"
 maintainer:          "igor720@gmail.com.com"
-copyright:           "2021 Igor Chudaev"
+copyright:           "2022 Igor Chudaev"
 
 extra-source-files:
 - README.md

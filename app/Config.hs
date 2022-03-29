@@ -73,6 +73,7 @@ data MainConfig = MainConfig
     , _acDorfDecorUnderline     :: Bool
     , _acDorfDecorFgColor       :: Maybe Color
     , _acDorfDecorBgColor       :: Maybe Color
+    , _acMaximumLogEntries      :: Int
     , _acPreviousLogEntries     :: Int
     , _acLogFilePath            :: Maybe Text
     , _acShowProfession         :: Bool
@@ -115,6 +116,7 @@ instance FromYAML MainConfig where
         <*> m .: "dorfDecorUnderline"
         <*> m .:? "dorfDecorFgColor" .!= Nothing
         <*> m .:? "dorfDecorBgColor" .!= Nothing
+        <*> m .:? "maximumLogEntries" .!= 1000
         <*> m .:? "previousLogEntries" .!= 0
         <*> m .:? "logFilePath" .!= Nothing
         <*> m .: "showProfession"
@@ -125,7 +127,7 @@ instance FromYAML MainConfig where
 instance ToYAML MainConfig where
     toYAML (MainConfig mws rf ef ts tc tcs es sw tfw ws cst bc
                 jdu jdfg jdbg mdu mdfg mdbg ddu ddfg ddbg 
-                ple lfp snP sn ct fad) = mapping 
+                mles ples lfp snP sn ct fad) = mapping 
         [ "mainWindowDefaultSize"   .= mws
         , "regularFont"             .= rf
         , "emphasizeFont"           .= ef
@@ -147,7 +149,8 @@ instance ToYAML MainConfig where
         , "dorfbDecorUnderline"     .= ddu
         , "dorfDecorFgColor"        .= ddfg
         , "dorfDecorBgColor"        .= ddbg
-        , "previousLogEntries"      .= ple
+        , "maximumLogEntries"       .= mles
+        , "previousLogEntries"      .= ples
         , "logFilePath"             .= lfp
         , "showProfession"          .= snP
         , "showName"                .= sn
@@ -173,7 +176,7 @@ readMainConfig path = do
 checkMainConfig :: MainConfig -> Either String MainConfig
 checkMainConfig cfg@(MainConfig (w,h) _ _ ts _ (tsh0,tsh1) es sw tfw ws cst _
                         _ _ _ _ _ _ _ _ _ 
-                        ple _ snP sn _ fad)
+                        mles ples _ snP sn _ fad)
     | w<400 || h<300    = Left "Too small default window size"
     | ts<7 || ts>36     = Left "Too big font"
     | any (<0) [tsh0, tsh1] = 
@@ -184,8 +187,11 @@ checkMainConfig cfg@(MainConfig (w,h) _ _ ts _ (tsh0,tsh1) es sw tfw ws cst _
     | ws<1 || ws>4      = Left "'windows' must be in integval [1, 4]"
     | T.length cst<1 || T.length cst>16 = 
                           Left $ "Length of 'colorSampleText' must be "
-                              <> "in interval [1, 16]"
-    | ple<0             = Left "previousLogEntries must be non-negative integer"
+                                <> "in interval [1, 16]"
+    | mles<0            = Left "maximumLogEntries must be non-negative integer"
+    | ples<0            = Left "previousLogEntries must be non-negative integer"
+    | ples>mles         = Left $ "previousLogEntries must no more "
+                                <>"then maximumLogEntries"
     | fad<0             = Left "'fadeAnimationDuration' must be non-negative"
     | otherwise         = Right cfg
 

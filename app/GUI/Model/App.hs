@@ -13,9 +13,11 @@ App model definition
 
 module GUI.Model.App where
 
+import Control.Lens
 import Control.Lens.TH ( makeLenses )
 import Data.Text ( Text )
 import qualified Data.Map as M
+import qualified Data.IntMap.Strict as IM
 import Data.Time ( UTCTime )
 import Monomer ( Rect )
 import Control.DeepSeq ( NFData )
@@ -27,10 +29,6 @@ import Config
 import GUI.Model.LogWindowsDialog
 import GUI.Model.ColorsDialog
 
-
--- -- | Limit for log entries (don't work for initial bulk load)
--- hardLogsLimit :: Integer
--- hardLogsLimit = 1000
 
 -- | Log Entry Id
 type LEId = Int
@@ -53,6 +51,36 @@ data LogEntry = LogEntry
     , _leReLogEntry     :: !ReLogEntry
     } deriving (Show, Eq, Generic, NFData)
 
+type LogEntriesIndex = Int
+
+-- | In memory repository for log entries
+data LogEntriesDepository = LogEntriesDepository
+    { _lesSize          :: !LogEntriesIndex
+    , _lesData          :: IM.IntMap LogEntry
+    } deriving (Show, Eq, Generic, NFData)
+
+makeLenses 'LogEntriesDepository
+
+-- | Below are functions for log entries depository manipulation
+emptyLogEntriesDepository :: LogEntriesDepository
+emptyLogEntriesDepository = LogEntriesDepository 0 IM.empty
+
+makeLogEntriesDepositoryFromBulk :: [LogEntry] -> LogEntriesDepository
+makeLogEntriesDepositoryFromBulk les =
+    LogEntriesDepository (length les) (IM.fromList $ zip [1..] (reverse les))
+
+addToLogEntriesDepository :: LogEntriesIndex -> LogEntry -> LogEntriesDepository 
+        -> LogEntriesDepository
+addToLogEntriesDepository maxSize le (LogEntriesDepository idx dt)
+    | idx<maxSize   = LogEntriesDepository (idx+1)
+                        (IM.insert (idx+1) le dt)
+    | otherwise     = LogEntriesDepository (idx+1)
+                        (IM.insert (idx+1) le $ IM.delete (idx-maxSize+1) dt)
+
+getLogEntries :: LogEntriesDepository -> [LogEntry]
+getLogEntries depos = map snd $ reverse $ IM.toList (depos^. lesData)
+
+-- | Monomer application model
 data AppModel = AppModel
     { _mainConfig       :: MainConfig
     , _errorMsg         :: Maybe Text
@@ -61,7 +89,7 @@ data AppModel = AppModel
     , _logMergeMode     :: LogMergeMode     -- ^ log merge mode
     , _curTime          :: UTCTime          -- ^ time of last log entry reicived
     , _lastId           :: LEId             -- ^ last log entry Id
-    , _logEntries       :: [LogEntry]       -- ^ log entries
+    , _logEntries       :: LogEntriesDepository -- ^ log entries depository
     , _logColorDistrib  :: LogColorDistrib  -- ^ log colors distribution
     , _logWindowDistrib :: LogWindowDistrib -- ^ log windows distribution
     , _cModel           :: CDialogModel     -- ^ color configuration model
@@ -84,11 +112,19 @@ data AppEvent
     | AppCloseWindowConfigScreen IsDialogApply
     | AppWindowConfigSaved
     | AppAddRecord LogEntry
+    | AppSetFocus Text
     | AppAddBulkRecords [LogEntry] LEId
     deriving (Show)
 
 makeLenses 'LogEntry
 makeLenses 'AppModel
+
+
+
+
+
+
+
 
 
 

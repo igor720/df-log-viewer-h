@@ -77,32 +77,28 @@ defTimeColor (tCSh0, tCSh1) (tC0, tC1, tC2) secs
     | secs <= tCSh1   = tC1
     | otherwise       = tC2
 
--- | Returns text of time field, its color, and function for 'mergeRequired' use
-getLogEntryTimeValues :: AppModel -> LogEntry -> (Text, Color, s -> s -> Bool)
+-- | Returns text of time field, and its color
+getLogEntryTimeValues :: AppModel -> LogEntry -> (Text, Color)
 getLogEntryTimeValues model le = vals where
     time0 = model^. curTime
     tc@(_, _, timeColor) = model^. mainConfig.acTimeColors
     tcs = model^.mainConfig.acTimeColorShifts
     vals = case le^.leTime of
-        Nothing     -> (">>", timeColor, \_ _ -> model^. logMergeMode==LMFull)
+        Nothing     -> (">>", timeColor)
         Just time   -> res' where
             secs = secondsSince time0 time
             res' 
                 | secs<=1 =
                     ( showt secs
                     , defTimeColor tcs tc secs
-                    , \_ _ -> model^. logMergeMode==LMFull 
-                                || model^. logMergeMode==LMLast
                     )
                 | secs<=model^. mainConfig.acExplicitSecs =
                     ( showt secs
                     , defTimeColor tcs tc secs
-                    , \_ _ -> model^. logMergeMode==LMFull
                     )
                 | otherwise = 
                     ( ">"
                     , defTimeColor tcs tc secs
-                    , \_ _ -> model^. logMergeMode==LMFull 
                     )
 
 -- Returns log entry text components, distributed among each line of text
@@ -145,7 +141,7 @@ logEntryRow wenv model le = row where
     getTextWidth str = getTextSize wenv themeLabelStyle str^. L.w
 
     -- getting log entry components
-    (timeTxt, timeColor, isMergeRequired) = getLogEntryTimeValues model le
+    (timeTxt, timeColor) = getLogEntryTimeValues model le
     rle@(ReLogEntry leTag desc reas) = le^. leReLogEntry
     descW = getTextSize wenv 
         (textFont "Bold"<>textSize (model^. mainConfig.acTextSize)) desc^. L.w
@@ -184,7 +180,7 @@ logEntryRow wenv model le = row where
             box_ [alignRight, alignTop] (
                 label_ timeTxt [ellipsis] `styleBasic` timeStyle
                 ) `styleBasic` timeBoxStyle,
-            box_ [mergeRequired isMergeRequired] $ hstack [
+            box_ [] $ hstack [
                 spacer_ [width spacerW],
                 box_ [alignTop] (label desc `styleBasic` descStyle),
                 spacer_ [width spacerW],
@@ -196,7 +192,7 @@ logEntryRow wenv model le = row where
         descStyle = [ textFont "Bold"
                     , textColor (if cfg^. acColoredTag then txtColor else white) 
                     ]
-        animCfg = [duration (cfg^. acFadeAnimationDuration), autoStart]
+        animCfg = [duration (cfg^. acFadeAnimationDuration)]
     row = box_ [expandContent] (
             rowContent `styleBasic` basicStyle `styleHover` hoverStyle
             ) `styleBasic` boxStyle where
@@ -213,7 +209,7 @@ logScreen wenv model = widgetTree where
     isMergeReqired _ newModel = newModel^.logMergeMode/=LMNo
     logWindow key w = vscroll_ [scrollFollowFocus, barWidth 10] 
         (vstack (logEntryRow wenv model <$> reverse ( 
-            model^.logEntries^..folded.filtered 
+            model^.logEntries.to getLogEntries ^..folded.filtered 
                 (\le->(getWindow le==w) || (w==ws && getWindow le>ws))
         ))) `nodeKey` key
         `styleBasic` [ bgColor black, border 1 lightGray
@@ -378,13 +374,18 @@ handleEvent wenv node model evt = case evt of
     AppAddRecord le                 -> [
         Model $ model
             & curTime           .~ fromMaybe (model^.curTime) (le^.leTime)
-            & logEntries        .~ (le : (model^.logEntries)),
-        SetFocusOnKey (WidgetKey (showt (le^.leId)))
+            & logEntries        .~ addToLogEntriesDepository 
+                (cfg^. acMaximumLogEntries) le (model^.logEntries), -- (le : (model^.logEntries)),
+        Task $ afterAddRecord (showt (le^.leId))
+        ]
+    AppSetFocus wKey -> [
+        SetFocusOnKey (WidgetKey wKey),
+        Message (WidgetKey wKey) AnimationStart
         ]
     AppAddBulkRecords les leId      -> [
         Model $ model
             & curTime           .~ model^.curTime
-            & logEntries        .~ les,
+            & logEntries        .~ makeLogEntriesDepositoryFromBulk les,
         SetFocusOnKey (WidgetKey (showt leId))
         ]
     where
@@ -403,7 +404,8 @@ handleEvent wenv node model evt = case evt of
             [x]     -> []
             (x:xs)  -> xs
         isReforMode = length (model^.reforMode)>1
-        path = model^.exePath
+        path = model^. exePath
+        cfg = model^. mainConfig
 
 -- *****************************************************************************
 
@@ -530,4 +532,7 @@ endReformatting :: IO AppEvent
 endReformatting =
     return AppReformattingDone
 
+afterAddRecord :: Text -> IO AppEvent
+afterAddRecord wKey =
+    return $ AppSetFocus wKey
 

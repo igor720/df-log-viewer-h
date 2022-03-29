@@ -29,8 +29,11 @@ timeFieldWidth: 30.0
 spacerWidth: 8.0
 ## Sample text for color configuration dialog
 colorSampleText: "Losing is fun!"
-## Max number of recent records at the time of app start that will be displayed
-previousLogEntries: 10000
+## Max number of records in memory at any time. 
+maximumLogEntries: 2000
+## Max number of recent records at the time of app start that will be displayed.
+## Must be less then or equal to 'maximumLogEntries'
+previousLogEntries: 200
 
 ## Decorators for log entities
 jobDecorUnderline: False
@@ -53,7 +56,7 @@ showName: "NameOnly"
 ## If False all tags (descriptions) have one (white) color
 coloredTag: True
 ## Log entry fade animation duration (in ms)
-fadeAnimationDuration: 600
+fadeAnimationDuration: 100
 
 ## Explicit path for gamelog. Used if no command line arg path; 
 ## if none then app will try to find gamelog on its own.

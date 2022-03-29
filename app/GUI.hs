@@ -48,7 +48,7 @@ gui path mainConfig aws logFilePath = do
             appInitEvent AppInit,
             appResizeEvent AppResize
             ]
-        initXRecords = []
+        initLogEntries = emptyLogEntriesDepository -- []
         colorsModel = CDialogModel {
             _cDistrib = M.empty
         }
@@ -63,7 +63,7 @@ gui path mainConfig aws logFilePath = do
                 LMFull                  -- full merge for app start
                 time0                   -- current time (app start)
                 0                       -- start log entry Id
-                initXRecords            -- init log entries
+                initLogEntries          -- init log entries
                 (M.union logColorDistrib defaultColorDistrib)
                 (M.union logWindowDistrib defaultLogWindowDistrib)
                 colorsModel 
