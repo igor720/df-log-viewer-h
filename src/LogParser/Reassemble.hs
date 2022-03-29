@@ -25,7 +25,7 @@ import Data.Maybe ( fromMaybe )
 import qualified Data.Text as T
 import Data.Text ( Text )
 import Data.Typeable ( cast )
-import Control.DeepSeq ( NFData, force )
+import Control.DeepSeq ( NFData )
 import GHC.Generics ( Generic )
 import LogParser.LogEntry
 
@@ -62,15 +62,15 @@ reassemble reCfg led = ss where
         (ReConfig True  SNFullName,     Dorf n Nothing p)       -> np n p
         (ReConfig True  SNFullName,     Dorf n (Just nick) p)   -> nk nick<>" "<>np n p
         (ReConfig True  SNNameOnly,     Dorf n Nothing p)       -> np n p 
-        (ReConfig True  SNNameOnly,     Dorf n (Just nick) p)   -> np n p
+        (ReConfig True  SNNameOnly,     Dorf n (Just _) p)      -> np n p
         (ReConfig True  SNNicknameOnly, Dorf n Nothing p)       -> np n p 
-        (ReConfig True  SNNicknameOnly, Dorf n (Just nick) p)   -> np nick p
+        (ReConfig True  SNNicknameOnly, Dorf _ (Just nick) p)   -> np nick p
         (ReConfig False SNFullName,     Dorf n Nothing p)       -> np1 n p
-        (ReConfig False SNFullName,     Dorf n (Just nick) p)   -> nk nick<>" "<>n
+        (ReConfig False SNFullName,     Dorf n (Just nick) _)   -> nk nick<>" "<>n
         (ReConfig False SNNameOnly,     Dorf n Nothing p)       -> np1 n p
-        (ReConfig False SNNameOnly,     Dorf n (Just nick) p)   -> np1 n p
+        (ReConfig False SNNameOnly,     Dorf n (Just _) p)      -> np1 n p
         (ReConfig False SNNicknameOnly, Dorf n Nothing p)       -> np1 n p
-        (ReConfig False SNNicknameOnly, Dorf n (Just nick) p)   -> nick
+        (ReConfig False SNNicknameOnly, Dorf _ (Just nick) _)   -> nick
         _ -> throw $ MissedDorf led
     j :: [LEComponent]
     j = [LEC LECJob (fromMaybe "" (led^. job))]
@@ -79,7 +79,7 @@ reassemble reCfg led = ss where
     a :: Maybe Actor -> [LEComponent]
     a ac = case ac of
             Nothing -> []
-            Just a  -> case a of
+            Just actor  -> case actor of
                 Nobody      -> []
                 Creature n  -> [LEC LECDorf n]
                 d@Dorf {}   -> [LEC LECDorf (makeName d)]
@@ -89,8 +89,8 @@ reassemble reCfg led = ss where
     a2 = a (led^. ac2)
     w :: Int -> [LEComponent]
     w i = map (LEC LECOther) $ T.words (led^. strs.ix i)
-    o :: Text -> [LEComponent]
-    o txt = map (LEC LECOther) $ T.words txt
+    --o :: Text -> [LEComponent]
+    --o txt = map (LEC LECOther) $ T.words txt
     o1 :: Text -> [LEComponent]
     o1 txt = [LEC LECOther txt]
     c desc comps = ReLogEntry (led^. tag) desc (concat comps)

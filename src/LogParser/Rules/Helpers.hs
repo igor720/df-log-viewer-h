@@ -15,15 +15,13 @@ module LogParser.Rules.Helpers where
 
 import Control.Exception ( Exception, toException, fromException )
 import Control.Lens ( Identity )
-import Data.Text ( pack, unpack, Text )
+import Data.Text ( pack, Text )
 import qualified Data.List as L
 import Text.Parsec
-import Data.Maybe
 
 import LogException
 import LogParser.LogEntry
 import Control.Monad (when)
-import Data.Char (ord)
 
 
 data LogParseConfig = LogParseConfig    -- empty for now
@@ -69,7 +67,7 @@ pWord = pack <$> many1 lower
 pTillChars :: String -> Parsec Text LogParseConfig Text
 pTillChars chars = do
     s <- pMany (noneOf chars)
-    oneOf chars
+    _ <- oneOf chars
     return s
 
 pSomeone :: [String] -> Parsec Text LogParseConfig Text
@@ -122,15 +120,15 @@ pFullName  = do
 pDorf :: Parsec Text LogParseConfig Actor
 pDorf = do
     nicknameStartMb <- optionMaybe (char '`')
-    nickname <- mapM (\_ -> do
+    nick <- mapM (\_ -> do
             str <- many1 (noneOf ['\''])
             _ <- char '\''
             spaces 
             return $ pack str
         ) nicknameStartMb
-    (nameS, prof) <- try ( do
+    (nameS, profession) <- try ( do
             nameS' <- pFullName
-            string ", "
+            _ <- string ", "
             prof' <- try ( do
                     a <- pFullName
                     notFollowedBy (string "(Tame)")
@@ -142,7 +140,7 @@ pDorf = do
                                 <|> try (pString "fallen butcher")
                                 <|> try (pString "faint stalker")
                                 <|> try (pString "hollow slayer")
-                            space
+                            _ <- space
                             return $ ts<>b'
                             )
                     return $ a<>b
@@ -150,7 +148,7 @@ pDorf = do
                 <|> ( do 
                     a <- pWord
                     try ( do
-                            space
+                            _ <- space
                             when (a=="war"||a=="hunting") $
                                 notFollowedBy (pFullName >> string "(Tame)")
                             bMb <- optionMaybe (
@@ -173,7 +171,7 @@ pDorf = do
                                 (Just b, Just c)    -> " "<>b<>" "<>c
                             )
                         <|> ( do
-                            lookAhead (oneOf ",:.!")
+                            _ <- lookAhead (oneOf ",:.!")
                             return a
                             )
                     )
@@ -185,7 +183,7 @@ pDorf = do
             return (nameS', "")
         )
     spaces 
-    return $ Dorf nameS nickname prof
+    return $ Dorf nameS nick profession
 
 pActor :: [String] -> Parsec Text LogParseConfig Actor
 pActor endWith = do

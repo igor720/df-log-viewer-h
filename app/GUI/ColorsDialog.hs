@@ -21,7 +21,6 @@ import Monomer
 
 import LogParser.LogEntry
 import GUI.Model.ColorsDialog
-import GUI.Model.App
 
 {-# INLINE logWindowBgColor #-}
 {-# INLINE defaultColor #-}
@@ -34,17 +33,17 @@ defaultColor = white
 
 buildColorsDialogComp :: Text -> WidgetEnv CDialogModel CDialogEvent 
     -> CDialogModel -> WidgetNode CDialogModel CDialogEvent
-buildColorsDialogComp colorSampleText wenv model = widgetTree where
+buildColorsDialogComp colorSampleText _ model = widgetTree where
     leTegLabel xt = label (T.drop 2 $ showt xt) `styleBasic`
         [ textFont "Bold", textSize 12, textColor black
         , padding 2 ]
     sampleLabel c = box_ [alignMiddle] $ label colorSampleText `styleBasic`
         [ textSize 12, textColor c, bgColor logWindowBgColor
         , padding 4, maxWidth 106 ]
-    colorRow (tag, c) = row where
+    colorRow (leTag, c) = row where
         row = box $ vstack
-            [ hstack [sampleLabel c, spacer, leTegLabel tag]
-            , hstack [colorPickerV c (ColorChange tag) `styleBasic`
+            [ hstack [sampleLabel c, spacer, leTegLabel leTag]
+            , hstack [colorPickerV c (ColorChange leTag) `styleBasic`
                 [ bgColor logWindowBgColor ]]
             , spacer_ [width 8]
             ]
@@ -76,7 +75,7 @@ buildColorsDialogComp colorSampleText wenv model = widgetTree where
 handleEventColorsDialog :: WidgetEnv CDialogModel CDialogEvent
     -> WidgetNode CDialogModel CDialogEvent -> CDialogModel -> CDialogEvent 
     -> [EventResponse CDialogModel CDialogEvent sp ep]
-handleEventColorsDialog wenv node model evt = case evt of
+handleEventColorsDialog _ _ model evt = case evt of
     ColorChange xt c -> [ Model $ model
         & cDistrib . ix xt .~ c
         ]

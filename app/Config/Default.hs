@@ -13,7 +13,6 @@ Application's default main config (mainly for initial creation of if missing)
 module Config.Default where
 
 import System.FilePath ( (</>) )
-import qualified Data.Map as M
 import Data.Text ( pack )
 import Monomer ( rgbHex )
 

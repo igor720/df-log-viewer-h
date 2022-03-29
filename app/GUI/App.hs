@@ -23,17 +23,15 @@ import Control.Monad.Loops ( iterateM_, unfoldM )
 import Control.Concurrent ( threadDelay )
 import Data.Default ( Default(def) )
 import Data.Maybe ( fromMaybe, isJust, listToMaybe )
-import Data.Text (Text, pack)
+import Data.Text ( Text )
 import TextShow ( TextShow(showt) )
 import Data.Time ( UTCTime, diffUTCTime, getCurrentTime )
-import Data.Bifunctor ( Bifunctor(first) )
 import qualified Data.Text.IO as TIO
 import qualified Data.Text as T
 import qualified Data.Map as M
 import qualified Data.List as List
 import Monomer
 import qualified Monomer.Lens as L
-import Monomer.Core.Lens (HasUnderline(underline))
 
 import Control.DeepSeq
 
@@ -81,7 +79,7 @@ defTimeColor (tCSh0, tCSh1) (tC0, tC1, tC2) secs
 getLogEntryTimeValues :: AppModel -> LogEntry -> (Text, Color)
 getLogEntryTimeValues model le = vals where
     time0 = model^. curTime
-    tc@(_, _, timeColor) = model^. mainConfig.acTimeColors
+    colors@(_, _, timeColor) = model^. mainConfig.acTimeColors
     tcs = model^.mainConfig.acTimeColorShifts
     vals = case le^.leTime of
         Nothing     -> (">>", timeColor)
@@ -90,15 +88,15 @@ getLogEntryTimeValues model le = vals where
             res' 
                 | secs<=1 =
                     ( showt secs
-                    , defTimeColor tcs tc secs
+                    , defTimeColor tcs colors secs
                     )
                 | secs<=model^. mainConfig.acExplicitSecs =
                     ( showt secs
-                    , defTimeColor tcs tc secs
+                    , defTimeColor tcs colors secs
                     )
                 | otherwise = 
                     ( ">"
-                    , defTimeColor tcs tc secs
+                    , defTimeColor tcs colors secs
                     )
 
 -- Returns log entry text components, distributed among each line of text
@@ -112,7 +110,7 @@ getLogEntryTextComponents getTextWidth introW logWindowW (ReLogEntry _ _ reas)
             LEC _ txt = comp
             w = getTextWidth txt
         ((hComps0, w0) : cws') -> case comp of
-            LEC lec txt  -> hComps where
+            LEC _ txt  -> hComps where
                 w = getTextWidth txt
                 l = T.length txt
                 hComps
@@ -129,7 +127,6 @@ logEntryRow :: AppWenv -> AppModel -> LogEntry -> AppNode
 logEntryRow wenv model le = row where
     -- configuration parameters
     cfg = model^.mainConfig
-    reCfg = ReConfig (cfg^. acShowProfession) (cfg^. acShowName)
     ws = model^.mainConfig.acLogWindows
     cols = if ws<=2 then 1 else 2 :: Int
     rowHoverBgColor = wenv^. L.theme. L.userColorMap. at "hoverBgColor". non def
@@ -142,7 +139,7 @@ logEntryRow wenv model le = row where
 
     -- getting log entry components
     (timeTxt, timeColor) = getLogEntryTimeValues model le
-    rle@(ReLogEntry leTag desc reas) = le^. leReLogEntry
+    rle@(ReLogEntry leTag desc _) = le^. leReLogEntry
     descW = getTextSize wenv 
         (textFont "Bold"<>textSize (model^. mainConfig.acTextSize)) desc^. L.w
     introW = descW + timeW + spacerW
@@ -311,7 +308,7 @@ buildUI wenv model = widgetTree where
 
 handleEvent :: WidgetEnv AppModel AppEvent -> WidgetNode AppModel AppEvent
   -> AppModel -> AppEvent -> [EventResponse AppModel AppEvent AppModel ()]
-handleEvent wenv node model evt = case evt of
+handleEvent wenv _ model evt = case evt of
     AppErrorShow msg                -> [
         Model $ model
             & errorMsg          ?~ msg
@@ -397,11 +394,11 @@ handleEvent wenv node model evt = case evt of
         SetFocusOnKey (WidgetKey wKey),
         Message (WidgetKey wKey) AnimationStart
         ]
-    AppAddBulkRecords les leId      -> [
+    AppAddBulkRecords les leid      -> [
         Model $ model
             & curTime           .~ model^.curTime
             & logEntries        .~ makeLogEntriesDepositoryFromBulk les,
-        SetFocusOnKey (WidgetKey (showt leId))
+        SetFocusOnKey (WidgetKey (showt leid))
         ]
     where
         winSize' = wenv^. L.windowSize
@@ -416,8 +413,8 @@ handleEvent wenv node model evt = case evt of
         inforceReforMode = 0:(model^.reforMode)
         relaxReforMode = case model^.reforMode of
             []      -> []
-            [x]     -> []
-            (x:xs)  -> xs
+            [_]     -> []
+            (_:xs)  -> xs
         isReforMode = length (model^.reforMode)>1
         path = model^. exePath
         cfg = model^. mainConfig
@@ -428,16 +425,16 @@ handleEvent wenv node model evt = case evt of
 
 -- Get integer seconds between tw0 times
 secondsSince :: UTCTime -> UTCTime -> Int
-secondsSince t0 t = fromIntegral i
+secondsSince t0 t = i
    where (i, _) = properFraction $ diffUTCTime t0 t
 
 -- Log fetcher (from gamelog)
 logProducer :: MainConfig -> FilePath -> (AppEvent -> IO ()) -> IO ()
-logProducer cfg logFilePath sendMsg = ( do
+logProducer cfg logpath sendMsg = ( do
         let lpCfg = LogParseConfig 
             sm = symMapping
             reCfg = ReConfig (cfg^. acShowProfession) (cfg^. acShowName)
-        f <- openFile logFilePath ReadMode
+        f <- openFile logpath ReadMode
         hSetEncoding f latin1
         prevLines <- unfoldM ( do
             eof <- hIsEOF f
@@ -451,25 +448,25 @@ logProducer cfg logFilePath sendMsg = ( do
             leds = force $ 
                 map (reassemble reCfg . parseLogEntry lpCfg) latestLines
             les = force $ reverse $ zipWith (`LogEntry` Nothing) [1..] leds
-            lastId = if null les then 0
+            lstId = if null les then 0
                      else let LogEntry lastId' _ _  = head les
                           in lastId'
-        sendMsg $ AppAddBulkRecords les lastId
+        sendMsg $ AppAddBulkRecords les lstId
         sendMsg AppReformattingDone
-        iterateM_ (\leId -> do
+        iterateM_ (\leid -> do
             eof <- hIsEOF f
             lineMb <- if eof then return Nothing
                       else Just <$> TIO.hGetLine f
             case lineMb of
-                Nothing     -> threadDelay readTimeout >> return leId
+                Nothing     -> threadDelay readTimeout >> return leid
                 Just line   -> do
                     utcTime <- getCurrentTime
-                    sendMsg $ AppAddRecord $ force $ LogEntry leId 
+                    sendMsg $ AppAddRecord $ force $ LogEntry leid 
                         (Just utcTime) 
                         (reassemble reCfg $ 
                             parseLogEntry lpCfg (textTranslate sm line))
-                    return (leId+1)
-            ) (lastId+1)
+                    return (leid+1)
+            ) (lstId+1)
     ) `catches` 
         [ Handler (\ (ex :: SomeException)  -> sendMsg $ 
                 AppErrorShow (T.pack (show ex)))
@@ -495,34 +492,34 @@ prettyList str0 =
         ) (str0, False)
 
 saveColorConfig :: FilePath -> LogColorDistrib -> IO AppEvent
-saveColorConfig path logColorDistrib = do
-    writeFile (path </> colorConfigFile) (prettyList $ show logColorDistrib)
-        `catch` \(e::SomeException) -> throw ExSaveColorConfig
+saveColorConfig path logColors = do
+    writeFile (path </> colorConfigFile) (prettyList $ show logColors)
+        `catch` \(_::SomeException) -> throw ExSaveColorConfig
     return AppColorConfigSaved
 
 readColorConfig :: FilePath -> IO LogColorDistrib
 readColorConfig path = do
-    logColorDistrib <- catch ( 
+    logColors <- catch ( 
         readFile (path </> colorConfigFile)
         ) (\(e::SomeException) -> throw (ExReadColorConfig $ show e))
     return $ fromMaybe 
-        (throw (ExReadColorConfig $ show "can't parse"))
-        (fmap fst . listToMaybe . reads $ logColorDistrib)
+        (throw (ExReadColorConfig "can't parse"))
+        (fmap fst . listToMaybe . reads $ logColors)
         
 saveWindowConfig :: FilePath -> LogWindowDistrib -> IO AppEvent
-saveWindowConfig path logWindowDistrib = do
-    writeFile (path </> windowConfigFile) (prettyList $ show logWindowDistrib)
-        `catch` \(e::SomeException) -> throw ExSaveColorConfig
+saveWindowConfig path logWindows = do
+    writeFile (path </> windowConfigFile) (prettyList $ show logWindows)
+        `catch` \(_::SomeException) -> throw ExSaveColorConfig
     return AppWindowConfigSaved
 
 readWindowConfig :: FilePath -> IO LogWindowDistrib
 readWindowConfig path = do
-    logWindowDistrib <- catch ( 
+    logWindows <- catch ( 
         readFile (path </> windowConfigFile)
         ) (\(e::SomeException) -> throw (ExReadWindowConfig $ show e))
     return $ fromMaybe 
-        (throw (ExReadWindowConfig $ show "can't parse"))
-        (fmap fst . listToMaybe . reads $ logWindowDistrib)
+        (throw (ExReadWindowConfig "can't parse"))
+        (fmap fst . listToMaybe . reads $ logWindows)
 
 -- *****************************************************************************
 
@@ -534,14 +531,14 @@ appWindowSizeFile = "winsize"
 writeAppWindowSize :: FilePath -> AppWindowSize -> IO AppEvent
 writeAppWindowSize path aws = do
     writeFile (path </> appWindowSizeFile) (show aws)
-        `catch` \(e::SomeException) -> throw ExSaveAppWindowSize
+        `catch` \(_::SomeException) -> throw ExSaveAppWindowSize
     return AppWindowSizeSaved
 
 readAppWindowSize :: FilePath -> MainConfig -> IO AppWindowSize
 readAppWindowSize path cfg =
     catch (
         read <$> readFile (path </> appWindowSizeFile)
-        ) (\(e::SomeException) -> return (cfg^.acMainWindowDefaultSize))    -- throw ExReadAppWindowSize
+        ) (\(_::SomeException) -> return (cfg^. acMainWindowDefaultSize))    -- throw ExReadAppWindowSize
         
 -- *****************************************************************************
 

@@ -51,6 +51,8 @@ library:
   other-modules:
     - LogParser.Profession
   source-dirs: src
+  ghc-options:
+    - -Wall
 
 executables:
   dflv:
@@ -78,8 +80,9 @@ executables:
     - src
     ghc-options:
     - -threaded
+    - -Wall
     - -rtsopts
-    - -with-rtsopts=-N
+    - -with-rtsopts=-N -O2
     dependencies:
     - df-log-viewer-h
     - monomer >=1.2

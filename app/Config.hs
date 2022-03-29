@@ -11,6 +11,7 @@ Application's main config module
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Config where
 
@@ -19,9 +20,8 @@ import qualified Control.Lens as CL
 import Control.Lens.TH ( makeLenses )
 import qualified Data.ByteString.Lazy as BS.L
 import qualified Data.Text as T
-import Data.Text ( Text )
+import Data.Text ( Text, pack )
 import Data.YAML
-import TextShow
 import Numeric ( showHex )
 import Monomer ( rgbHex, Color )
 import qualified Monomer.Lens as L
@@ -29,13 +29,6 @@ import qualified Monomer.Lens as L
 import AppException
 import LogParser.LogEntry
 
-
-type Secs = Int
-
-type Width = Double
-
-fontsPath :: FilePath
-fontsPath = "assets/fonts"
 
 instance FromYAML ShowNameType where
     parseYAML = withStr "" $ \t -> do 
@@ -48,7 +41,23 @@ instance FromYAML ShowNameType where
         return sn
 
 instance ToYAML ShowNameType where
-    toYAML sn = let _:_:str = show sn in toYAML (T.pack str)
+    toYAML sn = let _:_:str = show sn in toYAML (pack str)
+
+instance FromYAML Color where
+    parseYAML = withStr "Color" $ \t -> pure (rgbHex (T.unpack t))
+
+instance ToYAML Color where
+    toYAML color = toYAML $ "#"
+        <> T.pack (showHex (color CL.^. L.r) "")
+        <> T.pack (showHex (color CL.^. L.g) "")
+        <> T.pack (showHex (color CL.^. L.b) "")
+
+type Secs = Int
+
+type Width = Double
+
+fontsPath :: FilePath
+fontsPath = "assets/fonts"
 
 -- | Application's main configuration
 data MainConfig = MainConfig
@@ -83,15 +92,6 @@ data MainConfig = MainConfig
     } deriving (Show, Eq)
 
 makeLenses 'MainConfig
-
-instance FromYAML Color where
-    parseYAML = withStr "Color" $ \t -> pure (rgbHex (T.unpack t))
-
-instance ToYAML Color where
-    toYAML color = toYAML $ "#"
-        <> T.pack (showHex (color CL.^. L.r) "")
-        <> T.pack (showHex (color CL.^. L.g) "")
-        <> T.pack (showHex (color CL.^. L.b) "")
 
 instance FromYAML MainConfig where
     parseYAML = withMap "MainConfig" $ \m -> MainConfig
@@ -161,7 +161,7 @@ instance ToYAML MainConfig where
 writeMainConfig :: FilePath -> MainConfig -> IO ()
 writeMainConfig path cfg = do
     BS.L.writeFile path (encode1 cfg)
-        `catch` \(e::SomeException) -> throw ExSaveMainConfig
+        `catch` \(_::SomeException) -> throw ExSaveMainConfig
 
 readMainConfig :: FilePath -> IO MainConfig
 readMainConfig path = do
@@ -176,7 +176,7 @@ readMainConfig path = do
 checkMainConfig :: MainConfig -> Either String MainConfig
 checkMainConfig cfg@(MainConfig (w,h) _ _ ts _ (tsh0,tsh1) es sw tfw ws cst _
                         _ _ _ _ _ _ _ _ _ 
-                        mles ples _ snP sn _ fad)
+                        mles ples _ _ _ _ fad)
     | w<400 || h<300    = Left "Too small default window size"
     | ts<7 || ts>36     = Left "Too big font"
     | any (<0) [tsh0, tsh1] = 

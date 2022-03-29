@@ -17,10 +17,8 @@ import System.FilePath
 import Control.Monad ( filterM )
 import Control.Exception ( bracket )
 import qualified Data.List as List
-import qualified Data.Text as T
 import Data.Text ( Text )
 import Data.Maybe ( fromJust, fromMaybe, isJust )
-import qualified Data.Text.IO as TIO
 
 {-# INLINE sizeOfBlock #-}
 {-# INLINE readTimeout #-}
@@ -39,7 +37,7 @@ gamelogFileName = "gamelog.txt"
 
 -- | Get blocks of text lines of last saved log entries
 latestLogCut :: Int -> [Text] -> LogBlocks
-latestLogCut numberOfEntries lines
+latestLogCut numberOfEntries ls
     | numberOfEntries<0     = error "invalid numberOfEntries"
     | numberOfEntries==0    = []
     | otherwise             = resLogBlocks where
@@ -53,7 +51,7 @@ latestLogCut numberOfEntries lines
             in if blockI'>numOfBlocks+1
                     then (init logLines', numOfBlocks+1, lineI')
                     else res
-            ) ([], 1, 1) lines
+            ) ([], 1, 1) ls
         accumF rest bl
             | rest<=0   = (0, [])
             | otherwise =

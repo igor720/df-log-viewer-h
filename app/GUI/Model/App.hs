@@ -14,9 +14,8 @@ App model definition
 module GUI.Model.App where
 
 import Control.Lens
-import Control.Lens.TH ( makeLenses )
+--import Control.Lens.TH ( makeLenses )
 import Data.Text ( Text )
-import qualified Data.Map as M
 import qualified Data.IntMap.Strict as IM
 import Data.Time ( UTCTime )
 import Monomer ( Rect )

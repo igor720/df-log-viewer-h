@@ -10,18 +10,19 @@ Colors configuration dialog model definition
 -}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module GUI.Model.ColorsDialog where
 
 import Control.Lens.TH ( makeLenses )
 import qualified Data.Map as M
-import Monomer ( Color(Color), white )
+import Monomer ( Color(Color) )
 
 import LogParser.LogEntry
 
 
 -- | For easy 'Color' parsing
-deriving instance Read Color  
+deriving instance Read Color
 
 -- | Color for LogEntryTag distribution mapping
 type LogColorDistrib = M.Map LogEntryTag Color

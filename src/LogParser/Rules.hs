@@ -19,12 +19,14 @@ Parsing rules module
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE BangPatterns #-}
+{-# OPTIONS_GHC -Wno-unused-do-bind #-}
+{-# OPTIONS_GHC -Wno-unused-matches #-}
 
 module LogParser.Rules where
 
 import Control.Exception ( throw )
 import Control.Lens ( (?~), (.~), (&) )
-import Data.Text ( pack, unpack, Text )
+import Data.Text ( pack, Text )
 import qualified Data.Text as T
 import Text.Parsec
 import Data.Maybe
@@ -356,7 +358,7 @@ pLogEntryData _ t@LEBattleHit = do
 pLogEntryData (ActorFirst w1 acA)   t@LEBattleEvade = do
     try ( do
         (w1s', a1', a2') <- try ( do
-                w1 <- try (pString "jumps away")
+                w2 <- try (pString "jumps away")
                     <|> try (pString "jumps out")
                     <|> try (pString "jump away")
                     <|> try (pString "scrambles out of")
@@ -365,21 +367,21 @@ pLogEntryData (ActorFirst w1 acA)   t@LEBattleEvade = do
                     <|> try (pString "rolls away")
                     <|> try (pString "bats The")
                     <|> pString "falls over"
-                w2 <- pAny
-                return ([w1<>w2, T.empty], acA, Nothing)
+                w3 <- pAny
+                return ([w2<>w3, T.empty], acA, Nothing)
                 )
             <|> try ( do 
-                w1 <- try (pString "blocks")
+                w2 <- try (pString "blocks")
                     <|> pString "miss"
-                w2 <- pAny
-                return ([w1<>w2, T.empty], acA, Nothing)
+                w3 <- pAny
+                return ([w2<>w3, T.empty], acA, Nothing)
                 )
             <|> ( do 
-                w1 <- pString "strikes at"
+                w2 <- pString "strikes at"
                 acB <- pActor ["but"]
-                w2 <- pString "but the shot is blocked"
-                w3 <- pAny
-                return ([w1, w2<>w3], acA, Just acB)
+                w3 <- pString "but the shot is blocked"
+                w4 <- pAny
+                return ([w2, w3<>w4], acA, Just acB)
                 )
         return $ newLogEntryData & tag .~ t
             & ac1 ?~ a1'
@@ -986,13 +988,13 @@ pLogEntryData (ActorFirst _ acA)    t@LEItem = do
         <|> ( do
             w1 <- pString "has bestowed "
             w2 <- pSomething [ "upon" ]
-            w1 <- pString "upon a"
+            w3 <- pString "upon a"
             space
             m <- pTillChars "!"
             return $ newLogEntryData & tag .~ t
                 & ac1 ?~ acA
                 & mat ?~ m
-                & strs .~ [w1]
+                & strs .~ [w1<>w2<>ts<>w3]
             )
 pLogEntryData OtherLogEntry         t@LEItem = fail ""
 pLogEntryData _ t@LEWeather = do

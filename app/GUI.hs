@@ -21,8 +21,6 @@ import qualified Data.Map as M
 import Monomer
 import qualified Monomer.Lens as L
 
-import LogParser.LogEntry
-import LogParser.Reassemble
 import Config
 import GUI.Model.ColorsDialog
 import GUI.Model.LogWindowsDialog
@@ -33,18 +31,18 @@ import GUI.LogWindowsDialog
 
 -- | Starts application GUI
 gui :: FilePath -> MainConfig -> AppWindowSize -> FilePath -> IO ()
-gui path mainConfig aws logFilePath = do
+gui path cfg aws logpath = do
     time0 <- getCurrentTime
-    logColorDistrib <- readColorConfig path
-    logWindowDistrib <- readWindowConfig path
+    logColors <- readColorConfig path
+    logWindows <- readWindowConfig path
     let appConfig = [
             appWindowTitle "DFLogViewerH",
             appWindowState (MainWindowNormal aws),
-            appTheme (customDarkTheme mainConfig),
+            appTheme (customDarkTheme cfg),
             appFontDef "Regular" $ T.pack $ 
-                path </> fontsPath </> T.unpack (mainConfig^.acRegularFont),
+                path </> fontsPath </> T.unpack (cfg^. acRegularFont),
             appFontDef "Bold" $ T.pack $ 
-                path </> fontsPath </> T.unpack (mainConfig^.acEmphasizeFont),
+                path </> fontsPath </> T.unpack (cfg^. acEmphasizeFont),
             appInitEvent AppInit,
             appResizeEvent AppResize
             ]
@@ -56,7 +54,7 @@ gui path mainConfig aws logFilePath = do
             _lwLists = [[], [], [], [], []]
             }
         initModel = AppModel 
-                mainConfig
+                cfg
                 Nothing                 -- no error message
                 []                      -- no reformattingMode layers
                 DMNone                  -- no dialog
@@ -64,11 +62,11 @@ gui path mainConfig aws logFilePath = do
                 time0                   -- current time (app start)
                 0                       -- start log entry Id
                 initLogEntries          -- init log entries
-                (M.union logColorDistrib defaultColorDistrib)
-                (M.union logWindowDistrib defaultLogWindowDistrib)
+                (M.union logColors defaultColorDistrib)
+                (M.union logWindows defaultLogWindowDistrib)
                 colorsModel 
                 windowsModel 
-                logFilePath
+                logpath
                 path
     startApp initModel handleEvent buildUI appConfig
 

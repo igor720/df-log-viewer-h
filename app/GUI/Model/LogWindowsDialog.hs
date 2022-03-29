@@ -13,7 +13,6 @@ Log windows configuration dialog model definition
 module GUI.Model.LogWindowsDialog where
 
 import Control.Lens.TH ( makeLenses )
-import Data.Text (Text)
 import qualified Data.Map as M
 
 import LogParser.LogEntry

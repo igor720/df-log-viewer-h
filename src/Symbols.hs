@@ -12,7 +12,7 @@ Log text symbols translation
 
 module Symbols where
 
-import Data.Text ( pack, unpack, Text )
+import Data.Text ( Text )
 import qualified Data.Text as T
 import Data.Char ( ord, chr )
 import Data.Maybe ( fromMaybe )

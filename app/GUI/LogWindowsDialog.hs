@@ -22,7 +22,6 @@ import Monomer
 
 import LogParser.LogEntry
 import GUI.Model.LogWindowsDialog
-import GUI.Model.App
 
 {-# INLINE listingBgColor #-}
 {-# INLINE listingHoverColor #-}
@@ -43,7 +42,7 @@ defaultLogWindow    = 4
 
 buildLogWindowsDialogComp :: WidgetEnv LWDialogModel LWDialogEvent 
     -> LWDialogModel -> WidgetNode LWDialogModel LWDialogEvent
-buildLogWindowsDialogComp wenv model = widgetTree where
+buildLogWindowsDialogComp _ model = widgetTree where
     itemA val = box_ [alignLeft] $ label (T.drop 2 $ showt val) `styleBasic`
         [ textColor black, padding 5 ]
     dragItem val = draggable_ val
@@ -80,7 +79,7 @@ buildLogWindowsDialogComp wenv model = widgetTree where
 handleEventLogWindowsDialog :: WidgetEnv LWDialogModel LWDialogEvent 
     -> WidgetNode LWDialogModel LWDialogEvent -> LWDialogModel -> LWDialogEvent 
     -> [EventResponse LWDialogModel LWDialogEvent sp ep]
-handleEventLogWindowsDialog wenv node model evt = case evt of
+handleEventLogWindowsDialog _ _ model evt = case evt of
     DropTo j val -> [ Model $ model
         & lwLists .~ map (\i -> 
             if i/=j then List.delete val (model^.lwLists.ix i) 
