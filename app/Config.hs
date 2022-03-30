@@ -31,14 +31,13 @@ import LogParser.LogEntry
 
 
 instance FromYAML ShowNameType where
-    parseYAML = withStr "" $ \t -> do 
-        let sn
-                | t=="FullName"     = SNFullName
-                | t=="NameOnly"     = SNNameOnly
-                | t=="NicknameOnly" = SNNicknameOnly
-                | otherwise = throw $ ExInvalidConfigRecord
-                    "invalid 'showName' configuration value"
-        return sn
+    parseYAML = withStr "" $ \t -> return (sn t) where
+        sn t
+            | t=="FullName"         = SNFullName
+            | t=="NameOnly"         = SNNameOnly
+            | t=="NicknameOnly"     = SNNicknameOnly
+            | otherwise = throw $ ExInvalidConfigRecord
+                "invalid 'showName' configuration value"
 
 instance ToYAML ShowNameType where
     toYAML sn = let _:_:str = show sn in toYAML (pack str)

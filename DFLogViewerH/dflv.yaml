@@ -33,7 +33,7 @@ colorSampleText: "Losing is fun!"
 maximumLogEntries: 2000
 ## Max number of recent records at the time of app start that will be displayed.
 ## Must be less then or equal to 'maximumLogEntries'
-previousLogEntries: 200
+previousLogEntries: 500
 
 ## Decorators for log entities
 jobDecorUnderline: False
@@ -48,11 +48,9 @@ dorfDecorUnderline: True
 
 ## Show dorf's profession
 showProfession: False
-## How to show dorf's name: FullName, NameOnly, NicknameOnly. 
+## How to show dorf's name: FullName, NameOnly, NicknameOnly.
 ## Last variant will show name if nickname is unavailable
-#showName: "FullName"
-#showName: "NicknameOnly"
-showName: "NameOnly"
+showName: "FullName"
 ## If False all tags (descriptions) have one (white) color
 coloredTag: True
 ## Log entry fade animation duration (in ms)

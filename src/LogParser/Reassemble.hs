@@ -53,10 +53,9 @@ data ReConfig = ReConfig
 reassemble :: ReConfig -> LogEntryData -> ReLogEntry
 reassemble reCfg led = ss where
     np n p 
-        | T.null n  = p 
         | T.null p  = n 
         | otherwise = n<>", "<>p
-    np1 n p = if T.null n then p else n
+    --np1 n p = if T.null n then p else n
     nk nick = "`"<>nick<>"'"
     makeName dorf = case (reCfg, dorf) of
         (ReConfig True  SNFullName,     Dorf n Nothing p)       -> np n p
@@ -65,11 +64,11 @@ reassemble reCfg led = ss where
         (ReConfig True  SNNameOnly,     Dorf n (Just _) p)      -> np n p
         (ReConfig True  SNNicknameOnly, Dorf n Nothing p)       -> np n p 
         (ReConfig True  SNNicknameOnly, Dorf _ (Just nick) p)   -> np nick p
-        (ReConfig False SNFullName,     Dorf n Nothing p)       -> np1 n p
+        (ReConfig False SNFullName,     Dorf n Nothing _)       -> n
         (ReConfig False SNFullName,     Dorf n (Just nick) _)   -> nk nick<>" "<>n
-        (ReConfig False SNNameOnly,     Dorf n Nothing p)       -> np1 n p
-        (ReConfig False SNNameOnly,     Dorf n (Just _) p)      -> np1 n p
-        (ReConfig False SNNicknameOnly, Dorf n Nothing p)       -> np1 n p
+        (ReConfig False SNNameOnly,     Dorf n Nothing _)       -> n
+        (ReConfig False SNNameOnly,     Dorf n (Just _) _)      -> n
+        (ReConfig False SNNicknameOnly, Dorf n Nothing _)       -> n
         (ReConfig False SNNicknameOnly, Dorf _ (Just nick) _)   -> nick
         _ -> throw $ MissedDorf led
     j :: [LEComponent]
