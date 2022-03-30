@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           df-log-viewer-h
-version:        0.1.0.1
+version:        0.1.0.2
 synopsis:       Dwarf Fortress game log viewer
 description:    Please see the README on GitHub at <https://github.com/igor720/df-log-parser#readme>
 category:       Dwarf Fortress game utility
@@ -28,13 +28,13 @@ source-repository head
 library
   exposed-modules:
       LogFile
-      LogException
       LogParser.LogEntry
-      LogParser.Rules.Helpers
       LogParser.Rules
       LogParser.Reassemble
       Symbols
   other-modules:
+      LogException
+      LogParser.Rules.Helpers
       LogParser.Profession
   hs-source-dirs:
       src

@@ -46,7 +46,7 @@ parsePath s
 -- | Parses working dir and gamelog path from a command line (both are optional)
 parsArgs :: [String] -> Maybe (Maybe FilePath, Maybe FilePath)
 parsArgs args = case args of
-    []  -> Nothing
+    []  -> Just (Nothing, Nothing)
     [s] -> case parsePath s of
             WorkingDir p    -> Just (Just p, Nothing)
             GameLogPath p   -> Just (Nothing, Just p)
@@ -65,7 +65,7 @@ main = do
     argsParsed <- parsArgs <$> getArgs
     (pathArgMb, logFileMb) <- case argsParsed of
         Just as -> return as
-        Nothing -> putStrLn commandLineHelp >> exitSuccess
+        Nothing -> putStrLn commandLineHelp >> exitSuccess  -- FIXME: don't work with monomer
     pathExe <- takeDirectory <$> getExecutablePath
     let path = fromMaybe pathExe pathArgMb
     check <- checkMainConfig <$> readMainConfig (path </> mainConfigFile)
@@ -75,7 +75,6 @@ main = do
     logFileName <- getLogFileName path logFileMb (unpack <$> _acLogFilePath cfg)
     aws <- readAppWindowSize path cfg
     gui path cfg aws logFileName
-
 
 
 

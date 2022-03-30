@@ -1,5 +1,5 @@
 name:                df-log-viewer-h
-version:             0.1.0.1
+version:             0.1.0.2
 github:              "igor720/df-log-viewer-h"
 license:             BSD3
 author:              "Igor Chudaev"
@@ -42,15 +42,16 @@ dependencies:
 library:
   exposed-modules:
     - LogFile
-    - LogException
     - LogParser.LogEntry
-    - LogParser.Rules.Helpers
     - LogParser.Rules
     - LogParser.Reassemble
     - Symbols
-  other-modules:
+  other-modules: 
+    - LogException
+    - LogParser.Rules.Helpers
     - LogParser.Profession
-  source-dirs: src
+  source-dirs:         
+    - src
   ghc-options:
     - -Wall
 

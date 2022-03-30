@@ -19,7 +19,7 @@ import Data.Text ( Text, pack, unpack )
 import qualified Data.List as List
 import qualified Data.Map as M
 import Data.Maybe ( fromMaybe )
-import qualified Text.Parsec as Parsec
+--import qualified Text.Parsec as Parsec
 
 import LogException
 
