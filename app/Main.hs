@@ -12,7 +12,7 @@ module Main where
 
 import System.FilePath ( takeDirectory, (</>) )
 import System.Environment ( getArgs, getExecutablePath )
-import System.Exit ( exitSuccess )
+import System.Exit ( exitFailure )
 import Control.Exception
 import qualified Data.List as List
 import Data.Text ( unpack )
@@ -63,9 +63,7 @@ parsArgs args = case args of
 main :: IO ()
 main = do
     argsParsed <- parsArgs <$> getArgs
-    (pathArgMb, logFileMb) <- case argsParsed of
-        Just as -> return as
-        Nothing -> putStrLn commandLineHelp >> exitSuccess  -- FIXME: don't work with monomer
+    (pathArgMb, logFileMb) <- maybe exitFailure return argsParsed
     pathExe <- takeDirectory <$> getExecutablePath
     let path = fromMaybe pathExe pathArgMb
     check <- checkMainConfig <$> readMainConfig (path </> mainConfigFile)
