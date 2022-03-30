@@ -23,6 +23,11 @@ import LogException
 import LogParser.LogEntry
 import Control.Monad (when)
 
+{-# INLINE ts #-}
+{-# INLINE texcl #-}
+{-# INLINE tp #-}
+{-# INLINE tc #-}
+{-# INLINE tcol #-}
 
 data LogParseConfig = LogParseConfig    -- empty for now
         deriving Show
