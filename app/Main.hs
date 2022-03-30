@@ -31,7 +31,7 @@ mainConfigFile = "dflv.yaml"
 commandLineHelp :: String 
 commandLineHelp = "command line: "
                 ++"dfvh(.exe) [--work-dir=\"working directory\"] "
-                ++"[--gemelog=\"logfilepath\"]"
+                ++"[--gamelog=\"logfilepath\"]"
 
 data PathOpt = WorkingDir FilePath | GameLogPath FilePath | InvalidOpt
         deriving Show

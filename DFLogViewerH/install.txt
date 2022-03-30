@@ -2,32 +2,41 @@ This package do not require system level instalation.
 Just run dflv[.exe] program with specified configuration (see below).
 
 If you want option to run the application with different configurations,
-then use --dir="working directory" command line switch 
-for directories containing various configurations.
+then use --work-dir command line switch for directories containing 
+various configurations.
 
 By default the application use configuration files 
 in the program's directory.
 
-1. Configuration.
+1. Commamd line.
+
+dfvh(.exe) [--work-dir="working directory"] [--gamelog="logfilepath"]
+
+2. Configuration.
 
 This consists of following files:
 - dflv.yaml: main application config
 - colors: color scheme
-- windows: specification of log entries distribution on application windows
+- windows: specification of log entries distribution on log windows
 - winsize: file with last saved application's window sizes
 - assets folder: contains fonts
 
 'colors' and 'windows' files must contain valid Haskell expression for
-Data.Map.Map structure. So if any of them is corrupted
-you can use string 'fromList []' for default configuration.
+Data.Map.Map value. So if any of them is corrupted
+you can recreate it using string 'fromList []' for default configuration.
+
+Content of 'colors' file can be modified in dialog 'Colors'. Also,
+content of 'windows' file can be modified in dialog 'Windows'. Here are five
+panels: the left and biggest one is for hidding log entries 
+of chosen tag (type), other pannels corresponds to surtain log windows.
 
 If 'winsize' file is corrupted, just delete it. It will be recreated from main
 configuration parameters in 'dflv.yaml'
 
-'dflv.yaml' file is not modifiable by the application itself. 
+'dflv.yaml' file is not writable by the application itself. 
 Nevertheless, if it is corrupted you can copy it from distribution or backup.
 
-2. Specifying Dwarf Fortress game log location.
+3. Specifying Dwarf Fortress game log location.
 
 There are 4 different methods to do this.
 
@@ -43,7 +52,7 @@ More early methods have priority to more later ones.
 The third and forth methods assume that there is only one directory which 
 is starts with 'Dwarf Fortress' string and contains Dwarf Fortress game files.
 
-3. dflv.yaml - Main configuration
+4. dflv.yaml - Main configuration
 
 Mostly you can understand options by reading comments in this file. 
 Here are some additional explanations.
@@ -61,7 +70,23 @@ designated to unavalable windows will appear in the last avalable window.
 of them (max 3) for any log component type (dorf or creature, material, job).
 
 - 'logFilePath' option workes only if there is no command line specification
-for gamelog path. Also it prevents DF game look up mechanism from working.
+for gamelog path. Also it prevents look up mechanism for DF gamelog 
+from working.
+
+5. Upgrading.
+
+If you did not made any changes to configuration, then you can just override
+all files.
+
+If you made some changes to configuration, then you may want to copy 
+configuration files (see Configuration section above) to new installation.
+This is applicable to 'colors', 'windows', and 'winsize' files; if upgrade
+includes new parsing rules, then corresponding log entries will appear
+in default (4) log window and will have default (white) color.
+
+Placing old dflv.yaml in new installation may be appropriate if no new opts
+were made or they are optional. If not, you have to make manual edits.
+
 
 
 

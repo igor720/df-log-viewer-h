@@ -61,6 +61,6 @@ fadeAnimationDuration: 100
 ## Explicit path for gamelog. Used if no command line arg path; 
 ## if none then app will try to find gamelog on its own.
 ## This must be a valid Haskell String 
-## (So, on Windows '\\' matches '\' for directories separation)
+## (On Windows '\\' matches '\' for directories separation)
 # logFilePath: "e:\\DF\\PeridexisErrant's Starter Pack 0.47.05-r06\\Dwarf Fortress 0.47.05\\gamelog.txt"
 
