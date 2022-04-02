@@ -1,4 +1,4 @@
-This package do not require system level instalation.
+This package does not require system level instalation.
 Just run dflv[.exe] program with specified configuration (see below).
 
 If you want option to run the application with different configurations,
