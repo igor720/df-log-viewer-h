@@ -97,9 +97,7 @@ were made or they are optional. If not, you have to make manual edits.
 Since currently not all log records are correctly described 
 in the parsing rules, such records appear with the 'default' tag. 
 In this case, you can write incorrectly parsed records to issues
-on the project's github page. Or, alternatively, you can make commits 
-to the project, with appropriate tests (base knowledge of Haskell required).
-
+on the project's github page.
 
 
 
