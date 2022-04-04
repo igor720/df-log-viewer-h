@@ -13,7 +13,7 @@ Distinctive features:
 - changing log entries color
 - a wide variety of possible log display configurations
 
-The app heavily relies on Francisco Vallarino 
+The app heavily relies on Francisco Vallarino's
 [Monomer framework](https://github.com/fjvallarino/monomer), 
 and in principle, it can run on Windows, Linux, and macOS.
 

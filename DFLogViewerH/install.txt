@@ -5,7 +5,7 @@ If you want option to run the application with different configurations,
 then use --work-dir command line switch for directories containing 
 various configurations.
 
-By default the application use configuration files 
+By default the application uses configuration files 
 in the program's directory.
 
 1. Commamd line.
@@ -28,20 +28,20 @@ you can recreate it using string 'fromList []' for default configuration.
 Content of 'colors' file can be modified in dialog 'Colors'. Also,
 content of 'windows' file can be modified in dialog 'Windows'. Here are five
 panels: the left and biggest one is for hidding log entries 
-of chosen tag (type), other pannels corresponds to surtain log windows.
+of chosen tag (type), other pannels correspond to sertain log windows.
 
 If 'winsize' file is corrupted, just delete it. It will be recreated from main
 configuration parameters in 'dflv.yaml'
 
 'dflv.yaml' file is not writable by the application itself. 
-Nevertheless, if it is corrupted you can copy it from distribution or backup.
+Nevertheless, if it is corrupted you can copy it from distribution or a backup.
 
 3. Specifying Dwarf Fortress game log location.
 
 There are 4 different methods to do this.
 
-- Specifying the path to a gamelog.txt in command line.
-- Specifying the path to a gamelog.txt in dflv.yaml.
+- Specifying the path to a 'gamelog.txt' in command line.
+- Specifying the path to a 'gamelog.txt' in 'dflv.yaml'.
 - Placing distribition directory (with executable and config files) 
     in 'utilities' directory of PeridexisErrant's Starter Pack.
 - Placing distribition directory (with executable and config files) 
@@ -50,7 +50,7 @@ There are 4 different methods to do this.
 More early methods have priority to more later ones.
 
 The third and forth methods assume that there is only one directory which 
-is starts with 'Dwarf Fortress' string and contains Dwarf Fortress game files.
+starts with 'Dwarf Fortress' string and contains Dwarf Fortress game files.
 
 4. dflv.yaml - Main configuration
 
@@ -59,14 +59,14 @@ Here are some additional explanations.
 
 - You can specify other fonts for use. Place them in 'assets' folder and
 change 'regularFont' and 'emphasizeFont' options respectively. By default, 
-the application use Roboto fonts family 
+the application uses Roboto fonts family
 (https://fonts.google.com/specimen/Roboto),
 which don't have symbols for some Unicode code points (U+2xxx).
 
 - If you specify 'logWindows' option to value less then 4, then log entries
 designated to unavalable windows will appear in the last avalable window.
 
-- *Decor* options are add ups to each other, so you can specify any number 
+- *Decor* options add ups to each other, so you can specify any number 
 of them (max 3) for any log component type (dorf or creature, material, job).
 
 - 'logFilePath' option workes only if there is no command line specification
