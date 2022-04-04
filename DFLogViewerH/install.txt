@@ -1,3 +1,8 @@
+DFLogViewerH
+
+Home page:
+https://github.com/igor720/df-log-viewer-h
+
 This package does not require system level instalation.
 Just run dflv[.exe] program with specified configuration (see below).
 
@@ -52,7 +57,7 @@ More early methods have priority to more later ones.
 The third and forth methods assume that there is only one directory which 
 starts with 'Dwarf Fortress' string and contains Dwarf Fortress game files.
 
-4. dflv.yaml - Main configuration
+4. dflv.yaml - Main configuration.
 
 Mostly you can understand options by reading comments in this file. 
 Here are some additional explanations.
@@ -86,6 +91,15 @@ in default (4) log window and will have default (white) color.
 
 Placing old dflv.yaml in new installation may be appropriate if no new opts
 were made or they are optional. If not, you have to make manual edits.
+
+6. Default rule - invalid parsing.
+
+Since currently not all log records are correctly described 
+in the parsing rules, such records appear with the 'default' tag. 
+In this case, you can write incorrectly parsed records to issues
+on the project's github page. Or, alternatively, you can make commits 
+to the project, with appropriate tests (base knowledge of Haskell required).
+
 
 
 
