@@ -47,9 +47,9 @@ Correctness of word wrapping in log windows for other fonts is not tested.
 
 ## Screenshots
 
-![logs screen](https://drive.google.com/file/d/1ieAqZiVnmmL2uh84Ck3j71qmw2jlEuvb/view?usp=sharing "Log Screen")
+![logs screen](./DFLogViewerH0.png "Log Screen")
 
-![colors configuration](https://drive.google.com/file/d/1XsLcm3SIkIINYVXxXA0QKNX4sNGK2CJO/view?usp=sharing "Colors Configuration")
+![colors configuration](./DFLogViewerH1.png "Colors Configuration")
 
-![log windows configuration](https://drive.google.com/file/d/14usoMGgh_SLMv6ChUlsJkHMeDftaTJL7/view?usp=sharing "Log Windows Configuration")
+![log windows configuration](./DFLogViewerH2.png "Log Windows Configuration")
 
