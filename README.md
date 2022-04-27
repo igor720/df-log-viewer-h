@@ -45,3 +45,11 @@ licensed under the [Apache license](http://www.apache.org/licenses/LICENSE-2.0).
 
 Correctness of word wrapping in log windows for other fonts is not tested.
 
+## Screenshots
+
+![logs screen](https://drive.google.com/file/d/1ieAqZiVnmmL2uh84Ck3j71qmw2jlEuvb/view?usp=sharing "Log Screen")
+
+![colors configuration](https://drive.google.com/file/d/1XsLcm3SIkIINYVXxXA0QKNX4sNGK2CJO/view?usp=sharing "Colors Configuration")
+
+![log windows configuration](https://drive.google.com/file/d/14usoMGgh_SLMv6ChUlsJkHMeDftaTJL7/view?usp=sharing "Log Windows Configuration")
+
