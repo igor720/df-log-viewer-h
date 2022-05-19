@@ -29,11 +29,11 @@ type LogColorDistrib = M.Map LogEntryTag Color
 
 newtype CDialogModel = CDialogModel {
   _cDistrib :: LogColorDistrib
-  } deriving (Eq, Show)
+  } deriving (Eq)
 
 data CDialogEvent
   = ColorChange LogEntryTag Color
-  deriving (Eq, Show)
+  deriving (Show)
 
 makeLenses 'CDialogModel
 

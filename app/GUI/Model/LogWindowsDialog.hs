@@ -25,11 +25,11 @@ type LogWindowDistrib = M.Map LogEntryTag LogWindow
 
 newtype LWDialogModel = LWDialogModel {
     _lwLists :: [[LogEntryTag]]
-    } deriving (Eq, Show)
+    } deriving (Eq)
 
 data LWDialogEvent
     = DropTo Int LogEntryTag
-    deriving (Eq, Show)
+    deriving (Show)
 
 makeLenses 'LWDialogModel
 

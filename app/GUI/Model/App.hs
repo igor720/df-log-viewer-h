@@ -96,7 +96,7 @@ data AppModel = AppModel
     , _lwModel          :: LWDialogModel    -- ^ window configuration model
     , _logFilePath      :: FilePath         -- ^ gamelog file path
     , _exePath          :: FilePath         -- ^ working directory path
-    } deriving (Show, Eq)
+    } deriving (Eq)
 
 data AppEvent
     = AppErrorShow Text
