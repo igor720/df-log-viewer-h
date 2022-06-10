@@ -38,7 +38,7 @@ library
       LogParser.Profession
   hs-source-dirs:
       src
-  ghc-options: -Wall
+  ghc-options: -Wall -O2
   build-depends:
       HsYAML ==0.2.*
     , aeson >=1.4 && <2.1
@@ -83,7 +83,7 @@ executable dflv
   hs-source-dirs:
       app
       src
-  ghc-options: -threaded -Wall -rtsopts -with-rtsopts=-N -O2
+  ghc-options: -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HsYAML ==0.2.*
     , aeson >=1.4 && <2.1

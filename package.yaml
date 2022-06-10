@@ -54,6 +54,7 @@ library:
     - src
   ghc-options:
     - -Wall
+    - -O2
 
 executables:
   dflv:
@@ -80,10 +81,11 @@ executables:
     - app 
     - src
     ghc-options:
-    - -threaded
     - -Wall
+    - -O2
+    - -threaded
     - -rtsopts
-    - -with-rtsopts=-N -O2
+    - -with-rtsopts=-N
     dependencies:
     - df-log-viewer-h
     - monomer >=1.2
